@@ -10,7 +10,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
     setError(null)
     startTransition(async () => {
       const result = await login(formData)
@@ -32,7 +34,7 @@ export default function LoginPage() {
           <h1 className="text-xl font-bold text-gray-900 mb-1">Bon retour !</h1>
           <p className="text-sm text-gray-500 mb-6">Connectez-vous à votre espace bailleur.</p>
 
-          <form action={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Adresse email

@@ -11,7 +11,9 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  function handleSubmit(formData: FormData) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
     setError(null)
     startTransition(async () => {
       const result = await signup(formData)
@@ -46,7 +48,7 @@ export default function SignupPage() {
               <h1 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h1>
               <p className="text-sm text-gray-500 mb-6">Gérez vos quittances en toute simplicité.</p>
 
-              <form action={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                     Adresse email
