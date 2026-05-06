@@ -252,7 +252,7 @@ def lambda_handler(event, context):
             "Cette quittance annule tous les reçus qui auraient pu être établis "
             "précédemment en cas de paiement partiel du montant du présent terme.\n"
             "Elle est à conserver pendant trois ans par le locataire "
-            "(loi n° 89-462 du 6 juillet 1989 : art. 7-1)"
+            "(loi n° 89-462 du 6 juillet 1989 : art. 7-1)."
         ),
         # ── Champs v3 ─────────────────────────────────────────────────────────
         "periode_de_location": f"Du {date_debut} au {date_fin}.",

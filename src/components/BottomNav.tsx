@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { FileText, Home, Users, User, LogOut } from 'lucide-react'
+import { FileText, Home, Users, User, LogOut, Loader2 } from 'lucide-react'
+import { useTransition } from 'react'
 import { signOut } from '@/app/(app)/actions'
 
 const links = [
@@ -15,6 +16,11 @@ const links = [
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const [isPending, startTransition] = useTransition()
+
+  function handleSignOut() {
+    startTransition(async () => { await signOut() })
+  }
 
   return (
     <>
@@ -43,15 +49,14 @@ export default function BottomNav() {
           })}
         </nav>
         <div className="px-3 py-4 border-t border-gray-100">
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-            >
-              <LogOut size={18} />
-              Se déconnecter
-            </button>
-          </form>
+          <button
+            onClick={handleSignOut}
+            disabled={isPending}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 transition-colors"
+          >
+            {isPending ? <Loader2 size={18} className="animate-spin" /> : <LogOut size={18} />}
+            {isPending ? 'Déconnexion...' : 'Se déconnecter'}
+          </button>
         </div>
       </aside>
 
