@@ -1,0 +1,203 @@
+import base64
+import json
+import os
+import tempfile
+from datetime import datetime
+from io import BytesIO
+
+from PIL import Image
+from pypdf import PdfReader, PdfWriter
+from pypdf.generic import (
+    BooleanObject,
+    NameObject,
+    NumberObject,
+    create_string_object,
+)
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen import canvas as rl_canvas
+
+_FF_READ_ONLY = 1
+
+
+# ── Field filling helpers ─────────────────────────────────────────────────────
+
+def _iter_acroform_fields(writer):
+    """Yield every field object from the AcroForm hierarchy."""
+    acroform = writer._root_object.get("/AcroForm")
+    if acroform is None:
+        return
+    stack = list(acroform.get_object().get("/Fields", []))
+    while stack:
+        ref = stack.pop()
+        obj = ref.get_object()
+        kids = obj.get("/Kids")
+        if kids:
+            if obj.get("/T"):
+                yield obj
+            stack.extend(kids)
+        else:
+            yield obj
+
+
+def _fill_fields(writer, field_values):
+    """Set /V on every named Acroform field and clear cached appearances."""
+    for obj in _iter_acroform_fields(writer):
+        t = obj.get("/T")
+        if t is None:
+            continue
+        name = str(t)
+        if name in field_values:
+            obj.update({NameObject("/V"): create_string_object(field_values[name])})
+            if "/AP" in obj:
+                del obj["/AP"]
+            for kid_ref in obj.get("/Kids", []):
+                kid = kid_ref.get_object()
+                if "/AP" in kid:
+                    del kid["/AP"]
+
+
+def _lock_all_fields(writer):
+    """Mark every Acroform field as ReadOnly."""
+    for obj in _iter_acroform_fields(writer):
+        ff = int(obj.get("/Ff", 0))
+        obj.update({NameObject("/Ff"): NumberObject(ff | _FF_READ_ONLY)})
+        for kid_ref in obj.get("/Kids", []):
+            kid = kid_ref.get_object()
+            ff_kid = int(kid.get("/Ff", 0))
+            kid.update({NameObject("/Ff"): NumberObject(ff_kid | _FF_READ_ONLY)})
+
+
+# ── Signature image overlay ───────────────────────────────────────────────────
+
+def _get_signature_rect(template_path):
+    """Return the /Rect of the signature widget annotation."""
+    reader = PdfReader(template_path)
+    for page in reader.pages:
+        raw = page.get("/Annots")
+        if raw is None:
+            continue
+        annots = raw.get_object() if hasattr(raw, "get_object") else raw
+        for annot in annots:
+            obj = annot.get_object()
+            if str(obj.get("/T", "")) == "signature":
+                return [float(v) for v in obj["/Rect"]]
+    return None
+
+
+def _build_signature_overlay(sig_b64, rect, page_w, page_h):
+    """Create a single-page PDF containing only the signature image at rect."""
+    raw = sig_b64.split(",")[1] if "," in sig_b64 else sig_b64
+    img_bytes = base64.b64decode(raw)
+
+    img = Image.open(BytesIO(img_bytes)).convert("RGBA")
+    # Composite onto white so transparent areas become white
+    bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
+    flat = Image.alpha_composite(bg, img).convert("RGB")
+
+    img_buf = BytesIO()
+    flat.save(img_buf, format="PNG")
+    img_buf.seek(0)
+
+    x1, y1, x2, y2 = rect
+    w, h = x2 - x1, y2 - y1
+
+    buf = BytesIO()
+    c = rl_canvas.Canvas(buf, pagesize=(page_w, page_h))
+    c.drawImage(ImageReader(img_buf), x1, y1, width=w, height=h,
+                preserveAspectRatio=True, anchor="sw")
+    c.save()
+    buf.seek(0)
+    return buf
+
+
+# ── Lambda entry point ────────────────────────────────────────────────────────
+
+def lambda_handler(event, context):
+    http_method = (
+        event.get("httpMethod")
+        or event.get("requestContext", {}).get("http", {}).get("method", "POST")
+    )
+    if http_method == "OPTIONS":
+        return {"statusCode": 200, "body": ""}
+
+    raw_body = event.get("body") or "{}"
+    if event.get("isBase64Encoded"):
+        raw_body = base64.b64decode(raw_body).decode("utf-8")
+
+    try:
+        body = json.loads(raw_body)
+    except Exception:
+        return {"statusCode": 400, "body": json.dumps({"error": "Invalid JSON"})}
+
+    loyer = float(body.get("montant_loyer_hors_charges_raw", 0))
+    charges = float(body.get("montant_charges_raw", 0))
+    total = loyer + charges
+
+    def fmt(n):
+        return f"{n:,.2f}".replace(",", " ").replace(".", ",") + " €"
+
+    fields = {
+        "proprietaire_prenom_nom":           body.get("proprietaire_prenom_nom", ""),
+        "proprietaire_rue":                  body.get("proprietaire_rue", ""),
+        "proprietaire_code_postal_ville_pays": body.get("proprietaire_code_postal_ville_pays", ""),
+        "locataire_prenom_nom":              body.get("locataire_prenom_nom", ""),
+        "locataire_rue":                     body.get("locataire_rue", ""),
+        "locataire_code_postal_ville":       body.get("locataire_code_postal_ville", ""),
+        "locataire_rue_code_postal_ville":   body.get("locataire_rue_code_postal_ville", ""),
+        "montant_loyer_hors_charges":        fmt(loyer),
+        "montant_charges":                   fmt(charges),
+        "montant_total_paye":                fmt(total),
+        "date_debut_periode_paiement":       body.get("date_debut_periode_paiement", ""),
+        "date_fin_periode_paiement":         body.get("date_fin_periode_paiement", ""),
+        "date_paiement":                     body.get("date_paiement", ""),
+        "fait_a":                            body.get("fait_a", ""),
+        "fait_le":                           datetime.now().strftime("%d/%m/%Y"),
+        # signature field kept as empty text — image is overlaid separately
+        "signature":                         "",
+    }
+
+    template_path = os.path.join(os.path.dirname(__file__), "modele.pdf")
+
+    reader = PdfReader(template_path)
+    writer = PdfWriter()
+    writer.clone_reader_document_root(reader)
+
+    _fill_fields(writer, fields)
+    _lock_all_fields(writer)
+
+    if writer._root_object.get("/AcroForm"):
+        writer._root_object["/AcroForm"].update({
+            NameObject("/NeedAppearances"): BooleanObject(True),
+        })
+
+    # Overlay drawn signature image if provided
+    sig_image = body.get("signature_image", "")
+    if sig_image:
+        page = writer.pages[0]
+        page_w = float(page.mediabox.width)
+        page_h = float(page.mediabox.height)
+        rect = _get_signature_rect(template_path)
+        if rect:
+            overlay_buf = _build_signature_overlay(sig_image, rect, page_w, page_h)
+            overlay_reader = PdfReader(overlay_buf)
+            page.merge_page(overlay_reader.pages[0])
+
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix=".pdf")
+    os.close(tmp_fd)
+    try:
+        with open(tmp_path, "wb") as f:
+            writer.write(f)
+        with open(tmp_path, "rb") as f:
+            pdf_bytes = f.read()
+    finally:
+        os.unlink(tmp_path)
+
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": 'attachment; filename="quittance.pdf"',
+        },
+        "body": base64.b64encode(pdf_bytes).decode("utf-8"),
+        "isBase64Encoded": True,
+    }

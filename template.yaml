@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: La Bonne Quittance - PDF generation Lambda
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.10
+
+Resources:
+  QuittanceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: handler.lambda_handler
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowCredentials: false
+          AllowHeaders:
+            - content-type
+          AllowMethods:
+            - POST
+            - OPTIONS
+          AllowOrigins:
+            - "*"
+
+Outputs:
+  FunctionUrl:
+    Description: Lambda Function URL
+    Value: !GetAtt QuittanceFunctionUrl.FunctionUrl
