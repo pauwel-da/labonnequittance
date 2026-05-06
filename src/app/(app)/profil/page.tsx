@@ -11,14 +11,20 @@ export default function ProfilPage() {
     nom: '', prenom: '', adresse: '', codePostal: '', ville: '', signature: '',
   })
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => { getProprietaire().then(setForm) }, [])
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
-    await saveProprietaire(form)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setSaveError(null)
+    try {
+      await saveProprietaire(form)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.')
+    }
   }
 
   return (
@@ -97,6 +103,12 @@ export default function ProfilPage() {
               onChange={sig => setForm(f => ({ ...f, signature: sig }))}
             />
           </div>
+
+          {saveError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {saveError}
+            </p>
+          )}
 
           <button
             type="submit"

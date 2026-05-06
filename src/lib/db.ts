@@ -121,14 +121,20 @@ export async function getProprietaire(): Promise<Proprietaire> {
 
 export async function saveProprietaire(p: Proprietaire): Promise<void> {
   const supabase = createClient()
-  const { error } = await supabase.from('proprietaire').upsert({
-    nom: p.nom,
-    prenom: p.prenom,
-    adresse: p.adresse,
-    code_postal: p.codePostal,
-    ville: p.ville,
-    signature: p.signature,
-    updated_at: new Date().toISOString(),
-  })
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Non authentifié')
+  const { error } = await supabase.from('proprietaire').upsert(
+    {
+      user_id: user.id,
+      nom: p.nom,
+      prenom: p.prenom,
+      adresse: p.adresse,
+      code_postal: p.codePostal,
+      ville: p.ville,
+      signature: p.signature,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' }
+  )
   if (error) throw error
 }
