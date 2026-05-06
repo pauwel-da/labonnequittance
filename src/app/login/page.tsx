@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Loader2, Mail, Lock } from 'lucide-react'
@@ -8,16 +8,14 @@ import { login } from './actions'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
+  function handleSubmit(formData: FormData) {
     setError(null)
-    const result = await login(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    }
+    startTransition(async () => {
+      const result = await login(formData)
+      if (result?.error) setError(result.error)
+    })
   }
 
   return (
@@ -77,10 +75,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+              disabled={isPending}
+              className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
             >
-              {loading ? <><Loader2 size={16} className="animate-spin" /> Connexion...</> : 'Se connecter'}
+              {isPending ? <><Loader2 size={16} className="animate-spin" /> Connexion...</> : 'Se connecter'}
             </button>
           </form>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Loader2, Mail, Lock } from 'lucide-react'
@@ -9,18 +9,15 @@ import { signup } from './actions'
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true)
+  function handleSubmit(formData: FormData) {
     setError(null)
-    const result = await signup(formData)
-    if (result?.error) {
-      setError(result.error)
-      setLoading(false)
-    } else {
-      setSuccess(true)
-    }
+    startTransition(async () => {
+      const result = await signup(formData)
+      if (result?.error) setError(result.error)
+      else setSuccess(true)
+    })
   }
 
   return (
@@ -93,10 +90,10 @@ export default function SignupPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+                  disabled={isPending}
+                  className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
                 >
-                  {loading ? <><Loader2 size={16} className="animate-spin" /> Création...</> : 'Créer mon compte'}
+                  {isPending ? <><Loader2 size={16} className="animate-spin" /> Création...</> : 'Créer mon compte'}
                 </button>
               </form>
             </>
