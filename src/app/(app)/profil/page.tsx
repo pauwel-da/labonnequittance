@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { proprietaireStore } from '@/lib/store'
+import { getProprietaire, saveProprietaire } from '@/lib/db'
 import type { Proprietaire } from '@/lib/types'
 import SignaturePad from '@/components/SignaturePad'
 import { signOut } from '@/app/(app)/actions'
@@ -12,11 +12,11 @@ export default function ProfilPage() {
   })
   const [saved, setSaved] = useState(false)
 
-  useEffect(() => { setForm(proprietaireStore.get()) }, [])
+  useEffect(() => { getProprietaire().then(setForm) }, [])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
-    proprietaireStore.save(form)
+    await saveProprietaire(form)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }

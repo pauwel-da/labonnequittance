@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { biensStore, generateId } from '@/lib/store'
+import { getBiens, addBien, updateBien, deleteBien } from '@/lib/db'
 import type { Bien, BienType } from '@/lib/types'
-import { Plus, Home, Pencil, Trash2, X } from 'lucide-react'
+import { Plus, Home, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 
 const TYPES: { value: BienType; label: string }[] = [
   { value: 'studio', label: 'Studio' },
@@ -14,11 +14,19 @@ const emptyForm = { adresse: '', codePostal: '', ville: '', type: 'appartement' 
 
 export default function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Bien | null>(null)
   const [form, setForm] = useState(emptyForm)
 
-  useEffect(() => { setBiens(biensStore.getAll()) }, [])
+  async function reload() {
+    setBiens(await getBiens())
+  }
+
+  useEffect(() => {
+    getBiens().then(setBiens).finally(() => setLoading(false))
+  }, [])
 
   function openNew() {
     setEditing(null)
@@ -32,21 +40,26 @@ export default function BiensPage() {
     setShowForm(true)
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
-    if (editing) {
-      biensStore.update(editing.id, form)
-    } else {
-      biensStore.add({ id: generateId(), ...form })
+    setSaving(true)
+    try {
+      if (editing) {
+        await updateBien(editing.id, form)
+      } else {
+        await addBien(form)
+      }
+      await reload()
+      setShowForm(false)
+    } finally {
+      setSaving(false)
     }
-    setBiens(biensStore.getAll())
-    setShowForm(false)
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm('Supprimer ce bien ?')) return
-    biensStore.delete(id)
-    setBiens(biensStore.getAll())
+    await deleteBien(id)
+    await reload()
   }
 
   return (
@@ -66,31 +79,36 @@ export default function BiensPage() {
       </div>
 
       <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
-        {biens.length === 0 && (
+        {loading ? (
+          <div className="flex items-center justify-center py-12 text-gray-400">
+            <Loader2 size={20} className="animate-spin mr-2" /> Chargement...
+          </div>
+        ) : biens.length === 0 ? (
           <div className="text-center text-gray-400 py-12">
             <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <Home size={28} className="text-gray-400" />
             </div>
             <p>Aucun bien enregistré</p>
           </div>
+        ) : (
+          biens.map(b => (
+            <div key={b.id} className="bg-white rounded-xl shadow-sm p-4 flex items-start justify-between">
+              <div>
+                <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-1 ${
+                  b.type === 'studio' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                }`}>
+                  {TYPES.find(t => t.value === b.type)?.label}
+                </span>
+                <p className="font-semibold text-gray-900">{b.adresse}</p>
+                <p className="text-sm text-gray-500">{b.codePostal} {b.ville}</p>
+              </div>
+              <div className="flex gap-2 ml-2">
+                <button onClick={() => openEdit(b)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
+                <button onClick={() => handleDelete(b.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
+              </div>
+            </div>
+          ))
         )}
-        {biens.map(b => (
-          <div key={b.id} className="bg-white rounded-xl shadow-sm p-4 flex items-start justify-between">
-            <div>
-              <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-1 ${
-                b.type === 'studio' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-              }`}>
-                {TYPES.find(t => t.value === b.type)?.label}
-              </span>
-              <p className="font-semibold text-gray-900">{b.adresse}</p>
-              <p className="text-sm text-gray-500">{b.codePostal} {b.ville}</p>
-            </div>
-            <div className="flex gap-2 ml-2">
-              <button onClick={() => openEdit(b)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
-              <button onClick={() => handleDelete(b.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
-            </div>
-          </div>
-        ))}
       </div>
 
       {showForm && (
@@ -126,8 +144,7 @@ export default function BiensPage() {
                 <input
                   value={form.adresse}
                   onChange={e => setForm(f => ({ ...f, adresse: e.target.value }))}
-                  required
-                  placeholder="10 rue de la Paix"
+                  required placeholder="10 rue de la Paix"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
                 />
               </div>
@@ -137,8 +154,7 @@ export default function BiensPage() {
                   <input
                     value={form.codePostal}
                     onChange={e => setForm(f => ({ ...f, codePostal: e.target.value }))}
-                    required
-                    placeholder="75001"
+                    required placeholder="75001"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
                   />
                 </div>
@@ -147,17 +163,17 @@ export default function BiensPage() {
                   <input
                     value={form.ville}
                     onChange={e => setForm(f => ({ ...f, ville: e.target.value }))}
-                    required
-                    placeholder="Paris"
+                    required placeholder="Paris"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
                   />
                 </div>
               </div>
               <button
                 type="submit"
-                className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl transition-colors"
+                disabled={saving}
+                className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
               >
-                {editing ? 'Enregistrer' : 'Ajouter'}
+                {saving ? <><Loader2 size={16} className="animate-spin" /> Enregistrement...</> : editing ? 'Enregistrer' : 'Ajouter'}
               </button>
             </form>
           </div>
