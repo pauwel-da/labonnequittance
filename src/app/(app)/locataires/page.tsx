@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { locatairesStore, biensStore, generateId } from '@/lib/store'
 import type { Locataire, Bien } from '@/lib/types'
+import { Plus, Users, Pencil, Trash2, X, AlertTriangle } from 'lucide-react'
 
 const emptyForm = {
   nom: '', prenom: '', bienId: '', loyer: '', charges: '', dateDebut: '',
@@ -76,20 +77,22 @@ export default function LocatairesPage() {
           onClick={openNew}
           className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
         >
-          <span className="text-xl">+</span> Ajouter un locataire
+          <Plus size={18} /> Ajouter un locataire
         </button>
       </div>
 
       {biens.length === 0 && (
         <div className="mx-4 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-          ⚠️ Vous devez d&apos;abord créer un bien immobilier.
+          <AlertTriangle size={14} className="inline mr-1" /> Vous devez d&apos;abord créer un bien immobilier.
         </div>
       )}
 
       <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {locataires.length === 0 && (
           <div className="text-center text-gray-400 py-12">
-            <div className="text-5xl mb-3">👥</div>
+            <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Users size={28} className="text-gray-400" />
+            </div>
             <p>Aucun locataire enregistré</p>
           </div>
         )}
@@ -110,8 +113,8 @@ export default function LocatairesPage() {
                   </p>
                 </div>
                 <div className="flex gap-2 ml-2">
-                  <button onClick={() => openEdit(l)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg">✏️</button>
-                  <button onClick={() => handleDelete(l.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg">🗑️</button>
+                  <button onClick={() => openEdit(l)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
+                  <button onClick={() => handleDelete(l.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
                 </div>
               </div>
             </div>
@@ -125,7 +128,7 @@ export default function LocatairesPage() {
           <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold">{editing ? 'Modifier' : 'Nouveau locataire'}</h2>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 text-2xl leading-none">&times;</button>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">

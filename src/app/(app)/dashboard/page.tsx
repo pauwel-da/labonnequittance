@@ -5,69 +5,116 @@ import { locatairesStore, biensStore, proprietaireStore } from '@/lib/store'
 import { genererQuittance } from '@/lib/quittance'
 import type { Locataire, Bien, Proprietaire } from '@/lib/types'
 import Link from 'next/link'
+import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, Loader2 } from 'lucide-react'
+
+function monthLabel(year: number, month: number) {
+  return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
 
 export default function DashboardPage() {
+  const today = new Date()
+  const [year, setYear] = useState(today.getFullYear())
+  const [month, setMonth] = useState(today.getMonth())
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
   const [generating, setGenerating] = useState<string | null>(null)
-  const [selectedLocataire, setSelectedLocataire] = useState<Locataire | null>(null)
-  const [datePaiement, setDatePaiement] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     setLocataires(locatairesStore.getAll())
     setBiens(biensStore.getAll())
     setProprietaire(proprietaireStore.get())
-    const today = new Date()
-    setDatePaiement(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`)
   }, [])
 
-  function getBien(id: string) {
+  function prevMonth() {
+    if (month === 0) { setYear(y => y - 1); setMonth(11) }
+    else setMonth(m => m - 1)
+  }
+
+  function nextMonth() {
+    if (month === 11) { setYear(y => y + 1); setMonth(0) }
+    else setMonth(m => m + 1)
+  }
+
+  function getBien(id: string): Bien | undefined {
     return biens.find(b => b.id === id)
   }
 
-  function openModal(l: Locataire) {
-    setSelectedLocataire(l)
-    setError(null)
-  }
-
-  async function handleGenerate() {
-    if (!selectedLocataire || !proprietaire || !datePaiement) return
-    const bien = getBien(selectedLocataire.bienId)
-    if (!bien) { setError('Bien introuvable.'); return }
-    if (!proprietaire.nom && !proprietaire.prenom) {
-      setError('Veuillez renseigner votre profil (nom, adresse).')
+  async function handleGenerate(l: Locataire) {
+    const bien = getBien(l.bienId)
+    if (!bien) { setErrors(e => ({ ...e, [l.id]: 'Bien introuvable.' })); return }
+    if (!proprietaire?.nom && !proprietaire?.prenom) {
+      setErrors(e => ({ ...e, [l.id]: 'Renseignez votre profil.' }))
       return
     }
-
-    setGenerating(selectedLocataire.id)
-    setError(null)
+    const datePaiement = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    setGenerating(l.id)
+    setErrors(e => { const n = { ...e }; delete n[l.id]; return n })
     try {
-      await genererQuittance(selectedLocataire, bien, proprietaire, datePaiement)
-      setSelectedLocataire(null)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erreur lors de la génération.')
+      await genererQuittance(l, bien, proprietaire!, datePaiement)
+    } catch {
+      setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la génération.' }))
     } finally {
       setGenerating(null)
     }
   }
 
-  const isLoading = generating !== null
+  const totalMensuel = locataires.reduce((s, l) => s + l.loyer + l.charges, 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-8">
-        <h1 className="text-2xl font-bold">Tableau de bord</h1>
-        <p className="text-green-100 text-sm mt-1">
-          {locataires.length} locataire{locataires.length !== 1 ? 's' : ''}
-        </p>
+      {/* Header */}
+      <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-6">
+        <h1 className="text-2xl font-bold mb-4">Générer des quittances</h1>
+
+        {/* Sélecteur de mois */}
+        <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
+          <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
+            <ChevronLeft size={20} />
+          </button>
+          <span className="font-semibold text-base capitalize">{monthLabel(year, month)}</span>
+          <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </header>
 
-      <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
-        {locataires.length === 0 && (
+      {/* Résumé */}
+      {locataires.length > 0 && (
+        <div className="px-4 lg:px-8 py-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
+              <div className="bg-green-50 p-2 rounded-lg">
+                <Users size={18} className="text-[#008020]" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Locataires</p>
+                <p className="text-xl font-bold text-gray-900">{locataires.length}</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
+              <div className="bg-green-50 p-2 rounded-lg">
+                <FileText size={18} className="text-[#008020]" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Total / mois</p>
+                <p className="text-xl font-bold text-gray-900">
+                  {totalMensuel.toLocaleString('fr-FR', { minimumFractionDigits: 0 })} €
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Liste des locataires */}
+      <div className="px-4 lg:px-8 pb-6 space-y-3 max-w-4xl mx-auto">
+        {locataires.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
-            <div className="text-6xl mb-4">🏡</div>
+            <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Home size={28} className="text-gray-400" />
+            </div>
             <p className="font-medium text-gray-600 mb-1">Aucun locataire</p>
             <p className="text-sm mb-6">Commencez par ajouter un bien puis un locataire.</p>
             <div className="flex gap-3 justify-center">
@@ -79,91 +126,60 @@ export default function DashboardPage() {
               </Link>
             </div>
           </div>
-        )}
+        ) : (
+          locataires.map(l => {
+            const bien = getBien(l.bienId)
+            const total = l.loyer + l.charges
+            const isGen = generating === l.id
 
-        {locataires.map(l => {
-          const bien = getBien(l.bienId)
-          const total = l.loyer + l.charges
-          const isGen = generating === l.id
-          return (
-            <div key={l.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900 text-base">{l.prenom} {l.nom}</p>
-                    {bien && (
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {bien.adresse} · {bien.ville}
+            return (
+              <div key={l.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-semibold text-gray-900">{l.prenom} {l.nom}</p>
+                      {bien && (
+                        <p className="text-sm text-gray-500 mt-0.5">{bien.adresse}, {bien.ville}</p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-[#008020] text-lg">
+                        {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
                       </p>
+                      <p className="text-xs text-gray-400">/ mois</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 text-xs text-gray-400 mb-4">
+                    <span>Loyer HC : {l.loyer.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                    <span>·</span>
+                    <span>Charges : {l.charges.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+
+                  {errors[l.id] && (
+                    <div className="flex items-center gap-2 text-red-600 text-sm mb-3">
+                      <AlertCircle size={14} />
+                      {errors[l.id]}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => handleGenerate(l)}
+                    disabled={!!generating}
+                    className="w-full flex items-center justify-center gap-2 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                  >
+                    {isGen ? (
+                      <><Loader2 size={16} className="animate-spin" /> Génération...</>
+                    ) : (
+                      <><Download size={16} /> Quittance {monthLabel(year, month)}</>
                     )}
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-[#008020]">
-                      {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
-                    </p>
-                    <p className="text-xs text-gray-400">/mois</p>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-3 text-xs text-gray-400">
-                  <span>HC: {l.loyer.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
-                  <span>·</span>
-                  <span>Charges: {l.charges.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={() => openModal(l)}
-                disabled={isLoading}
-                className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-3 transition-colors flex items-center justify-center gap-2"
-              >
-                {isGen ? (
-                  <>
-                    <span className="animate-spin">⏳</span> Génération en cours...
-                  </>
-                ) : (
-                  <>📄 Générer la quittance</>
-                )}
-              </button>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
-
-      {selectedLocataire && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedLocataire(null)} />
-          <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold">Générer la quittance</h2>
-              <button onClick={() => setSelectedLocataire(null)} className="text-gray-400 text-2xl leading-none">&times;</button>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Pour <span className="font-medium">{selectedLocataire.prenom} {selectedLocataire.nom}</span>
-            </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date de paiement</label>
-              <input
-                type="date"
-                value={datePaiement}
-                onChange={e => setDatePaiement(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
-              />
-              <p className="text-xs text-gray-400 mt-1">La quittance couvrira le mois correspondant à cette date.</p>
-            </div>
-            {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
-            <button
-              onClick={handleGenerate}
-              disabled={isLoading || !datePaiement}
-              className="mt-5 w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <><span className="animate-spin">⏳</span> Génération...</>
-              ) : (
-                <>📥 Télécharger la quittance PDF</>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
