@@ -112,6 +112,23 @@ export default function SignupPage() {
                   </div>
                 </div>
 
+                {/* Consentement */}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="consent"
+                    required
+                    className="mt-0.5 w-4 h-4 shrink-0 accent-[#008020] cursor-pointer"
+                  />
+                  <span className="text-xs text-gray-500 leading-relaxed">
+                    En continuant, j'accepte les{' '}
+                    <a href="/cgu" target="_blank" className="text-[#008020] hover:underline">Conditions générales d'utilisation</a>
+                    , la{' '}
+                    <a href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</a>
+                    {' '}et d'être inscrit à la newsletter.
+                  </span>
+                </label>
+
                 {error && (
                   <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                     {error}
