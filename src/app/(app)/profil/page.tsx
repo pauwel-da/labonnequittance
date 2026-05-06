@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { proprietaireStore } from '@/lib/store'
 import type { Proprietaire } from '@/lib/types'
 import SignaturePad from '@/components/SignaturePad'
+import { signOut } from '@/app/(app)/actions'
 
 export default function ProfilPage() {
   const [form, setForm] = useState<Proprietaire>({
@@ -21,13 +22,13 @@ export default function ProfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-[#008020] text-white px-4 pt-10 pb-5">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-5">
         <h1 className="text-2xl font-bold">Mon profil</h1>
         <p className="text-green-100 text-sm mt-1">Informations du bailleur</p>
       </header>
 
-      <div className="px-4 mt-6">
+      <div className="px-4 lg:px-8 mt-6 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
             <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Identité</h2>
@@ -106,6 +107,16 @@ export default function ProfilPage() {
             }`}
           >
             {saved ? '✓ Enregistré !' : 'Enregistrer'}
+          </button>
+        </form>
+
+        {/* Bouton déconnexion — visible uniquement sur mobile (le sidebar desktop a le sien) */}
+        <form action={signOut} className="mt-4 lg:hidden">
+          <button
+            type="submit"
+            className="w-full py-3 rounded-xl border border-gray-200 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+          >
+            🚪 Se déconnecter
           </button>
         </form>
       </div>
