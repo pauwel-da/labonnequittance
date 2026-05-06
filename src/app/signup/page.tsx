@@ -3,17 +3,19 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, Mail, Lock } from 'lucide-react'
+import { Loader2, Mail, Lock, ArrowRight } from 'lucide-react'
 import { signup } from './actions'
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    setEmail(formData.get('email') as string)
     setError(null)
     startTransition(async () => {
       const result = await signup(formData)
@@ -26,22 +28,48 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
 
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           {success ? (
-            <div className="text-center py-4">
-              <div className="bg-green-50 rounded-full w-14 h-14 flex items-center justify-center mx-auto mb-4">
-                <Mail size={24} className="text-[#008020]" />
+            <div className="text-center">
+              {/* Icône */}
+              <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-5">
+                <Mail size={28} className="text-[#008020]" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900 mb-2">Vérifiez vos emails</h2>
-              <p className="text-sm text-gray-500">
-                Un lien de confirmation a été envoyé à votre adresse. Cliquez dessus pour activer votre compte.
+
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Confirmez votre email</h2>
+              <p className="text-sm text-gray-500 mb-1">Un lien de confirmation a été envoyé à</p>
+              <p className="text-sm font-semibold text-gray-800 mb-6">{email}</p>
+
+              {/* Étapes */}
+              <div className="text-left space-y-3 mb-6">
+                {[
+                  'Ouvrez votre boîte mail',
+                  'Cliquez sur le lien de confirmation',
+                  'Connectez-vous à votre compte',
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[#008020] text-white text-xs font-bold flex items-center justify-center shrink-0">
+                      {i + 1}
+                    </div>
+                    <span className="text-sm text-gray-600">{step}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-gray-400 mb-6">
+                Pensez à vérifier vos spams si vous ne trouvez pas l'email.
               </p>
+
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              >
+                Aller à la connexion <ArrowRight size={16} />
+              </Link>
             </div>
           ) : (
             <>

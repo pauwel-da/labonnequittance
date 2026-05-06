@@ -98,7 +98,7 @@ export default function ProfilPage() {
           <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
             <div>
               <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Signature</h2>
-              <p className="text-xs text-gray-400 mt-1">Dessinez votre signature — elle sera apposée sur chaque quittance.</p>
+              <p className="text-xs text-gray-400 mt-1">Dessinez votre signature. Elle sera apposée sur chaque quittance.</p>
             </div>
             <SignaturePad
               value={form.signature}
