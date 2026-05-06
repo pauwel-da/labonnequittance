@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 import tempfile
 from datetime import datetime
 from io import BytesIO
@@ -54,6 +55,32 @@ def _fill_fields(writer, field_values):
                 kid = kid_ref.get_object()
                 if "/AP" in kid:
                     del kid["/AP"]
+
+
+def _reduce_font_size(writer, field_names, reduction=2):
+    """Reduce the /DA font size for specific fields."""
+    acroform = writer._root_object.get("/AcroForm")
+    form_da = ""
+    if acroform:
+        da_obj = acroform.get_object().get("/DA")
+        if da_obj:
+            form_da = str(da_obj)
+
+    for obj in _iter_acroform_fields(writer):
+        t = obj.get("/T")
+        if t is None or str(t) not in field_names:
+            continue
+        da_obj = obj.get("/DA")
+        da_str = str(da_obj) if da_obj else form_da
+        if not da_str:
+            continue
+
+        def replace_size(m):
+            new_size = max(4, float(m.group(1)) - reduction)
+            return m.group(0).replace(m.group(1), f"{new_size:g}")
+
+        new_da = re.sub(r"(\d+(?:\.\d+)?)\s+Tf", replace_size, da_str)
+        obj.update({NameObject("/DA"): create_string_object(new_da)})
 
 
 def _lock_all_fields(writer):
@@ -134,35 +161,69 @@ def lambda_handler(event, context):
     total = loyer + charges
 
     def fmt(n):
-        return f"{n:,.2f}".replace(",", " ").replace(".", ",") + " €"
+        return f"{n:,.2f}".replace(",", " ").replace(".", ",")
+
+    proprietaire_nom  = body.get("proprietaire_prenom_nom", "")
+    locataire_nom     = body.get("locataire_prenom_nom", "")
+    ville             = body.get("fait_a", "")
+    date_debut        = body.get("date_debut_periode_paiement", "")
+    date_fin          = body.get("date_fin_periode_paiement", "")
+    date_paiement_str = body.get("date_paiement", "")
+    fait_le           = datetime.now().strftime("%d/%m/%Y")
 
     fields = {
-        "proprietaire_prenom_nom":           body.get("proprietaire_prenom_nom", ""),
-        "proprietaire_rue":                  body.get("proprietaire_rue", ""),
+        # ── Identité ──────────────────────────────────────────────────────────
+        "proprietaire_prenom_nom":             proprietaire_nom,
+        "proprietaire_rue":                    body.get("proprietaire_rue", ""),
         "proprietaire_code_postal_ville_pays": body.get("proprietaire_code_postal_ville_pays", ""),
-        "locataire_prenom_nom":              body.get("locataire_prenom_nom", ""),
-        "locataire_rue":                     body.get("locataire_rue", ""),
-        "locataire_code_postal_ville":       body.get("locataire_code_postal_ville", ""),
-        "locataire_rue_code_postal_ville":   body.get("locataire_rue_code_postal_ville", ""),
-        "montant_loyer_hors_charges":        fmt(loyer),
-        "montant_charges":                   fmt(charges),
-        "montant_total_paye":                fmt(total),
-        "date_debut_periode_paiement":       body.get("date_debut_periode_paiement", ""),
-        "date_fin_periode_paiement":         body.get("date_fin_periode_paiement", ""),
-        "date_paiement":                     body.get("date_paiement", ""),
-        "fait_a":                            body.get("fait_a", ""),
-        "fait_le":                           datetime.now().strftime("%d/%m/%Y"),
-        # signature field kept as empty text — image is overlaid separately
-        "signature":                         "",
+        "locataire_prenom_nom":                locataire_nom,
+        "locataire_rue":                       body.get("locataire_rue", ""),
+        "locataire_code_postal_ville":         body.get("locataire_code_postal_ville", ""),
+        "locataire_rue_code_postal_ville":     body.get("locataire_rue_code_postal_ville", ""),
+        # ── Montants ──────────────────────────────────────────────────────────
+        "montant_loyer_hors_charges":          fmt(loyer),
+        "montant_charges":                     fmt(charges),
+        "montant_total_paye":                  fmt(total),
+        # ── Dates (v1) ────────────────────────────────────────────────────────
+        "date_debut_periode_paiement":         date_debut,
+        "date_fin_periode_paiement":           date_fin,
+        "date_paiement":                       date_paiement_str,
+        "fait_a":                              ville,
+        "fait_le":                             fait_le,
+        # ── Champs v2 ─────────────────────────────────────────────────────────
+        "fait_le_a": (
+            f"Fait le {fait_le}, à {ville}"
+        ),
+        "texte_global": (
+            f"Je soussigné {proprietaire_nom} propriétaire du logement désigné "
+            f"ci-dessus, déclare avoir reçu de {locataire_nom}, la somme de {fmt(total)} "
+            f"euros, au titre du paiement du loyer et des charges pour la période de location "
+            f"du {date_debut} au {date_fin} et lui en donne quittance, sous réserve de tous mes droits."
+        ),
+        "texte_loi": (
+            "Cette quittance annule tous les reçus qui auraient pu être établis "
+            "précédemment en cas de paiement partiel du montant du présent terme. "
+            "Elle est à conserver pendant trois ans par le locataire "
+            "(loi n° 89-462 du 6 juillet 1989 : art. 7-1)."
+        ),
+        # ── Signature ─────────────────────────────────────────────────────────
+        "signature":                           "",
     }
 
-    template_path = os.path.join(os.path.dirname(__file__), "modele.pdf")
+    template_path = os.path.join(os.path.dirname(__file__), "modele_v2.pdf")
+    if os.path.exists(template_path):
+        # v2 : date_paiement contient la phrase complète
+        fields["date_paiement"] = f"Date du paiement le : {date_paiement_str}"
+    else:
+        template_path = os.path.join(os.path.dirname(__file__), "modele.pdf")
+        # v1 : date_paiement est la date brute (déjà définie ci-dessus)
 
     reader = PdfReader(template_path)
     writer = PdfWriter()
     writer.clone_reader_document_root(reader)
 
     _fill_fields(writer, fields)
+    _reduce_font_size(writer, {"date_debut_periode_paiement", "date_fin_periode_paiement"}, reduction=2)
     _lock_all_fields(writer)
 
     if writer._root_object.get("/AcroForm"):
