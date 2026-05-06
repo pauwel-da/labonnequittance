@@ -18,6 +18,8 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas as rl_canvas
 
 _FF_READ_ONLY = 1
+_FF_MULTILINE = 4096       # bit 13
+_FF_RICH_TEXT = 33554432   # bit 26
 
 
 # ── Field filling helpers ─────────────────────────────────────────────────────
@@ -81,6 +83,52 @@ def _reduce_font_size(writer, field_names, reduction=2):
 
         new_da = re.sub(r"(\d+(?:\.\d+)?)\s+Tf", replace_size, da_str)
         obj.update({NameObject("/DA"): create_string_object(new_da)})
+
+
+def _xml_escape(s):
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def _set_multiline(writer, field_names):
+    """Enable the Multiline flag on specified fields."""
+    for obj in _iter_acroform_fields(writer):
+        t = obj.get("/T")
+        if t is None or str(t) not in field_names:
+            continue
+        ff = int(obj.get("/Ff", 0))
+        obj.update({NameObject("/Ff"): NumberObject(ff | _FF_MULTILINE)})
+
+
+def _set_rich_text(writer, field_name, plain_value, segments):
+    """Set /V (plain) and /RV (rich text) on a field.
+
+    segments: list of (text, bold) tuples that make up the paragraph.
+    """
+    spans = "".join(
+        f'<span style="font-weight:bold">{_xml_escape(t)}</span>' if bold
+        else f'<span>{_xml_escape(t)}</span>'
+        for t, bold in segments
+    )
+    rv = (
+        '<?xml version="1.0"?>'
+        '<body xmlns="http://www.w3.org/1999/xhtml" '
+        'xmlns:xfa="http://www.xfa.org/schema/xfa-data/1.0/" '
+        'xfa:APIVersion="Acrobat:1.0.0" xfa:spec="2.0.2">'
+        f'<p dir="ltr">{spans}</p>'
+        '</body>'
+    )
+    for obj in _iter_acroform_fields(writer):
+        t = obj.get("/T")
+        if t is None or str(t) != field_name:
+            continue
+        ff = int(obj.get("/Ff", 0))
+        obj.update({
+            NameObject("/Ff"):  NumberObject(ff | _FF_RICH_TEXT),
+            NameObject("/V"):   create_string_object(plain_value),
+            NameObject("/RV"):  create_string_object(rv),
+        })
+        if "/AP" in obj:
+            del obj["/AP"]
 
 
 def _lock_all_fields(writer):
@@ -202,7 +250,7 @@ def lambda_handler(event, context):
         ),
         "texte_loi": (
             "Cette quittance annule tous les reçus qui auraient pu être établis "
-            "précédemment en cas de paiement partiel du montant du présent terme. "
+            "précédemment en cas de paiement partiel du montant du présent terme.\n"
             "Elle est à conserver pendant trois ans par le locataire "
             "(loi n° 89-462 du 6 juillet 1989 : art. 7-1)."
         ),
@@ -224,6 +272,19 @@ def lambda_handler(event, context):
 
     _fill_fields(writer, fields)
     _reduce_font_size(writer, {"date_debut_periode_paiement", "date_fin_periode_paiement"}, reduction=2)
+    _set_multiline(writer, {"texte_loi"})
+    _set_rich_text(writer, "texte_global", fields["texte_global"], [
+        (
+            f"Je soussigné {proprietaire_nom} propriétaire du logement désigné "
+            f"ci-dessus, déclare avoir reçu de {locataire_nom}, la somme de {fmt(total)} "
+            f"euros, au titre du paiement du loyer et des charges pour la période de location du ",
+            False,
+        ),
+        (date_debut, True),
+        (" au ", False),
+        (date_fin, True),
+        (" et lui en donne quittance, sous réserve de tous mes droits.", False),
+    ])
     _lock_all_fields(writer)
 
     if writer._root_object.get("/AcroForm"):
