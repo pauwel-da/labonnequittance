@@ -1,0 +1,21 @@
+{
+  "name": "La Bonne Quittance",
+  "short_name": "Quittance",
+  "description": "Gérez vos quittances de loyer simplement",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#008020",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
