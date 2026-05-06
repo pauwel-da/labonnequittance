@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { getProprietaire, saveProprietaire } from '@/lib/db'
 import type { Proprietaire } from '@/lib/types'
 import SignaturePad from '@/components/SignaturePad'
 import { signOut } from '@/app/(app)/actions'
+
 
 export default function ProfilPage() {
   const [form, setForm] = useState<Proprietaire>({
@@ -12,6 +13,7 @@ export default function ProfilPage() {
   })
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isSigningOut, startSignOut] = useTransition()
 
   useEffect(() => { getProprietaire().then(setForm) }, [])
 
@@ -123,14 +125,13 @@ export default function ProfilPage() {
         </form>
 
         {/* Bouton déconnexion — visible uniquement sur mobile (le sidebar desktop a le sien) */}
-        <form action={signOut} className="mt-4 lg:hidden">
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl border border-gray-200 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
-          >
-            🚪 Se déconnecter
-          </button>
-        </form>
+        <button
+          onClick={() => startSignOut(async () => { await signOut() })}
+          disabled={isSigningOut}
+          className="mt-4 lg:hidden w-full py-3 rounded-xl border border-gray-200 text-gray-500 text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+        >
+          {isSigningOut ? 'Déconnexion...' : 'Se déconnecter'}
+        </button>
       </div>
     </div>
   )
