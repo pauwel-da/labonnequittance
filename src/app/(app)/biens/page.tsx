@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { biensStore, generateId } from '@/lib/store'
 import type { Bien, BienType } from '@/lib/types'
+import { Plus, Home, Pencil, Trash2, X } from 'lucide-react'
 
 const TYPES: { value: BienType; label: string }[] = [
   { value: 'studio', label: 'Studio' },
@@ -60,14 +61,16 @@ export default function BiensPage() {
           onClick={openNew}
           className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
         >
-          <span className="text-xl">+</span> Ajouter un bien
+          <Plus size={18} /> Ajouter un bien
         </button>
       </div>
 
       <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {biens.length === 0 && (
           <div className="text-center text-gray-400 py-12">
-            <div className="text-5xl mb-3">🏠</div>
+            <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <Home size={28} className="text-gray-400" />
+            </div>
             <p>Aucun bien enregistré</p>
           </div>
         )}
@@ -83,8 +86,8 @@ export default function BiensPage() {
               <p className="text-sm text-gray-500">{b.codePostal} {b.ville}</p>
             </div>
             <div className="flex gap-2 ml-2">
-              <button onClick={() => openEdit(b)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg">✏️</button>
-              <button onClick={() => handleDelete(b.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg">🗑️</button>
+              <button onClick={() => openEdit(b)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
+              <button onClick={() => handleDelete(b.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
@@ -96,7 +99,7 @@ export default function BiensPage() {
           <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-semibold">{editing ? 'Modifier le bien' : 'Nouveau bien'}</h2>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 text-2xl leading-none">&times;</button>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg"><X size={20} /></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
