@@ -49,13 +49,13 @@ export default function BiensPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-[#008020] text-white px-4 pt-10 pb-5">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-5">
         <h1 className="text-2xl font-bold">Mes biens</h1>
         <p className="text-green-100 text-sm mt-1">{biens.length} bien{biens.length !== 1 ? 's' : ''}</p>
       </header>
 
-      <div className="px-4 -mt-3">
+      <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
         <button
           onClick={openNew}
           className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
@@ -64,7 +64,7 @@ export default function BiensPage() {
         </button>
       </div>
 
-      <div className="px-4 mt-4 space-y-3">
+      <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {biens.length === 0 && (
           <div className="text-center text-gray-400 py-12">
             <div className="text-5xl mb-3">🏠</div>

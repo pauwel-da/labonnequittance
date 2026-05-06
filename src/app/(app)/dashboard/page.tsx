@@ -56,15 +56,15 @@ export default function DashboardPage() {
   const isLoading = generating !== null
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <header className="bg-[#008020] text-white px-4 pt-10 pb-8">
-        <h1 className="text-2xl font-bold">La Bonne Quittance</h1>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-8">
+        <h1 className="text-2xl font-bold">Tableau de bord</h1>
         <p className="text-green-100 text-sm mt-1">
           {locataires.length} locataire{locataires.length !== 1 ? 's' : ''}
         </p>
       </header>
 
-      <div className="px-4 mt-4 space-y-3">
+      <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {locataires.length === 0 && (
           <div className="text-center py-16 text-gray-400">
             <div className="text-6xl mb-4">🏡</div>

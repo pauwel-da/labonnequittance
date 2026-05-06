@@ -1,11 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { signOut } from '@/app/(app)/actions'
 
 const links = [
-  { href: '/dashboard', label: 'Locataires', icon: '👥' },
+  { href: '/dashboard', label: 'Quittances', icon: '📄' },
   { href: '/biens', label: 'Biens', icon: '🏠' },
+  { href: '/locataires', label: 'Locataires', icon: '👥' },
   { href: '/profil', label: 'Profil', icon: '👤' },
 ]
 
@@ -13,23 +16,62 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-50">
-      {links.map(({ href, label, icon }) => {
-        const active = pathname === href
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex-1 flex flex-col items-center justify-center py-2 text-xs font-medium transition-colors ${
-              active ? 'text-[#008020]' : 'text-gray-500 hover:text-[#008020]'
-            }`}
-          >
-            <span className="text-xl mb-0.5">{icon}</span>
-            <span>{label}</span>
-            {active && <span className="absolute bottom-0 h-0.5 w-12 bg-[#008020] rounded-t" />}
-          </Link>
-        )
-      })}
-    </nav>
+    <>
+      {/* Sidebar desktop */}
+      <aside className="hidden lg:flex flex-col fixed top-0 left-0 h-full w-60 bg-white border-r border-gray-200 z-50">
+        <div className="px-5 py-5 border-b border-gray-100">
+          <Image src="/logo.png" alt="La Bonne Quittance" width={150} height={64} priority />
+        </div>
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {links.map(({ href, label, icon }) => {
+            const active = pathname === href
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-green-50 text-[#008020]'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+              >
+                <span className="text-lg">{icon}</span>
+                {label}
+              </Link>
+            )
+          })}
+        </nav>
+        <div className="px-3 py-4 border-t border-gray-100">
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            >
+              <span className="text-lg">🚪</span>
+              Se déconnecter
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      {/* Barre de navigation mobile */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-50">
+        {links.map(({ href, label, icon }) => {
+          const active = pathname === href
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex-1 flex flex-col items-center justify-center py-2 text-xs font-medium transition-colors ${
+                active ? 'text-[#008020]' : 'text-gray-500 hover:text-[#008020]'
+              }`}
+            >
+              <span className="text-xl mb-0.5">{icon}</span>
+              <span>{label}</span>
+            </Link>
+          )
+        })}
+      </nav>
+    </>
   )
 }
