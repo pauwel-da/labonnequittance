@@ -72,7 +72,7 @@ export default function Home() {
         {/* Features */}
         <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
           {features.map((f) => (
-            <div key={f.title} className="flex flex-col gap-3 bg-gray-50 hover:bg-green-50 rounded-2xl px-5 py-5 transition-colors">
+            <div key={f.title} className="flex flex-col gap-3 bg-gray-50 rounded-2xl px-5 py-5">
               <span className="text-2xl">{f.icon}</span>
               <div>
                 <p className="text-sm font-semibold text-gray-900 mb-1">{f.title}</p>
