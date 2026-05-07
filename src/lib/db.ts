@@ -12,6 +12,7 @@ export async function getBiens(): Promise<Bien[]> {
   if (error) throw error
   return (data ?? []).map(r => ({
     id: r.id,
+    nom: r.nom,
     adresse: r.adresse,
     codePostal: r.code_postal,
     ville: r.ville,
@@ -22,6 +23,7 @@ export async function getBiens(): Promise<Bien[]> {
 export async function addBien(bien: Omit<Bien, 'id'>): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('biens').insert({
+    nom: bien.nom,
     adresse: bien.adresse,
     code_postal: bien.codePostal,
     ville: bien.ville,
@@ -33,6 +35,7 @@ export async function addBien(bien: Omit<Bien, 'id'>): Promise<void> {
 export async function updateBien(id: string, bien: Omit<Bien, 'id'>): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('biens').update({
+    nom: bien.nom,
     adresse: bien.adresse,
     code_postal: bien.codePostal,
     ville: bien.ville,
@@ -58,8 +61,9 @@ export async function getLocataires(): Promise<Locataire[]> {
   if (error) throw error
   return (data ?? []).map(r => ({
     id: r.id,
-    nom: r.nom,
-    prenom: r.prenom,
+    nomPrenom: r.nom_prenom,
+    email: r.email ?? '',
+    copieEmail: r.copie_email ?? false,
     bienId: r.bien_id,
     loyer: Number(r.loyer),
     charges: Number(r.charges),
@@ -70,8 +74,9 @@ export async function getLocataires(): Promise<Locataire[]> {
 export async function addLocataire(l: Omit<Locataire, 'id'>): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('locataires').insert({
-    nom: l.nom,
-    prenom: l.prenom,
+    nom_prenom: l.nomPrenom,
+    email: l.email || null,
+    copie_email: l.copieEmail,
     bien_id: l.bienId,
     loyer: l.loyer,
     charges: l.charges,
@@ -83,8 +88,9 @@ export async function addLocataire(l: Omit<Locataire, 'id'>): Promise<void> {
 export async function updateLocataire(id: string, l: Omit<Locataire, 'id'>): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.from('locataires').update({
-    nom: l.nom,
-    prenom: l.prenom,
+    nom_prenom: l.nomPrenom,
+    email: l.email || null,
+    copie_email: l.copieEmail,
     bien_id: l.bienId,
     loyer: l.loyer,
     charges: l.charges,

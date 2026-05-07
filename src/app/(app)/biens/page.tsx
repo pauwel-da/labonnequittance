@@ -10,7 +10,7 @@ const TYPES: { value: BienType; label: string }[] = [
   { value: 'non_meuble', label: 'Non meublé' },
 ]
 
-const emptyForm = { adresse: '', codePostal: '', ville: '', typeLocation: 'meuble' as BienType }
+const emptyForm = { nom: '', adresse: '', codePostal: '', ville: '', typeLocation: 'meuble' as BienType }
 
 export default function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
@@ -36,7 +36,7 @@ export default function BiensPage() {
 
   function openEdit(b: Bien) {
     setEditing(b)
-    setForm({ adresse: b.adresse, codePostal: b.codePostal, ville: b.ville, typeLocation: b.typeLocation })
+    setForm({ nom: b.nom, adresse: b.adresse, codePostal: b.codePostal, ville: b.ville, typeLocation: b.typeLocation })
     setShowForm(true)
   }
 
@@ -99,8 +99,8 @@ export default function BiensPage() {
                 }`}>
                   {TYPES.find(t => t.value === b.typeLocation)?.label}
                 </span>
-                <p className="font-semibold text-gray-900">{b.adresse}</p>
-                <p className="text-sm text-gray-500">{b.codePostal} {b.ville}</p>
+                <p className="font-semibold text-gray-900">{b.nom}</p>
+                <p className="text-sm text-gray-500">{b.adresse}, {b.codePostal} {b.ville}</p>
               </div>
               <div className="flex gap-2 ml-2">
                 <button onClick={() => openEdit(b)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
@@ -138,6 +138,15 @@ export default function BiensPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom du bien</label>
+                <input
+                  value={form.nom}
+                  onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
+                  required placeholder="Appartement Paris 11e"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>

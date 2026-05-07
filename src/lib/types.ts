@@ -2,6 +2,7 @@ export type BienType = 'meuble' | 'non_meuble'
 
 export interface Bien {
   id: string
+  nom: string
   adresse: string
   codePostal: string
   ville: string
@@ -10,8 +11,9 @@ export interface Bien {
 
 export interface Locataire {
   id: string
-  nom: string
-  prenom: string
+  nomPrenom: string
+  email: string
+  copieEmail: boolean
   bienId: string
   loyer: number
   charges: number

@@ -32,7 +32,7 @@ export async function genererQuittance(
     proprietaire_prenom_nom: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
     proprietaire_rue: proprietaire.adresse,
     proprietaire_code_postal_ville_pays: `${proprietaire.codePostal} ${proprietaire.ville} - France`,
-    locataire_prenom_nom: `${locataire.prenom} ${locataire.nom}`.trim(),
+    locataire_prenom_nom: locataire.nomPrenom,
     locataire_rue: bien.adresse,
     locataire_code_postal_ville: `${bien.codePostal} ${bien.ville}`,
     locataire_rue_code_postal_ville: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,

@@ -159,8 +159,8 @@ export default function DashboardPage() {
                     <div className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="font-semibold text-gray-900">{l.prenom} {l.nom}</p>
-                          {bien && <p className="text-sm text-gray-500 mt-0.5">{bien.adresse}, {bien.ville}</p>}
+                          <p className="font-semibold text-gray-900">{l.nomPrenom}</p>
+                          {bien && <p className="text-sm text-gray-500 mt-0.5">{bien.nom} — {bien.adresse}, {bien.ville}</p>}
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-[#008020] text-lg">
