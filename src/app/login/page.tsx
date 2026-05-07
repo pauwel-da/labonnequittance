@@ -65,8 +65,12 @@ function LoginForm() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Mot de passe
+          <div className="flex items-center justify-between mb-1">
+            <label htmlFor="password" className="text-sm font-medium text-gray-700">Mot de passe</label>
+            <Link href="/auth/reset-password" className="text-xs text-[#008020] hover:underline">
+              Mot de passe oublié ?
+            </Link>
+          </div>
           </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
