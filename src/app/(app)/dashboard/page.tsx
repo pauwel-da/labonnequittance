@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getBiens, getLocataires, getProprietaire } from '@/lib/db'
 import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/lib/quittance'
+import { renderPdfFirstPage } from '@/lib/pdfPreview'
 import type { Locataire, Bien, Proprietaire } from '@/lib/types'
 import Link from 'next/link'
 import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, Loader2, CalendarDays, Eye, Send, X, CheckCircle } from 'lucide-react'
@@ -31,6 +32,7 @@ export default function DashboardPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [datesReglement, setDatesReglement] = useState<Record<string, string>>({})
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewName, setPreviewName] = useState('')
 
   useEffect(() => {
@@ -98,16 +100,15 @@ export default function DashboardPage() {
     clearError(l.id)
     try {
       const { blob, filename } = await fetchQuittanceBlob(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
-      const url = URL.createObjectURL(blob)
-      // Sur mobile, ouvrir dans un nouvel onglet (iframe non supportée)
+      setPreviewName(filename)
       if (window.innerWidth < 1024) {
-        window.open(url, '_blank')
-        // Délai pour laisser le temps au navigateur d'ouvrir avant de révoquer
-        setTimeout(() => URL.revokeObjectURL(url), 10000)
+        // Mobile : rendu en image via pdf.js
+        const imageDataUrl = await renderPdfFirstPage(blob)
+        setPreviewImage(imageDataUrl)
       } else {
+        // Desktop : iframe
         if (previewUrl) URL.revokeObjectURL(previewUrl)
-        setPreviewUrl(url)
-        setPreviewName(filename)
+        setPreviewUrl(URL.createObjectURL(blob))
       }
     } catch {
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la prévisualisation.' }))
@@ -153,6 +154,7 @@ export default function DashboardPage() {
   function closePreview() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(null)
+    setPreviewImage(null)
   }
 
   const totalMensuel = locataires.reduce((s, l) => s + l.loyer + l.charges, 0)
@@ -315,17 +317,14 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* Modal prévisualisation PDF */}
+      {/* Modal prévisualisation PDF — desktop (iframe) */}
       {previewUrl && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/90">
           <div className="flex items-center justify-between px-4 py-3 bg-white shadow-sm">
             <span className="text-sm font-medium text-gray-700 truncate">{previewName}</span>
             <div className="flex items-center gap-2 ml-4 shrink-0">
-              <a
-                href={previewUrl}
-                download={previewName}
-                className="text-sm text-[#008020] font-medium flex items-center gap-1.5 hover:underline"
-              >
+              <a href={previewUrl} download={previewName}
+                className="text-sm text-[#008020] font-medium flex items-center gap-1.5 hover:underline">
                 <Download size={14} /> Télécharger
               </a>
               <button onClick={closePreview} className="ml-2 text-gray-400 hover:text-gray-600 p-1 rounded-lg">
@@ -333,11 +332,23 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
-          <iframe
-            src={previewUrl}
-            className="flex-1 w-full bg-gray-100"
-            title="Prévisualisation quittance"
-          />
+          <iframe src={previewUrl} className="flex-1 w-full bg-gray-100" title="Prévisualisation quittance" />
+        </div>
+      )}
+
+      {/* Modal prévisualisation PDF — mobile (image) */}
+      {previewImage && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/90">
+          <div className="flex items-center justify-between px-4 py-3 bg-white shadow-sm">
+            <span className="text-sm font-medium text-gray-700 truncate">{previewName}</span>
+            <button onClick={closePreview} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg ml-4">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto bg-gray-100 flex justify-center p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewImage} alt="Prévisualisation quittance" className="w-full max-w-lg rounded shadow-lg" />
+          </div>
         </div>
       )}
     </div>
