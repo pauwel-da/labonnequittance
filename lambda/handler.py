@@ -260,9 +260,16 @@ def lambda_handler(event, context):
         "signature":                           "",
     }
 
-    # Sélection du template : v3 > v2 > v1
+    # Sélection du template : v4 (meublé/non meublé) > v3 > v2 > v1
     base = os.path.dirname(__file__)
-    if os.path.exists(os.path.join(base, "modele_v3.pdf")):
+    type_location = body.get("type_location", "")
+    if type_location == "meuble" and os.path.exists(os.path.join(base, "modele_v4_meuble.pdf")):
+        template_path = os.path.join(base, "modele_v4_meuble.pdf")
+        fields["date_paiement"] = f"Date du paiement le : {date_paiement_str}"
+    elif type_location == "non_meuble" and os.path.exists(os.path.join(base, "modele_v4_non_meuble.pdf")):
+        template_path = os.path.join(base, "modele_v4_non_meuble.pdf")
+        fields["date_paiement"] = f"Date du paiement le : {date_paiement_str}"
+    elif os.path.exists(os.path.join(base, "modele_v3.pdf")):
         template_path = os.path.join(base, "modele_v3.pdf")
         fields["date_paiement"] = f"Date du paiement le : {date_paiement_str}"
     elif os.path.exists(os.path.join(base, "modele_v2.pdf")):
