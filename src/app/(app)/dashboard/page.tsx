@@ -271,39 +271,33 @@ export default function DashboardPage() {
                         </div>
                       )}
 
-                      {/* Actions secondaires */}
-                      <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           onClick={() => handlePreview(l)}
                           disabled={isBusy}
-                          className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 text-gray-700 text-sm font-medium py-2.5 rounded-lg transition-colors"
+                          className="flex items-center justify-center gap-1.5 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
                         >
                           {isPrev ? <Loader2 size={15} className="animate-spin" /> : <Eye size={15} />}
-                          Prévisualiser
+                          Voir
                         </button>
                         <button
                           onClick={() => handleSend(l)}
                           disabled={isBusy || !l.email}
                           title={!l.email ? 'Aucun email renseigné' : undefined}
-                          className="flex items-center justify-center gap-2 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 text-gray-700 text-sm font-medium py-2.5 rounded-lg transition-colors"
+                          className="flex items-center justify-center gap-1.5 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
                         >
                           {isSend ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                           Envoyer
                         </button>
+                        <button
+                          onClick={() => handleGenerate(l)}
+                          disabled={isBusy}
+                          className="flex items-center justify-center gap-1.5 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+                        >
+                          {isGen ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                          Générer
+                        </button>
                       </div>
-
-                      {/* Action principale */}
-                      <button
-                        onClick={() => handleGenerate(l)}
-                        disabled={isBusy}
-                        className="w-full flex items-center justify-center gap-2 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
-                      >
-                        {isGen ? (
-                          <><Loader2 size={16} className="animate-spin" /> Génération...</>
-                        ) : (
-                          <><Download size={16} /> Quittance {monthLabel(year, month)}</>
-                        )}
-                      </button>
                     </div>
                   </div>
                 )
