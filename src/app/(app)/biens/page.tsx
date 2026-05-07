@@ -6,11 +6,11 @@ import type { Bien, BienType } from '@/lib/types'
 import { Plus, Home, Pencil, Trash2, X, Loader2 } from 'lucide-react'
 
 const TYPES: { value: BienType; label: string }[] = [
-  { value: 'studio', label: 'Studio' },
-  { value: 'appartement', label: 'Appartement' },
+  { value: 'meuble', label: 'Meublé' },
+  { value: 'non_meuble', label: 'Non meublé' },
 ]
 
-const emptyForm = { adresse: '', codePostal: '', ville: '', type: 'appartement' as BienType }
+const emptyForm = { adresse: '', codePostal: '', ville: '', typeLocation: 'meuble' as BienType }
 
 export default function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
@@ -36,7 +36,7 @@ export default function BiensPage() {
 
   function openEdit(b: Bien) {
     setEditing(b)
-    setForm({ adresse: b.adresse, codePostal: b.codePostal, ville: b.ville, type: b.type })
+    setForm({ adresse: b.adresse, codePostal: b.codePostal, ville: b.ville, typeLocation: b.typeLocation })
     setShowForm(true)
   }
 
@@ -95,9 +95,9 @@ export default function BiensPage() {
             <div key={b.id} className="bg-white rounded-xl shadow-sm p-4 flex items-start justify-between">
               <div>
                 <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-1 ${
-                  b.type === 'studio' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                  b.typeLocation === 'meuble' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                 }`}>
-                  {TYPES.find(t => t.value === b.type)?.label}
+                  {TYPES.find(t => t.value === b.typeLocation)?.label}
                 </span>
                 <p className="font-semibold text-gray-900">{b.adresse}</p>
                 <p className="text-sm text-gray-500">{b.codePostal} {b.ville}</p>
@@ -121,15 +121,15 @@ export default function BiensPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type de bien</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type de location</label>
                 <div className="grid grid-cols-2 gap-2">
                   {TYPES.map(t => (
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => setForm(f => ({ ...f, type: t.value }))}
+                      onClick={() => setForm(f => ({ ...f, typeLocation: t.value }))}
                       className={`py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                        form.type === t.value
+                        form.typeLocation === t.value
                           ? 'border-[#008020] bg-green-50 text-[#008020]'
                           : 'border-gray-200 text-gray-600'
                       }`}

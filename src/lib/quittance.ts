@@ -45,6 +45,7 @@ export async function genererQuittance(
     date_paiement: formatDate(new Date(dateReglement)),
     fait_a: proprietaire.ville,
     signature_image: proprietaire.signature || '',
+    type_location: bien.typeLocation,
   }
 
   const response = await fetch(API_URL, {

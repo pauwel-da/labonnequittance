@@ -1,11 +1,11 @@
-export type BienType = 'studio' | 'appartement'
+export type BienType = 'meuble' | 'non_meuble'
 
 export interface Bien {
   id: string
   adresse: string
   codePostal: string
   ville: string
-  type: BienType
+  typeLocation: BienType
 }
 
 export interface Locataire {

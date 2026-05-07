@@ -15,7 +15,7 @@ export async function getBiens(): Promise<Bien[]> {
     adresse: r.adresse,
     codePostal: r.code_postal,
     ville: r.ville,
-    type: r.type,
+    typeLocation: r.type_location,
   }))
 }
 
@@ -25,7 +25,7 @@ export async function addBien(bien: Omit<Bien, 'id'>): Promise<void> {
     adresse: bien.adresse,
     code_postal: bien.codePostal,
     ville: bien.ville,
-    type: bien.type,
+    type_location: bien.typeLocation,
   })
   if (error) throw error
 }
@@ -36,7 +36,7 @@ export async function updateBien(id: string, bien: Omit<Bien, 'id'>): Promise<vo
     adresse: bien.adresse,
     code_postal: bien.codePostal,
     ville: bien.ville,
-    type: bien.type,
+    type_location: bien.typeLocation,
   }).eq('id', id)
   if (error) throw error
 }
