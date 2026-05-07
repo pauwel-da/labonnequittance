@@ -1,14 +1,17 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, Mail, Lock } from 'lucide-react'
+import { Loader2, Mail, Lock, MailCheck } from 'lucide-react'
 import { login } from './actions'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const searchParams = useSearchParams()
+  const message = searchParams.get('message')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -31,8 +34,26 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <h1 className="text-xl font-bold text-gray-900 mb-1">Bon retour !</h1>
-          <p className="text-sm text-gray-500 mb-6">Connectez-vous à votre espace bailleur.</p>
+          {message ? (
+            <>
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="bg-green-50 rounded-full w-14 h-14 flex items-center justify-center mb-4">
+                  <MailCheck size={26} className="text-[#008020]" />
+                </div>
+                <h1 className="text-xl font-bold text-gray-900 mb-2">Vérifiez vos emails</h1>
+                <p className="text-sm text-gray-500">{message}</p>
+                <p className="text-xs text-gray-400 mt-2">Pensez à vérifier vos spams.</p>
+              </div>
+              <div className="border-t border-gray-100 pt-5">
+                <p className="text-xs text-gray-400 text-center mb-4">Déjà confirmé votre compte ?</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">Bon retour !</h1>
+              <p className="text-sm text-gray-500 mb-6">Connectez-vous à votre espace bailleur.</p>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
