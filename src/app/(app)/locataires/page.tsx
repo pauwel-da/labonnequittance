@@ -62,8 +62,14 @@ export default function LocatairesPage() {
   }
 
   function handleEmailChange(value: string) {
-    setForm(f => ({ ...f, email: value, copieEmail: value ? f.copieEmail : false }))
-    if (value && !isValidEmail(value)) {
+    const wasValid = isValidEmail(form.email)
+    const isNowValid = isValidEmail(value)
+    setForm(f => ({
+      ...f,
+      email: value,
+      copieEmail: !value ? false : (isNowValid && !wasValid) ? true : f.copieEmail,
+    }))
+    if (value && !isNowValid) {
       setEmailError('Format d\'email invalide.')
     } else {
       setEmailError('')
