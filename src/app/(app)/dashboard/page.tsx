@@ -98,9 +98,17 @@ export default function DashboardPage() {
     clearError(l.id)
     try {
       const { blob, filename } = await fetchQuittanceBlob(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
-      setPreviewUrl(URL.createObjectURL(blob))
-      setPreviewName(filename)
+      const url = URL.createObjectURL(blob)
+      // Sur mobile, ouvrir dans un nouvel onglet (iframe non supportée)
+      if (window.innerWidth < 1024) {
+        window.open(url, '_blank')
+        // Délai pour laisser le temps au navigateur d'ouvrir avant de révoquer
+        setTimeout(() => URL.revokeObjectURL(url), 10000)
+      } else {
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(url)
+        setPreviewName(filename)
+      }
     } catch {
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la prévisualisation.' }))
     } finally {
