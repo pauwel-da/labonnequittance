@@ -11,7 +11,12 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   })
 
-  if (error) return { error: error.message }
+  if (error) {
+    const msg = error.message
+    if (msg === 'Invalid login credentials') return { error: 'Email ou mot de passe incorrect.' }
+    if (msg === 'Email not confirmed') return { error: 'Vous devez confirmer votre email avant de vous connecter.' }
+    return { error: msg }
+  }
 
   redirect('/dashboard')
 }
