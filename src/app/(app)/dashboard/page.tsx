@@ -5,24 +5,28 @@ import { getBiens, getLocataires, getProprietaire } from '@/lib/db'
 import { genererQuittance } from '@/lib/quittance'
 import type { Locataire, Bien, Proprietaire } from '@/lib/types'
 import Link from 'next/link'
-import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, Loader2 } from 'lucide-react'
+import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, Loader2, CalendarDays } from 'lucide-react'
 
 function monthLabel(year: number, month: number) {
   return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
+
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export default function DashboardPage() {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  const [dateReglement, setDateReglement] = useState(todayStr)
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [datesReglement, setDatesReglement] = useState<Record<string, string>>({})
 
   useEffect(() => {
     Promise.all([getLocataires(), getBiens(), getProprietaire()])
@@ -30,6 +34,10 @@ export default function DashboardPage() {
         setLocataires(locs)
         setBiens(bs)
         setProprietaire(prop)
+        // Initialiser chaque locataire à aujourd'hui
+        const init: Record<string, string> = {}
+        locs.forEach(l => { init[l.id] = todayStr() })
+        setDatesReglement(init)
       })
       .finally(() => setLoading(false))
   }, [])
@@ -55,6 +63,11 @@ export default function DashboardPage() {
       setErrors(e => ({ ...e, [l.id]: 'Renseignez votre profil.' }))
       return
     }
+    const dateReglement = datesReglement[l.id] || todayStr()
+    if (!dateReglement) {
+      setErrors(e => ({ ...e, [l.id]: 'Saisissez une date de paiement.' }))
+      return
+    }
     const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
     setGenerating(l.id)
     setErrors(e => { const n = { ...e }; delete n[l.id]; return n })
@@ -74,9 +87,8 @@ export default function DashboardPage() {
       <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-6">
         <h1 className="text-2xl font-bold mb-4">Générer des quittances</h1>
 
-        {/* Période */}
         <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Période</p>
-        <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3 mb-3">
+        <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
           <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
             <ChevronLeft size={20} />
           </button>
@@ -85,15 +97,6 @@ export default function DashboardPage() {
             <ChevronRight size={20} />
           </button>
         </div>
-
-        {/* Date de paiement */}
-        <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Date de paiement</p>
-        <input
-          type="date"
-          value={dateReglement}
-          onChange={e => setDateReglement(e.target.value)}
-          className="w-full bg-white/20 text-white placeholder-white/60 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/40 [color-scheme:dark]"
-        />
       </header>
 
       {loading ? (
@@ -166,16 +169,33 @@ export default function DashboardPage() {
                           <p className="text-xs text-gray-400">/ mois</p>
                         </div>
                       </div>
+
                       <div className="flex gap-4 text-xs text-gray-400 mb-4">
                         <span>Loyer HC : {l.loyer.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
                         <span>·</span>
                         <span>Charges : {l.charges.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
                       </div>
+
+                      {/* Date de paiement par locataire */}
+                      <div className="mb-3">
+                        <label className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mb-1.5">
+                          <CalendarDays size={13} />
+                          Date de paiement
+                        </label>
+                        <input
+                          type="date"
+                          value={datesReglement[l.id] ?? todayStr()}
+                          onChange={e => setDatesReglement(d => ({ ...d, [l.id]: e.target.value }))}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                        />
+                      </div>
+
                       {errors[l.id] && (
                         <div className="flex items-center gap-2 text-red-600 text-sm mb-3">
                           <AlertCircle size={14} /> {errors[l.id]}
                         </div>
                       )}
+
                       <button
                         onClick={() => handleGenerate(l)}
                         disabled={!!generating}
