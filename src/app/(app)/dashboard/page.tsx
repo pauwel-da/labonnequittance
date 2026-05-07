@@ -110,8 +110,9 @@ export default function DashboardPage() {
         if (previewUrl) URL.revokeObjectURL(previewUrl)
         setPreviewUrl(URL.createObjectURL(blob))
       }
-    } catch {
-      setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la prévisualisation.' }))
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setErrors(e => ({ ...e, [l.id]: `Erreur prévisualisation : ${msg}` }))
     } finally {
       setPreviewing(null)
     }
