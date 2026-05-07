@@ -16,6 +16,7 @@ export async function renderPdfFirstPage(blob: Blob, scale = 1.8): Promise<strin
   await page.render({
     canvasContext: canvas.getContext('2d')!,
     viewport,
+    canvas,
   }).promise
 
   return canvas.toDataURL('image/jpeg', 0.88)
