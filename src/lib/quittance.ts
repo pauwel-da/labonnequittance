@@ -62,7 +62,7 @@ export async function genererQuittance(
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `quittance_${locataire.nom}_${formatDate(dateDebut).replace(/\//g, '-')}.pdf`
+  a.download = `quittance_${locataire.nomPrenom.replace(/\s+/g, '_')}_${formatDate(dateDebut).replace(/\//g, '-')}.pdf`
   a.click()
   URL.revokeObjectURL(url)
 }
