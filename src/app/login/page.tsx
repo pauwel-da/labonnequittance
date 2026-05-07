@@ -71,7 +71,6 @@ function LoginForm() {
               Mot de passe oublié ?
             </Link>
           </div>
-          </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
