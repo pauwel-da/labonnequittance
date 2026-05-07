@@ -15,6 +15,8 @@ export default function DashboardPage() {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const [dateReglement, setDateReglement] = useState(todayStr)
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
@@ -53,11 +55,11 @@ export default function DashboardPage() {
       setErrors(e => ({ ...e, [l.id]: 'Renseignez votre profil.' }))
       return
     }
-    const datePaiement = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
     setGenerating(l.id)
     setErrors(e => { const n = { ...e }; delete n[l.id]; return n })
     try {
-      await genererQuittance(l, bien, proprietaire!, datePaiement)
+      await genererQuittance(l, bien, proprietaire!, datePeriode, dateReglement)
     } catch {
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la génération.' }))
     } finally {
@@ -71,7 +73,10 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-6">
         <h1 className="text-2xl font-bold mb-4">Générer des quittances</h1>
-        <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
+
+        {/* Période */}
+        <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Période</p>
+        <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3 mb-3">
           <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
             <ChevronLeft size={20} />
           </button>
@@ -80,6 +85,15 @@ export default function DashboardPage() {
             <ChevronRight size={20} />
           </button>
         </div>
+
+        {/* Date de paiement */}
+        <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Date de paiement</p>
+        <input
+          type="date"
+          value={dateReglement}
+          onChange={e => setDateReglement(e.target.value)}
+          className="w-full bg-white/20 text-white placeholder-white/60 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/40 [color-scheme:dark]"
+        />
       </header>
 
       {loading ? (

@@ -21,10 +21,11 @@ export async function genererQuittance(
   locataire: Locataire,
   bien: Bien,
   proprietaire: Proprietaire,
-  datePaiement: string
+  datePeriode: string,   // détermine le mois de la période (début / fin)
+  dateReglement: string  // date réelle du paiement saisie par l'utilisateur
 ): Promise<void> {
-  const dateDebut = firstDayOfMonth(datePaiement)
-  const dateFin = lastDayOfMonth(datePaiement)
+  const dateDebut = firstDayOfMonth(datePeriode)
+  const dateFin = lastDayOfMonth(datePeriode)
 
   const payload = {
     // Identité
@@ -41,10 +42,8 @@ export async function genererQuittance(
     // Dates
     date_debut_periode_paiement: formatDate(dateDebut),
     date_fin_periode_paiement: formatDate(dateFin),
-    date_paiement: formatDate(new Date(datePaiement)),
+    date_paiement: formatDate(new Date(dateReglement)),
     fait_a: proprietaire.ville,
-    // fait_le est généré côté serveur au moment de la création du PDF
-    // signature est une image PNG base64 dessinée par l'utilisateur
     signature_image: proprietaire.signature || '',
   }
 
