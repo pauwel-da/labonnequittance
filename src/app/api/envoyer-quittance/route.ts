@@ -6,7 +6,7 @@ const lambda = new LambdaClient({ region: 'us-east-1' })
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { locataire_email, copie_email, periode_label, ...pdfPayload } = body
+  const { locataire_email, copie_email, periode_label, proprietaire_prenom_nom, ...pdfPayload } = body
 
   if (!locataire_email) {
     return NextResponse.json({ error: 'Email locataire manquant.' }, { status: 400 })
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     FunctionName: 'labonnequittance-generate',
     Payload: JSON.stringify({
       requestContext: { http: { method: 'POST' } },
-      body: JSON.stringify(pdfPayload),
+      body: JSON.stringify({ ...pdfPayload, proprietaire_prenom_nom }),
       isBase64Encoded: false,
     }),
   })
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
         <p>Bonjour,</p>
         <p>Veuillez trouver ci-joint votre quittance de loyer pour la période <strong>${periode_label}</strong>.</p>
-        <p>Cordialement,<br/>La Bonne Quittance</p>
+        <p>Cordialement,<br/>${proprietaire_prenom_nom}</p>
         <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
         <p style="font-size:12px;color:#999">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
       </div>
