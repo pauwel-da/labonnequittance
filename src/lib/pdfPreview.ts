@@ -2,7 +2,6 @@
 export async function renderPdfFirstPage(blob: Blob, scale = 1.8): Promise<string> {
   const pdfjsLib = await import('pdfjs-dist')
 
-  // webpack résout new URL() comme un asset statique, compatible tous navigateurs
   if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
       'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -23,7 +22,7 @@ export async function renderPdfFirstPage(blob: Blob, scale = 1.8): Promise<strin
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas 2D non disponible')
 
-  await page.render({ canvasContext: ctx, viewport, canvas }).promise
+  await page.render({ canvasContext: ctx, viewport }).promise
 
   return canvas.toDataURL('image/jpeg', 0.88)
 }
