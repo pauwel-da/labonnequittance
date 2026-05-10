@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getBiens, addBien, updateBien, deleteBien } from '@/lib/db'
-import type { Bien, BienType } from '@/lib/types'
-import { Plus, Home, Pencil, Trash2, X, Loader2 } from 'lucide-react'
+import { getBiens, addBien, updateBien, deleteBien, getLocataires } from '@/lib/db'
+import type { Bien, BienType, Locataire } from '@/lib/types'
+import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle } from 'lucide-react'
 
 const TYPES: { value: BienType; label: string }[] = [
   { value: 'meuble', label: 'Meublé' },
@@ -14,18 +14,23 @@ const emptyForm = { nom: '', adresse: '', codePostal: '', ville: '', typeLocatio
 
 export default function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
+  const [locataires, setLocataires] = useState<Locataire[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Bien | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ bien: Bien; affected: Locataire[] } | null>(null)
 
   async function reload() {
-    setBiens(await getBiens())
+    const [bs, locs] = await Promise.all([getBiens(), getLocataires()])
+    setBiens(bs)
+    setLocataires(locs)
   }
 
   useEffect(() => {
-    getBiens().then(setBiens).finally(() => setLoading(false))
+    reload().finally(() => setLoading(false))
   }, [])
 
   function openNew() {
@@ -56,10 +61,21 @@ export default function BiensPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Supprimer ce bien ?')) return
-    await deleteBien(id)
-    await reload()
+  function handleDeleteClick(b: Bien) {
+    const affected = locataires.filter(l => l.bienId === b.id)
+    setDeleteConfirm({ bien: b, affected })
+  }
+
+  async function confirmDelete() {
+    if (!deleteConfirm) return
+    setDeleting(true)
+    try {
+      await deleteBien(deleteConfirm.bien.id)
+      await reload()
+      setDeleteConfirm(null)
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -104,13 +120,14 @@ export default function BiensPage() {
               </div>
               <div className="flex gap-2 ml-2">
                 <button onClick={() => openEdit(b)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
-                <button onClick={() => handleDelete(b.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
+                <button onClick={() => handleDeleteClick(b)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
               </div>
             </div>
           ))
         )}
       </div>
 
+      {/* Modal formulaire */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowForm(false)} />
@@ -185,6 +202,55 @@ export default function BiensPage() {
                 {saving ? <><Loader2 size={16} className="animate-spin" /> Enregistrement...</> : editing ? 'Enregistrer' : 'Ajouter'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmation suppression */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDeleteConfirm(null)} />
+          <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-red-100 rounded-full p-2 shrink-0">
+                <AlertTriangle size={20} className="text-red-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Supprimer « {deleteConfirm.bien.nom} » ?</h2>
+            </div>
+
+            {deleteConfirm.affected.length > 0 ? (
+              <>
+                <p className="text-sm text-gray-600 mb-3">
+                  Les locataires suivants sont associés à ce bien et seront <span className="font-semibold text-red-600">également supprimés</span> :
+                </p>
+                <ul className="mb-4 space-y-1">
+                  {deleteConfirm.affected.map(l => (
+                    <li key={l.id} className="flex items-center gap-2 text-sm text-gray-700 bg-red-50 rounded-lg px-3 py-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                      {l.nomPrenom}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-sm text-gray-600 mb-4">Cette action est irréversible.</p>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                {deleting ? <><Loader2 size={15} className="animate-spin" /> Suppression...</> : 'Supprimer'}
+              </button>
+            </div>
           </div>
         </div>
       )}
