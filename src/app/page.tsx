@@ -85,8 +85,15 @@ export default function Home() {
       </main>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer className="py-6 text-center text-xs text-gray-400 border-t border-gray-100">
-        © {new Date().getFullYear()} La Bonne Quittance · Gratuit pour tous les bailleurs
+      <footer className="py-6 text-center text-xs text-gray-400 border-t border-gray-100 space-y-2">
+        <p>© {new Date().getFullYear()} La Bonne Quittance · Gratuit pour tous les bailleurs</p>
+        <p className="flex items-center justify-center gap-4">
+          <Link href="/cgu" className="hover:text-gray-600 hover:underline transition-colors">CGU</Link>
+          <span>·</span>
+          <Link href="/mentions-legales" className="hover:text-gray-600 hover:underline transition-colors">Mentions légales</Link>
+          <span>·</span>
+          <Link href="/confidentialite" className="hover:text-gray-600 hover:underline transition-colors">Confidentialité</Link>
+        </p>
       </footer>
 
     </div>
