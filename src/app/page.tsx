@@ -24,7 +24,7 @@ export default function Home() {
     <div className="min-h-screen bg-white flex flex-col">
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 lg:py-24 text-center">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 lg:py-12 text-center">
 
         {/* Logo */}
         <Image
@@ -33,7 +33,7 @@ export default function Home() {
           width={300}
           height={129}
           priority
-          className="mb-8 lg:w-[420px]"
+          className="mb-4 lg:w-[420px]"
         />
 
         {/* Badge */}
