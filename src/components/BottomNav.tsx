@@ -26,7 +26,7 @@ export default function BottomNav() {
     <>
       {/* Sidebar desktop */}
       <aside className="hidden lg:flex flex-col fixed top-0 left-0 h-full w-60 bg-white border-r border-gray-200 z-50">
-        <div className="px-5 py-5 border-b border-gray-100">
+        <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-center">
           <Image src="/logo.png" alt="La Bonne Quittance" width={150} height={64} priority />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
