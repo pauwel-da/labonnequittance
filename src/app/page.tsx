@@ -33,7 +33,7 @@ export default function Home() {
           width={300}
           height={129}
           priority
-          className="mb-4 lg:w-[420px]"
+          className="-mt-8 mb-0 lg:mt-0 lg:mb-6 lg:w-[420px]"
         />
 
         {/* Badge */}
