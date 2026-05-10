@@ -9,7 +9,12 @@ export async function updatePassword(formData: FormData) {
 
   const { error } = await supabase.auth.updateUser({ password })
 
-  if (error) return { error: error.message }
+  if (error) {
+    const msg = error.message
+    if (msg === 'New password should be different from the old password.')
+      return { error: 'Le nouveau mot de passe doit être différent de l\'ancien.' }
+    return { error: msg }
+  }
 
   redirect('/dashboard')
 }
