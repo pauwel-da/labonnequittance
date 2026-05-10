@@ -48,14 +48,33 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  function shiftDates(newYear: number, newMonth: number) {
+    setDatesReglement(prev => {
+      const updated: Record<string, string> = {}
+      const lastDayOfMonth = new Date(newYear, newMonth + 1, 0).getDate()
+      for (const [id, dateStr] of Object.entries(prev)) {
+        const day = dateStr ? parseInt(dateStr.split('-')[2]) : new Date().getDate()
+        const clamped = Math.min(day, lastDayOfMonth)
+        updated[id] = `${newYear}-${String(newMonth + 1).padStart(2, '0')}-${String(clamped).padStart(2, '0')}`
+      }
+      return updated
+    })
+  }
+
   function prevMonth() {
-    if (month === 0) { setYear(y => y - 1); setMonth(11) }
-    else setMonth(m => m - 1)
+    const newYear = month === 0 ? year - 1 : year
+    const newMonth = month === 0 ? 11 : month - 1
+    setYear(newYear)
+    setMonth(newMonth)
+    shiftDates(newYear, newMonth)
   }
 
   function nextMonth() {
-    if (month === 11) { setYear(y => y + 1); setMonth(0) }
-    else setMonth(m => m + 1)
+    const newYear = month === 11 ? year + 1 : year
+    const newMonth = month === 11 ? 0 : month + 1
+    setYear(newYear)
+    setMonth(newMonth)
+    shiftDates(newYear, newMonth)
   }
 
   function getBien(id: string): Bien | undefined {
