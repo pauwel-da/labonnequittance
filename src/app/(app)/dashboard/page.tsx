@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getBiens, getLocataires, getProprietaire } from '@/lib/db'
 import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/lib/quittance'
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
@@ -34,6 +34,9 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewName, setPreviewName] = useState('')
+  const [showPicker, setShowPicker] = useState(false)
+  const [pickerYear, setPickerYear] = useState(today.getFullYear())
+  const pickerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     Promise.all([getLocataires(), getBiens(), getProprietaire()])
@@ -171,6 +174,24 @@ export default function DashboardPage() {
     }
   }
 
+  useEffect(() => {
+    if (!showPicker) return
+    function handleClick(e: MouseEvent) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showPicker])
+
+  function selectMonth(y: number, m: number) {
+    setYear(y)
+    setMonth(m)
+    shiftDates(y, m)
+    setShowPicker(false)
+  }
+
   function closePreview() {
     if (previewUrl) URL.revokeObjectURL(previewUrl)
     setPreviewUrl(null)
@@ -184,14 +205,56 @@ export default function DashboardPage() {
       <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-6">
         <h1 className="text-2xl font-bold mb-4">Générer des quittances</h1>
         <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Période</p>
-        <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
-          <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
-            <ChevronLeft size={20} />
-          </button>
-          <span className="font-semibold text-base capitalize">{monthLabel(year, month)}</span>
-          <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
-            <ChevronRight size={20} />
-          </button>
+        <div className="relative" ref={pickerRef}>
+          <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
+            <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={() => { setPickerYear(year); setShowPicker(p => !p) }}
+              className="font-semibold text-base capitalize hover:bg-white/20 px-3 py-1 rounded-lg transition-colors"
+            >
+              {monthLabel(year, month)}
+            </button>
+            <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
+              <ChevronRight size={20} />
+            </button>
+          </div>
+
+          {showPicker && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl z-40 p-4">
+              {/* Sélection année */}
+              <div className="flex items-center justify-between mb-3">
+                <button onClick={() => setPickerYear(y => y - 1)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600">
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="font-semibold text-gray-800">{pickerYear}</span>
+                <button onClick={() => setPickerYear(y => y + 1)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+              {/* Grille des mois */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {Array.from({ length: 12 }, (_, i) => {
+                  const isSelected = pickerYear === year && i === month
+                  const label = new Date(pickerYear, i, 1).toLocaleDateString('fr-FR', { month: 'short' })
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => selectMonth(pickerYear, i)}
+                      className={`py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
+                        isSelected
+                          ? 'bg-[#008020] text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
