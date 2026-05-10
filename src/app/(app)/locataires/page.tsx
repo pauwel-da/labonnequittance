@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getBiens, getLocataires, addLocataire, updateLocataire, deleteLocataire } from '@/lib/db'
 import type { Locataire, Bien } from '@/lib/types'
-import { Plus, Users, Pencil, Trash2, X, AlertTriangle, Loader2, Mail } from 'lucide-react'
+import { Plus, Users, Pencil, Trash2, X, AlertTriangle, Loader2, Mail, FileCheck } from 'lucide-react'
+import Link from 'next/link'
 
 const emptyForm = {
   nomPrenom: '',
@@ -170,9 +171,17 @@ export default function LocatairesPage() {
                     HC : {l.loyer.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} € + Charges : {l.charges.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
                   </p>
                 </div>
-                <div className="flex gap-2 ml-2">
-                  <button onClick={() => openEdit(l)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
-                  <button onClick={() => handleDelete(l.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
+                <div className="flex flex-col gap-2 ml-2 items-end">
+                  <div className="flex gap-2">
+                    <button onClick={() => openEdit(l)} className="text-[#008020] hover:bg-green-50 p-2 rounded-lg"><Pencil size={16} /></button>
+                    <button onClick={() => handleDelete(l.id)} className="text-red-500 hover:bg-red-50 p-2 rounded-lg"><Trash2 size={16} /></button>
+                  </div>
+                  <Link
+                    href={`/documents/attestation-caf/${l.id}`}
+                    className="flex items-center gap-1.5 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+                  >
+                    <FileCheck size={13} /> Attestation CAF
+                  </Link>
                 </div>
               </div>
             )
