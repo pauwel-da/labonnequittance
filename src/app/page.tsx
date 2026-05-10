@@ -1,19 +1,20 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { FileText, Home, PenLine } from 'lucide-react'
 
 const features = [
   {
-    icon: '📄',
+    icon: FileText,
     title: 'Quittances PDF en 1 clic',
     desc: 'Générez des quittances conformes et prêtes à envoyer en quelques secondes.',
   },
   {
-    icon: '🏠',
+    icon: Home,
     title: 'Gérez biens & locataires',
     desc: 'Centralisez tous vos logements et locataires dans un espace dédié.',
   },
   {
-    icon: '✍️',
+    icon: PenLine,
     title: 'Signature numérique',
     desc: 'Apposez votre signature sur chaque quittance directement depuis l\'application.',
   },
@@ -33,7 +34,7 @@ export default function Home() {
           width={300}
           height={129}
           priority
-          className="mt-2 mb-0 lg:mt-0 lg:mb-6 lg:w-[420px]"
+          className="mt-6 mb-6 lg:mt-0 lg:mb-8 lg:w-[420px]"
         />
 
         {/* Badge */}
@@ -72,8 +73,10 @@ export default function Home() {
         {/* Features */}
         <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
           {features.map((f) => (
-            <div key={f.title} className="flex flex-col gap-3 bg-gray-50 rounded-2xl px-5 py-5">
-              <span className="text-2xl">{f.icon}</span>
+            <div key={f.title} className="flex flex-col gap-4 border border-gray-100 rounded-2xl px-5 py-5">
+              <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+                <f.icon size={18} className="text-[#008020]" />
+              </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900 mb-1">{f.title}</p>
                 <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
