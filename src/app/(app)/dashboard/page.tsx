@@ -388,7 +388,7 @@ export default function DashboardPage() {
                           className="flex items-center justify-center gap-1.5 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
                         >
                           {isGen ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
-                          Générer
+                          Télécharger
                         </button>
                       </div>
                     </div>
