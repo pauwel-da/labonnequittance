@@ -68,6 +68,22 @@ function LoginForm() {
         </>
       )}
 
+      {/* Bouton Google */}
+      <button
+        onClick={handleGoogle}
+        disabled={googlePending || isPending}
+        className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
+      >
+        {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
+        Continuer avec Google
+      </button>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex-1 border-t border-gray-200" />
+        <span className="text-xs text-gray-400">ou</span>
+        <div className="flex-1 border-t border-gray-200" />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
