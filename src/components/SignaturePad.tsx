@@ -11,11 +11,13 @@ export default function SignaturePad({ value, onChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  const hasLoaded = useRef(false)
   const [isEmpty, setIsEmpty] = useState(!value)
 
-  // Load saved signature once on mount
+  // Load saved signature when value arrives from DB (async)
   useEffect(() => {
-    if (!value || !canvasRef.current) return
+    if (!value || !canvasRef.current || hasLoaded.current) return
+    hasLoaded.current = true
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -26,8 +28,7 @@ export default function SignaturePad({ value, onChange }: Props) {
       setIsEmpty(false)
     }
     img.src = value
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [value])
 
   function getXY(e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) {
     const rect = canvas.getBoundingClientRect()
