@@ -99,12 +99,19 @@ export default function DashboardPage() {
     return { bien, dateReglement }
   }
 
+  function trackEvent(name: string) {
+    if (typeof window !== 'undefined' && 'sa_event' in window) {
+      (window as Window & { sa_event: (n: string) => void }).sa_event(name)
+    }
+  }
+
   async function handleGenerate(l: Locataire) {
     const v = validate(l)
     if (!v) return
     const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
     setGenerating(l.id)
     clearError(l.id)
+    trackEvent('quittance_telecharger')
     try {
       await genererQuittance(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
     } catch {
@@ -120,6 +127,7 @@ export default function DashboardPage() {
     const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
     setPreviewing(l.id)
     clearError(l.id)
+    trackEvent('quittance_voir')
     try {
       const { blob, filename } = await fetchQuittanceBlob(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
       setPreviewName(filename)
@@ -152,6 +160,7 @@ export default function DashboardPage() {
     setSending(l.id)
     clearError(l.id)
     setSendSuccess(null)
+    trackEvent('quittance_envoyer')
     try {
       const res = await fetch('/api/envoyer-quittance', {
         method: 'POST',
