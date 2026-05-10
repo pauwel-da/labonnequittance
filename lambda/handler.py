@@ -284,6 +284,7 @@ def lambda_handler(event, context):
 
     _fill_fields(writer, fields)
     _reduce_font_size(writer, {"date_debut_periode_paiement", "date_fin_periode_paiement"}, reduction=2)
+    _reduce_font_size(writer, {"texte_loi"}, reduction=2)
     _set_multiline(writer, {"texte_loi"})
     _set_rich_text(writer, "texte_global", fields["texte_global"], [
         (
