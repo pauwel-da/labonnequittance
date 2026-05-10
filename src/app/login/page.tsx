@@ -107,7 +107,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
+          <Link href="/">
+            <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
+          </Link>
         </div>
         <Suspense fallback={
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
