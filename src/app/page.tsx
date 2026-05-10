@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { FileText, Home, PenLine } from 'lucide-react'
+import { FileText, Home as HomeIcon, PenLine } from 'lucide-react'
 
 const features = [
   {
@@ -9,7 +9,7 @@ const features = [
     desc: 'Générez des quittances conformes et prêtes à envoyer en quelques secondes.',
   },
   {
-    icon: Home,
+    icon: HomeIcon,
     title: 'Gérez biens & locataires',
     desc: 'Centralisez tous vos logements et locataires dans un espace dédié.',
   },
