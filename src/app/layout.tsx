@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: "La Bonne Quittance",
   description: "Gérez vos quittances de loyer simplement",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export const viewport: Viewport = {
