@@ -52,7 +52,7 @@ export default function Home() {
         </p>
 
         {/* CTA */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-none sm:justify-center mb-20 lg:mb-24">
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-none sm:justify-center mb-8 lg:mb-10">
           <Link
             href="/signup"
             className="bg-[#008020] hover:bg-green-800 text-white font-semibold px-8 py-3.5 rounded-xl text-sm transition-colors"
