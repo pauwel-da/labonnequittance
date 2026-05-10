@@ -130,7 +130,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
           <Link href="/">
-            <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
+            <Image src="/logo.png" alt="La Bonne Quittance" width={260} height={112} priority />
           </Link>
         </div>
         <Suspense fallback={

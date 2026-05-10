@@ -30,10 +30,10 @@ export default function Home() {
         <Image
           src="/logo.png"
           alt="La Bonne Quittance"
-          width={240}
-          height={103}
+          width={300}
+          height={129}
           priority
-          className="mb-8 lg:w-[320px]"
+          className="mb-8 lg:w-[420px]"
         />
 
         {/* Badge */}
