@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'Bailleur : comment remplir l\'attestation de loyer CAF ? — La Bonne Quittance',
-  description: 'Votre locataire touche les APL ? Découvrez comment remplir le Cerfa 10842 (attestation de loyer CAF) en tant que bailleur : champs obligatoires, délais et conseils.',
+  description: 'Votre locataire touche les APL, l\'ALF ou l\'ALS ? Découvrez comment remplir le Cerfa 10842 en tant que bailleur : champs obligatoires, délais et conseils.',
 }
 
 export default function ArticlePage() {
@@ -38,7 +38,7 @@ export default function ArticlePage() {
             Bailleur : comment remplir l&apos;attestation de loyer CAF ?
           </h1>
           <p className="text-gray-500 text-lg leading-relaxed">
-            Votre locataire perçoit les APL ou l&apos;ALF ? La CAF vous demande de remplir une attestation de loyer. Voici exactement ce que vous devez faire en tant que bailleur.
+            Votre locataire perçoit les APL, l&apos;ALF ou l&apos;ALS ? La CAF vous demande de remplir une attestation de loyer. Voici exactement ce que vous devez faire en tant que bailleur.
           </p>
         </div>
 
