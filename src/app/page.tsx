@@ -90,6 +90,7 @@ export default function Home() {
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <footer className="py-6 text-center text-xs text-gray-400 border-t border-gray-100 space-y-2">
         <p>© {new Date().getFullYear()} La Bonne Quittance · Gratuit pour tous les bailleurs</p>
+        <p className="text-gray-300">Ce site n&apos;utilise aucun cookie de suivi ni publicitaire.</p>
         <p className="flex items-center justify-center gap-4">
           <Link href="/blog" className="hover:text-gray-600 hover:underline transition-colors">Blog</Link>
           <span>·</span>
