@@ -177,7 +177,7 @@ export default function ArticlePage() {
         </article>
 
         {/* À retenir */}
-        <div className="mt-10 bg-gray-900 text-white rounded-2xl p-6">
+        <div className="mt-10 bg-green-50 border border-green-100 rounded-2xl p-6">
           <p className="text-[#008020] font-bold text-sm uppercase tracking-wide mb-4">À retenir</p>
           <ul className="space-y-2.5">
             {[
@@ -189,7 +189,7 @@ export default function ArticlePage() {
             ].map((point, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <span className="text-[#008020] font-bold shrink-0 mt-0.5">✓</span>
-                <span className="text-gray-200">{point}</span>
+                <span className="text-gray-700">{point}</span>
               </li>
             ))}
           </ul>
