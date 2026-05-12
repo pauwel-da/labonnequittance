@@ -91,6 +91,8 @@ export default function Home() {
       <footer className="py-6 text-center text-xs text-gray-400 border-t border-gray-100 space-y-2">
         <p>© {new Date().getFullYear()} La Bonne Quittance · Gratuit pour tous les bailleurs</p>
         <p className="flex items-center justify-center gap-4">
+          <Link href="/blog" className="hover:text-gray-600 hover:underline transition-colors">Blog</Link>
+          <span>·</span>
           <Link href="/cgu" className="hover:text-gray-600 hover:underline transition-colors">CGU</Link>
           <span>·</span>
           <Link href="/mentions-legales" className="hover:text-gray-600 hover:underline transition-colors">Mentions légales</Link>
