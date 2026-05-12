@@ -11,7 +11,7 @@ const articles = [
   {
     slug: 'comment-faire-quittance-de-loyer',
     titre: 'Comment faire une (bonne) quittance de loyer ?',
-    description: 'Tout ce qu'il faut savoir pour rédiger une quittance de loyer conforme : mentions obligatoires, aspect légal, et bonnes pratiques.',
+    description: "Tout ce qu'il faut savoir pour rédiger une quittance de loyer conforme : mentions obligatoires, aspect légal, et bonnes pratiques.",
     date: 'Mai 2026',
     tempsLecture: '5 min',
   },
