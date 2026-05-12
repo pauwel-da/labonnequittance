@@ -42,7 +42,7 @@ export default function BlogPage() {
         </span>
         <h1 className="text-3xl font-bold mb-3">Conseils pour les bailleurs</h1>
         <p className="text-green-100 text-base max-w-md mx-auto">
-          Obligations légales, quittances, aides au logement — tout ce qu&apos;un bailleur particulier doit savoir.
+          Obligations légales, quittances, aides au logement.<br />Tout ce qu&apos;un bailleur particulier doit savoir.
         </p>
       </div>
 
