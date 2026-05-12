@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'Comment faire une quittance de loyer conforme ? — La Bonne Quittance',
-  description: 'Mentions obligatoires, aspect légal, conservation : tout ce qu'il faut savoir pour rédiger une quittance de loyer valide en France.',
+  description: 'Mentions obligatoires, aspect légal, conservation : tout ce qu\'il faut savoir pour rédiger une quittance de loyer valide en France.',
 }
 
 export default function ArticlePage() {
