@@ -9,6 +9,13 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: 'attestation-loyer-caf-bailleur',
+    titre: 'Bailleur : comment remplir l\'attestation de loyer CAF ?',
+    description: "Votre locataire touche les APL ? Découvrez comment remplir le Cerfa 10842 en tant que bailleur : champs obligatoires, délais et erreurs à éviter.",
+    date: 'Mai 2026',
+    tempsLecture: '4 min',
+  },
+  {
     slug: 'comment-faire-quittance-de-loyer',
     titre: 'Comment faire une (bonne) quittance de loyer ?',
     description: "Tout ce qu'il faut savoir pour rédiger une quittance de loyer conforme : mentions obligatoires, aspect légal, et bonnes pratiques.",
