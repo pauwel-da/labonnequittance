@@ -50,7 +50,7 @@ export default function ArticlePage() {
               Lorsqu&apos;un locataire fait une demande d&apos;aide au logement (APL, ALF ou ALS), la CAF doit vérifier la réalité de la location : existence du bail, montant du loyer, identité du bailleur. C&apos;est le rôle de l&apos;<strong>attestation de loyer</strong>, aussi appelée <strong>Cerfa n° 10842*07</strong>.
             </p>
             <p className="leading-relaxed mt-3">
-              Ce document est rempli et signé par le bailleur, puis transmis à la CAF — soit par le locataire, soit directement par le propriétaire selon les cas.
+              Ce document est rempli et signé par le bailleur, puis transmis à la CAF par le locataire.
             </p>
           </section>
 
