@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import ReadingProgress from '@/components/ReadingProgress'
+import FaqItem from '@/components/FaqItem'
 
 export const metadata: Metadata = {
   title: 'Comment faire une quittance de loyer conforme ? — La Bonne Quittance',
@@ -200,30 +201,11 @@ export default function ArticlePage() {
         {/* FAQ */}
         <div className="mt-10">
           <h2 className="text-xl font-bold text-gray-900 mb-5">Questions fréquentes</h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: 'La quittance de loyer est-elle obligatoire ?',
-                a: 'Non, elle n\'est pas obligatoire d\'office. Mais le bailleur est légalement tenu de la remettre gratuitement si le locataire en fait la demande (article 21 de la loi du 6 juillet 1989).',
-              },
-              {
-                q: 'Peut-on refuser de donner une quittance de loyer ?',
-                a: 'Non. Refuser de délivrer une quittance alors que le loyer a bien été payé expose le bailleur à des poursuites. C\'est une obligation légale dès que le locataire en fait la demande.',
-              },
-              {
-                q: 'Combien de temps faut-il conserver une quittance de loyer ?',
-                a: '3 ans à compter de la date d\'échéance du terme, conformément à l\'article 7-1 de la loi du 6 juillet 1989. Cette durée s\'applique aussi bien au locataire qu\'au bailleur.',
-              },
-              {
-                q: 'Une quittance de loyer en PDF est-elle valable légalement ?',
-                a: 'Oui. La loi n\'impose aucun format particulier. Un PDF avec signature numérique a la même valeur légale qu\'un document papier signé à la main.',
-              },
-            ].map((faq, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
-                <p className="font-semibold text-gray-900 mb-2">{faq.q}</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <FaqItem question="La quittance de loyer est-elle obligatoire ?" answer="Non, elle n'est pas obligatoire d'office. Mais le bailleur est légalement tenu de la remettre gratuitement si le locataire en fait la demande (article 21 de la loi du 6 juillet 1989)." />
+            <FaqItem question="Peut-on refuser de donner une quittance de loyer ?" answer="Non. Refuser de délivrer une quittance alors que le loyer a bien été payé expose le bailleur à des poursuites. C'est une obligation légale dès que le locataire en fait la demande." />
+            <FaqItem question="Combien de temps faut-il conserver une quittance de loyer ?" answer="3 ans à compter de la date d'échéance du terme, conformément à l'article 7-1 de la loi du 6 juillet 1989. Cette durée s'applique aussi bien au locataire qu'au bailleur." />
+            <FaqItem question="Une quittance de loyer en PDF est-elle valable légalement ?" answer="Oui. La loi n'impose aucun format particulier. Un PDF avec signature numérique a la même valeur légale qu'un document papier signé à la main." />
           </div>
         </div>
 

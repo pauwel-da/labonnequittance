@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import ReadingProgress from '@/components/ReadingProgress'
+import FaqItem from '@/components/FaqItem'
 
 export const metadata: Metadata = {
   title: 'Bailleur : comment remplir l\'attestation de loyer CAF ? — La Bonne Quittance',
@@ -222,40 +223,11 @@ export default function ArticlePage() {
         {/* FAQ */}
         <div className="mt-10">
           <h2 className="text-xl font-bold text-gray-900 mb-5">Questions fréquentes</h2>
-          <div className="space-y-4">
-            {[
-              {
-                q: 'Qu\'est-ce que le Cerfa 10842 ?',
-                a: 'Le Cerfa 10842*07 est le formulaire officiel d\'attestation de loyer délivré par la CAF. Il est rempli par le bailleur et transmis à la CAF par le locataire pour l\'ouverture ou le maintien des droits aux aides au logement (APL, ALF, ALS).',
-                lien: null,
-              },
-              {
-                q: 'Où trouver le formulaire Cerfa 10842 ?',
-                a: 'Il est téléchargeable gratuitement sur le site service-public.fr ou directement sur le site de la CAF. Le locataire peut aussi vous le transmettre directement.',
-                lien: { url: 'https://www.msa.fr/lfp/documents/11566/48471/Attestation+de+loyer+et+de+r%c3%a9sidence+en+foyer.pdf', label: 'Télécharger le Cerfa 10842 (PDF officiel)' },
-              },
-              {
-                q: 'Faut-il renouveler l\'attestation chaque année ?',
-                a: 'La CAF peut demander une mise à jour de l\'attestation notamment en cas de changement de loyer, de renouvellement de bail ou de contrôle périodique. Il est conseillé de la mettre à jour dès que la situation locative évolue.',
-                lien: null,
-              },
-              {
-                q: 'Le bailleur peut-il refuser de remplir l\'attestation CAF ?',
-                a: 'En pratique, le refus est fortement déconseillé. Il peut priver le locataire de ses aides et donc compromettre le paiement du loyer. Dans certains cas, notamment pour les logements conventionnés, le refus peut exposer le bailleur à des sanctions.',
-                lien: null,
-              },
-            ].map((faq, i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
-                <p className="font-semibold text-gray-900 mb-2">{faq.q}</p>
-                <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
-                {faq.lien && (
-                  <a href={faq.lien.url} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-[#008020] hover:underline">
-                    ↓ {faq.lien.label}
-                  </a>
-                )}
-              </div>
-            ))}
+          <div className="space-y-3">
+            <FaqItem question="Qu'est-ce que le Cerfa 10842 ?" answer="Le Cerfa 10842*07 est le formulaire officiel d'attestation de loyer délivré par la CAF. Il est rempli par le bailleur et transmis à la CAF par le locataire pour l'ouverture ou le maintien des droits aux aides au logement (APL, ALF, ALS)." />
+            <FaqItem question="Où trouver le formulaire Cerfa 10842 ?" answer="Il est téléchargeable gratuitement sur le site service-public.fr ou directement sur le site de la CAF. Le locataire peut aussi vous le transmettre directement." link={{ url: 'https://www.msa.fr/lfp/documents/11566/48471/Attestation+de+loyer+et+de+r%c3%a9sidence+en+foyer.pdf', label: 'Télécharger le Cerfa 10842 (PDF officiel)' }} />
+            <FaqItem question="Faut-il renouveler l'attestation chaque année ?" answer="La CAF peut demander une mise à jour de l'attestation notamment en cas de changement de loyer, de renouvellement de bail ou de contrôle périodique. Il est conseillé de la mettre à jour dès que la situation locative évolue." />
+            <FaqItem question="Le bailleur peut-il refuser de remplir l'attestation CAF ?" answer="En pratique, le refus est fortement déconseillé. Il peut priver le locataire de ses aides et donc compromettre le paiement du loyer. Dans certains cas, notamment pour les logements conventionnés, le refus peut exposer le bailleur à des sanctions." />
           </div>
         </div>
 
