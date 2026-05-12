@@ -102,7 +102,7 @@ export default function ArticlePage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-3">Tiers payant : quand la CAF verse directement au bailleur</h2>
             <p className="leading-relaxed">
-              Dans certains cas, la CAF peut verser l&apos;aide directement au bailleur — c&apos;est le <strong>tiers payant</strong>. Cela concerne notamment les logements conventionnés (APL) ou les situations de précarité. Le bailleur doit alors s&apos;engager à déduire le montant de l&apos;aide du loyer réclamé au locataire.
+              La CAF peut verser l&apos;aide directement au bailleur — c&apos;est le <strong>tiers payant</strong>. Ce dispositif est accessible pour tous les profils de locataires. Pour en bénéficier, le bailleur doit en faire la demande via un document complémentaire : le <strong>Cerfa n° 11362*04</strong>. Il s&apos;engage alors à déduire le montant de l&apos;aide du loyer réclamé au locataire.
             </p>
           </section>
 
