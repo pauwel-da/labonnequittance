@@ -15,6 +15,7 @@ from pypdf.generic import (
     create_string_object,
 )
 from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas as rl_canvas
 
 _FF_READ_ONLY = 1
@@ -87,6 +88,38 @@ def _reduce_font_size(writer, field_names, reduction=2):
 
 def _xml_escape(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
+def _set_font_size(writer, field_names, size, exclude=None, font_name=None):
+    """Force an absolute font size (and optionally font name). Pass field_names=None to target all fields."""
+    exclude = exclude or set()
+    acroform = writer._root_object.get("/AcroForm")
+    form_da = ""
+    if acroform:
+        da_obj = acroform.get_object().get("/DA")
+        if da_obj:
+            form_da = str(da_obj)
+
+    for obj in _iter_acroform_fields(writer):
+        t = obj.get("/T")
+        if t is None:
+            continue
+        name = str(t)
+        if field_names is not None and name not in field_names:
+            continue
+        if name in exclude:
+            continue
+        da_obj = obj.get("/DA")
+        da_str = str(da_obj) if da_obj else form_da
+        if not da_str:
+            continue
+        if font_name:
+            new_da = re.sub(r"/\w+\s+\d+(?:\.\d+)?\s+Tf", f"/{font_name} {size:g} Tf", da_str)
+            if "Tf" not in new_da:
+                new_da = f"/{font_name} {size:g} Tf 0 g"
+        else:
+            new_da = re.sub(r"\d+(?:\.\d+)?\s+Tf", f"{size:g} Tf", da_str)
+        obj.update({NameObject("/DA"): create_string_object(new_da)})
 
 
 def _set_multiline(writer, field_names):
@@ -185,6 +218,42 @@ def _build_signature_overlay(sig_b64, rect, page_w, page_h):
     return buf
 
 
+def _get_field_width(reader, field_name):
+    """Return the usable width (px) of a named AcroForm field."""
+    for page in reader.pages:
+        raw = page.get("/Annots")
+        if raw is None:
+            continue
+        annots = raw.get_object() if hasattr(raw, "get_object") else raw
+        for annot in annots:
+            obj = annot.get_object()
+            if str(obj.get("/T", "")) == field_name:
+                rect = obj.get("/Rect")
+                if rect:
+                    coords = [float(v) for v in rect]
+                    return abs(coords[2] - coords[0]) - 4  # 2pt padding each side
+    return None
+
+
+def _split_for_field(text, field_width, font_size=11):
+    """Split text at word boundary to fit field_width using Helvetica metrics.
+    Returns (fits_in_field, overflow_or_None).
+    """
+    if field_width is None:
+        return text, None
+    full_width = pdfmetrics.stringWidth(text, "Helvetica", font_size)
+    if full_width <= field_width:
+        return text, None
+    words = text.split(" ")
+    line = ""
+    for i, word in enumerate(words):
+        candidate = (line + " " + word).strip()
+        if pdfmetrics.stringWidth(candidate, "Helvetica", font_size) > field_width:
+            return line, " ".join(words[i:])
+        line = candidate
+    return line, None
+
+
 # ── Lambda entry point ────────────────────────────────────────────────────────
 
 def lambda_handler(event, context):
@@ -279,12 +348,29 @@ def lambda_handler(event, context):
         template_path = os.path.join(base, "modele.pdf")
 
     reader = PdfReader(template_path)
+
+    # ── Logique locataire_rue_bis_OU_locataire_code_postal_ville ──────────────
+    rue = fields.get("locataire_rue", "")
+    cp_ville = fields.get("locataire_code_postal_ville", "")
+    rue_width = _get_field_width(reader, "locataire_rue")
+    rue_fits, rue_overflow = _split_for_field(rue, rue_width)
+    if rue_overflow is None:
+        # L'adresse rentre : le champ bis reçoit le code postal/ville
+        fields["locataire_rue"] = rue_fits
+        fields["locataire_rue_bis_OU_locataire_code_postal_ville"] = cp_ville
+        fields["locataire_code_postal_ville"] = ""
+    else:
+        # L'adresse déborde : le champ bis reçoit la suite de l'adresse
+        fields["locataire_rue"] = rue_fits
+        fields["locataire_rue_bis_OU_locataire_code_postal_ville"] = rue_overflow
+
     writer = PdfWriter()
     writer.clone_reader_document_root(reader)
 
     _fill_fields(writer, fields)
-    _reduce_font_size(writer, {"date_debut_periode_paiement", "date_fin_periode_paiement"}, reduction=2)
-    _reduce_font_size(writer, {"texte_loi"}, reduction=2)
+    _set_font_size(writer, None, size=11, exclude={"date_debut_periode_paiement", "date_fin_periode_paiement", "texte_loi"}, font_name="Helv")
+    _set_font_size(writer, {"date_debut_periode_paiement", "date_fin_periode_paiement"}, size=9, font_name="Helv")
+    _set_font_size(writer, {"texte_loi"}, size=9, font_name="Helv")
     _set_multiline(writer, {"texte_loi"})
     _set_rich_text(writer, "texte_global", fields["texte_global"], [
         (
