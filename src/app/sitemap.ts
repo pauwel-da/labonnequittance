@@ -29,6 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${base}/blog/attestation-loyer-caf-bailleur`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${base}/blog/comment-faire-quittance-de-loyer`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
