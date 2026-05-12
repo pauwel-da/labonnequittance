@@ -55,7 +55,7 @@ export default function ArticlePage() {
         {/* Chiffres clés */}
         <div className="grid grid-cols-3 gap-3 mb-10">
           {[
-            { stat: '9', label: 'Champs à renseigner dans le Cerfa 10842' },
+            { stat: '8', label: 'Champs à renseigner dans le Cerfa 10842' },
             { stat: '1-2 mois', label: 'Délai de traitement par la CAF' },
             { stat: '100%', label: 'Des locataires APL peuvent bénéficier du tiers payant' },
           ].map((s, i) => (
@@ -114,7 +114,6 @@ export default function ArticlePage() {
                 { label: 'Date d\'entrée dans les lieux', detail: 'Date de début du bail' },
                 { label: 'Montant du loyer', detail: 'Loyer mensuel hors charges' },
                 { label: 'Montant des charges', detail: 'Charges mensuelles' },
-                { label: 'Lien de parenté', detail: 'Indiquer si le bailleur est un proche du locataire' },
                 { label: 'Signature du bailleur', detail: 'Manuscrite ou numérique' },
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3">
@@ -132,7 +131,7 @@ export default function ArticlePage() {
             <h2 className="text-xl font-bold text-gray-900 mb-3">4. Point d&apos;attention : le lien de parenté</h2>
             <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl px-5 py-4 text-sm leading-relaxed">
               <p>
-                Si le bailleur est un <strong>ascendant ou descendant</strong> du locataire (parent, enfant, grand-parent), le locataire ne peut pas percevoir les APL. La CAF vérifie systématiquement ce point. Indiquez honnêtement votre lien de parenté dans le formulaire.
+                Si le bailleur est un <strong>ascendant ou descendant</strong> du locataire (parent, enfant, grand-parent), le locataire ne peut pas percevoir les APL. Ce lien de parenté ne figure pas dans le Cerfa 10842 lui-même, mais la CAF le vérifie par d&apos;autres moyens. En cas de fausse déclaration, le locataire s&apos;expose à un remboursement des aides perçues.
               </p>
             </div>
           </section>
@@ -204,7 +203,7 @@ export default function ArticlePage() {
           <ul className="space-y-2.5">
             {[
               'Le bailleur est obligé de remplir l\'attestation CAF sur demande du locataire',
-              'Le Cerfa 10842*07 comporte 9 champs dont le lien de parenté — crucial',
+              'Le lien de parenté entre bailleur et locataire est un point crucial à ne pas négliger',
               'Si bailleur = ascendant ou descendant du locataire, les APL sont exclues',
               'Le tiers payant est possible pour tous les locataires via le Cerfa 11362*04',
               'Délai de traitement CAF : 1 à 2 mois après réception du document',
@@ -226,23 +225,33 @@ export default function ArticlePage() {
               {
                 q: 'Qu\'est-ce que le Cerfa 10842 ?',
                 a: 'Le Cerfa 10842*07 est le formulaire officiel d\'attestation de loyer délivré par la CAF. Il est rempli par le bailleur et transmis à la CAF par le locataire pour l\'ouverture ou le maintien des droits aux aides au logement (APL, ALF, ALS).',
+                lien: null,
               },
               {
                 q: 'Où trouver le formulaire Cerfa 10842 ?',
                 a: 'Il est téléchargeable gratuitement sur le site service-public.fr ou directement sur le site de la CAF. Le locataire peut aussi vous le transmettre directement.',
+                lien: { url: 'https://www.msa.fr/lfp/documents/11566/48471/Attestation+de+loyer+et+de+r%c3%a9sidence+en+foyer.pdf', label: 'Télécharger le Cerfa 10842 (PDF officiel)' },
               },
               {
                 q: 'Faut-il renouveler l\'attestation chaque année ?',
                 a: 'La CAF peut demander une mise à jour de l\'attestation notamment en cas de changement de loyer, de renouvellement de bail ou de contrôle périodique. Il est conseillé de la mettre à jour dès que la situation locative évolue.',
+                lien: null,
               },
               {
                 q: 'Le bailleur peut-il refuser de remplir l\'attestation CAF ?',
                 a: 'En pratique, le refus est fortement déconseillé. Il peut priver le locataire de ses aides et donc compromettre le paiement du loyer. Dans certains cas, notamment pour les logements conventionnés, le refus peut exposer le bailleur à des sanctions.',
+                lien: null,
               },
             ].map((faq, i) => (
               <div key={i} className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
                 <p className="font-semibold text-gray-900 mb-2">{faq.q}</p>
                 <p className="text-sm text-gray-600 leading-relaxed">{faq.a}</p>
+                {faq.lien && (
+                  <a href={faq.lien.url} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-[#008020] hover:underline">
+                    ↓ {faq.lien.label}
+                  </a>
+                )}
               </div>
             ))}
           </div>
