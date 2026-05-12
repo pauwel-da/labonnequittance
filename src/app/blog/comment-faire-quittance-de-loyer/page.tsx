@@ -53,7 +53,7 @@ export default function ArticlePage() {
         {/* Chiffres clés */}
         <div className="grid grid-cols-3 gap-3 mb-10">
           {[
-            { stat: '0 €', label: 'Coût de la quittance pour le locataire' },
+            { stat: <Link href="/signup" className="text-[#008020] hover:underline">0 €</Link>, label: 'Le prix de la quittance avec La Bonne Quittance' },
             { stat: '3 ans', label: 'Durée de conservation obligatoire' },
             { stat: '9', label: 'Mentions obligatoires' },
           ].map((s, i) => (
