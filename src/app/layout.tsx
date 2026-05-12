@@ -6,8 +6,8 @@ import "./globals.css";
 const geist = Geist({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "La Bonne Quittance",
-  description: "Gérez vos quittances de loyer simplement",
+  title: "La Bonne Quittance — Générez vos quittances de loyer gratuitement",
+  description: "Créez et envoyez vos quittances de loyer en PDF en 1 clic. Outil gratuit pour les bailleurs particuliers. Signature numérique, envoi par email, 100 % conforme.",
   manifest: "/manifest.json",
   icons: {
     icon: "/favicon.png",
