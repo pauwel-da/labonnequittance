@@ -20,11 +20,11 @@ const toc = [
 export default function ArticlePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <ReadingProgress />
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-4 flex justify-center shadow-sm">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-4 flex justify-center shadow-sm relative">
         <Link href="/">
           <Image src="/logo.png" alt="La Bonne Quittance" width={160} height={69} priority />
         </Link>
+        <ReadingProgress />
       </header>
 
       {/* Hero */}
