@@ -38,7 +38,7 @@ export default function ArticlePage() {
             Comment faire une (bonne) quittance de loyer ?
           </h1>
           <p className="text-gray-500 text-lg leading-relaxed">
-            La quittance de loyer est un document simple mais encadré par la loi. Voici tout ce qu'un bailleur doit savoir pour en rédiger une correctement — et éviter les litiges.
+            La quittance de loyer est un document simple mais encadré par la loi. Voici tout ce qu'un bailleur doit savoir pour en rédiger une correctement et éviter les litiges.
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export default function ArticlePage() {
               Une quittance de loyer est un reçu écrit remis par le bailleur au locataire, attestant que ce dernier a bien payé l'intégralité du loyer et des charges pour une période donnée. Elle se distingue du <strong>reçu de paiement partiel</strong>, qui n'est délivré que lorsque le locataire n'a payé qu'une partie de la somme due.
             </p>
             <p className="leading-relaxed mt-3">
-              Contrairement à une idée reçue, le bailleur n'est pas obligé d'envoyer spontanément une quittance chaque mois. En revanche, il est tenu de la remettre <strong>gratuitement</strong> dès que le locataire en fait la demande — c'est une obligation légale.
+              Contrairement à une idée reçue, le bailleur n'est pas obligé d'envoyer spontanément une quittance chaque mois. En revanche, il est tenu de la remettre <strong>gratuitement</strong> dès que le locataire en fait la demande. C'est une obligation légale.
             </p>
           </section>
 
@@ -122,10 +122,10 @@ export default function ArticlePage() {
             <h2 className="text-xl font-bold text-gray-900 mb-3">Les erreurs fréquentes à éviter</h2>
             <ul className="space-y-2 text-sm">
               {[
-                'Oublier de distinguer loyer et charges — le locataire doit pouvoir les vérifier séparément',
+                'Oublier de distinguer loyer et charges : le locataire doit pouvoir les vérifier séparément',
                 'Remettre une quittance avant réception effective du paiement',
                 'Ne pas conserver une copie côté bailleur',
-                'Utiliser un modèle Word sans signature — peu sécurisé et facilement modifiable',
+                'Utiliser un modèle Word sans signature : peu sécurisé et facilement modifiable',
                 'Remettre une quittance partielle alors que le paiement est complet',
               ].map((err, i) => (
                 <li key={i} className="flex items-start gap-2">
