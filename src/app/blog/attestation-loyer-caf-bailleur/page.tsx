@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+import ReadingProgress from '@/components/ReadingProgress'
 
 export const metadata: Metadata = {
   title: 'Bailleur : comment remplir l\'attestation de loyer CAF ? — La Bonne Quittance',
@@ -21,7 +22,8 @@ const toc = [
 export default function ArticlePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
+      <ReadingProgress />
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-4 flex justify-center shadow-sm">
         <Link href="/">
           <Image src="/logo.png" alt="La Bonne Quittance" width={160} height={69} priority />
         </Link>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+import ReadingProgress from '@/components/ReadingProgress'
 
 export const metadata: Metadata = {
   title: 'Comment faire une quittance de loyer conforme ? — La Bonne Quittance',
@@ -19,7 +20,8 @@ const toc = [
 export default function ArticlePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
+      <ReadingProgress />
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-4 flex justify-center shadow-sm">
         <Link href="/">
           <Image src="/logo.png" alt="La Bonne Quittance" width={160} height={69} priority />
         </Link>
@@ -53,7 +55,7 @@ export default function ArticlePage() {
         {/* Chiffres clés */}
         <div className="grid grid-cols-3 gap-3 mb-10">
           {[
-            { stat: <Link href="/signup" className="text-[#008020] hover:underline">0 €</Link>, label: 'Le prix de la quittance avec La Bonne Quittance' },
+            { stat: '0 €', label: <span>Le prix de la quittance avec <Link href="/signup" className="text-[#008020] hover:underline font-semibold">La Bonne Quittance</Link></span> },
             { stat: '3 ans', label: 'Durée de conservation obligatoire' },
             { stat: '9', label: 'Mentions obligatoires' },
           ].map((s, i) => (
