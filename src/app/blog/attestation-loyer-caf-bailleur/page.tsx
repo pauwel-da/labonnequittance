@@ -57,7 +57,7 @@ export default function ArticlePage() {
           {[
             { stat: '8', label: 'Champs à renseigner dans le Cerfa 10842' },
             { stat: '1-2 mois', label: 'Délai de traitement par la CAF' },
-            { stat: '100%', label: 'Des locataires APL peuvent bénéficier du tiers payant' },
+            { stat: '100%', label: 'Des bailleurs peuvent percevoir directement les APL de leur locataire' },
           ].map((s, i) => (
             <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 text-center">
               <p className="text-2xl font-bold text-[#008020]">{s.stat}</p>
