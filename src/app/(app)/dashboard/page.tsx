@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewName, setPreviewName] = useState('')
+  const [adminUserCount, setAdminUserCount] = useState<number | null>(null)
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -49,6 +50,12 @@ export default function DashboardPage() {
         setDatesReglement(init)
       })
       .finally(() => setLoading(false))
+
+    // Stats admin
+    fetch('/api/admin/stats')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d?.count != null && setAdminUserCount(d.count))
+      .catch(() => {})
   }, [])
 
   function shiftDates(newYear: number, newMonth: number) {
@@ -267,6 +274,18 @@ export default function DashboardPage() {
           )}
         </div>
       </header>
+
+      {adminUserCount !== null && (
+        <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
+          <div className="bg-gray-900 text-white rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Admin</span>
+            <span className="text-sm font-bold">
+              <span className="text-[#008020] text-2xl font-bold mr-2">{adminUserCount}</span>
+              utilisateur{adminUserCount > 1 ? 's' : ''} inscrit{adminUserCount > 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+      )}
 
       {profileIncomplete && (
         <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
