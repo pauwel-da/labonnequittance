@@ -15,7 +15,7 @@ export default function FaqItem({ question, answer, link }: Props) {
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 text-left gap-4"
+        className="w-full flex items-center justify-between px-5 py-4 text-left gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
       >
         <span className="font-semibold text-gray-900 text-sm">{question}</span>
         <span className={`text-[#008020] text-lg font-light shrink-0 transition-transform duration-200 ${open ? 'rotate-45' : ''}`}>
