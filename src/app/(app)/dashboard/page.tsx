@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getBiens, getLocataires, getProprietaire } from '@/lib/db'
+import { getBiens, getLocataires, getProprietaire, addQuittance } from '@/lib/db'
 import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/lib/quittance'
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
 import type { Locataire, Bien, Proprietaire } from '@/lib/types'
@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewName, setPreviewName] = useState('')
-  const [adminUserCount, setAdminUserCount] = useState<number | null>(null)
+  const [adminStats, setAdminStats] = useState<{ count: number; telecharge: number; envoye: number; visionne: number } | null>(null)
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -54,7 +54,7 @@ export default function DashboardPage() {
     // Stats admin
     fetch('/api/admin/stats')
       .then(r => r.ok ? r.json() : null)
-      .then(d => d?.count != null && setAdminUserCount(d.count))
+      .then(d => d?.count != null && setAdminStats(d))
       .catch(() => {})
   }, [])
 
@@ -121,6 +121,7 @@ export default function DashboardPage() {
     trackEvent('quittance_telecharger')
     try {
       await genererQuittance(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' }).catch(() => {})
     } catch {
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la génération.' }))
     } finally {
@@ -136,6 +137,7 @@ export default function DashboardPage() {
     clearError(l.id)
     trackEvent('quittance_voir')
     try {
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' }).catch(() => {})
       const { blob, filename } = await fetchQuittanceBlob(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
       setPreviewName(filename)
       if (window.innerWidth < 1024) {
@@ -181,6 +183,7 @@ export default function DashboardPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erreur envoi.')
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye' }).catch(() => {})
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
     } catch (err: unknown) {
@@ -275,14 +278,23 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {adminUserCount !== null && (
+      {adminStats !== null && (
         <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
-          <div className="bg-gray-900 text-white rounded-xl px-4 py-3 flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">Admin</span>
-            <span className="text-sm font-bold">
-              <span className="text-[#008020] text-2xl font-bold mr-2">{adminUserCount}</span>
-              utilisateur{adminUserCount > 1 ? 's' : ''} inscrit{adminUserCount > 1 ? 's' : ''}
-            </span>
+          <div className="bg-gray-900 text-white rounded-xl px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Admin</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: 'Inscrits', value: adminStats.count, color: 'text-[#008020]' },
+                { label: 'Téléchargées', value: adminStats.telecharge, color: 'text-green-400' },
+                { label: 'Envoyées', value: adminStats.envoye, color: 'text-blue-400' },
+                { label: 'Visionnées', value: adminStats.visionne, color: 'text-purple-400' },
+              ].map(s => (
+                <div key={s.label} className="bg-white/5 rounded-lg px-3 py-2 text-center">
+                  <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

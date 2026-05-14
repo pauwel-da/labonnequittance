@@ -11,8 +11,19 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const { data, error } = await supabase.rpc('count_users')
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const [{ data: usersData, error: usersError }, { data: statsData, error: statsError }] = await Promise.all([
+    supabase.rpc('count_users'),
+    supabase.rpc('get_quittance_stats'),
+  ])
 
-  return NextResponse.json({ count: Number(data) })
+  if (usersError || statsError) {
+    return NextResponse.json({ error: usersError?.message || statsError?.message }, { status: 500 })
+  }
+
+  const stats = { telecharge: 0, envoye: 0, visionne: 0 }
+  for (const row of (statsData ?? [])) {
+    if (row.action in stats) stats[row.action as keyof typeof stats] = Number(row.total)
+  }
+
+  return NextResponse.json({ count: Number(usersData), ...stats })
 }
