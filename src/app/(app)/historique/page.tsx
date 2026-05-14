@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getQuittances } from '@/lib/db'
-import type { QuittanceRecord } from '@/lib/types'
-import { History, Download, Send, Eye, Loader2 } from 'lucide-react'
+import { getQuittances, getLocataires, getBiens, getProprietaire } from '@/lib/db'
+import { genererQuittance } from '@/lib/quittance'
+import type { QuittanceRecord, Locataire, Bien, Proprietaire } from '@/lib/types'
+import { History, Download, Send, Loader2 } from 'lucide-react'
 
 function formatPeriode(periode: string) {
   return new Date(periode).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -15,11 +16,41 @@ function formatDate(date: string) {
 
 export default function HistoriquePage() {
   const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
+  const [locataires, setLocataires] = useState<Locataire[]>([])
+  const [biens, setBiens] = useState<Bien[]>([])
+  const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
   const [loading, setLoading] = useState(true)
+  const [regenerating, setRegenerating] = useState<string | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    getQuittances().then(setQuittances).finally(() => setLoading(false))
+    Promise.all([getQuittances(), getLocataires(), getBiens(), getProprietaire()])
+      .then(([qs, locs, bs, prop]) => {
+        setQuittances(qs.filter(q => q.action !== 'visionne'))
+        setLocataires(locs)
+        setBiens(bs)
+        setProprietaire(prop)
+      })
+      .finally(() => setLoading(false))
   }, [])
+
+  async function handleRegenerate(q: QuittanceRecord) {
+    const locataire = locataires.find(l => l.id === q.locataireId)
+    const bien = biens.find(b => b.id === q.bienId)
+    if (!locataire || !bien || !proprietaire) {
+      setErrors(e => ({ ...e, [q.id]: 'Données introuvables.' }))
+      return
+    }
+    setRegenerating(q.id)
+    setErrors(e => { const n = { ...e }; delete n[q.id]; return n })
+    try {
+      await genererQuittance(locataire, bien, proprietaire, q.periode, q.datePaiement)
+    } catch {
+      setErrors(e => ({ ...e, [q.id]: 'Erreur lors du téléchargement.' }))
+    } finally {
+      setRegenerating(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,30 +76,40 @@ export default function HistoriquePage() {
         ) : (
           quittances.map(q => {
             const total = q.montantLoyer + q.montantCharges
+            const isRegen = regenerating === q.id
             return (
-              <div key={q.id} className="bg-white rounded-xl shadow-sm p-4 flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                      q.action === 'envoye' ? 'bg-blue-50 text-blue-600'
-                      : q.action === 'visionne' ? 'bg-purple-50 text-purple-600'
-                      : 'bg-green-50 text-[#008020]'
-                    }`}>
-                      {q.action === 'envoye' ? <><Send size={10} /> Envoyée</>
-                      : q.action === 'visionne' ? <><Eye size={10} /> Visionnée</>
-                      : <><Download size={10} /> Téléchargée</>}
-                    </span>
-                    <span className="text-xs text-gray-400 capitalize">{formatPeriode(q.periode)}</span>
+              <div key={q.id} className="bg-white rounded-xl shadow-sm p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                        q.action === 'envoye' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-[#008020]'
+                      }`}>
+                        {q.action === 'envoye' ? <><Send size={10} /> Envoyée</> : <><Download size={10} /> Téléchargée</>}
+                      </span>
+                      <span className="text-xs text-gray-400 capitalize">{formatPeriode(q.periode)}</span>
+                    </div>
+                    <p className="font-semibold text-gray-900 truncate">{q.locataireNomPrenom}</p>
+                    <p className="text-sm text-gray-500 truncate">{q.bienNom}</p>
                   </div>
-                  <p className="font-semibold text-gray-900 truncate">{q.locataireNomPrenom}</p>
-                  <p className="text-sm text-gray-500 truncate">{q.bienNom}</p>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-gray-900">
+                      {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                    </p>
+                    <p className="text-xs text-gray-400 mb-2">{formatDate(q.createdAt)}</p>
+                    <button
+                      onClick={() => handleRegenerate(q)}
+                      disabled={!!regenerating}
+                      className="flex items-center gap-1.5 text-xs font-medium text-[#008020] hover:bg-green-50 disabled:opacity-50 px-2.5 py-1.5 rounded-lg border border-green-200 transition-colors"
+                    >
+                      {isRegen ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                      {isRegen ? 'Génération...' : 'Re-télécharger'}
+                    </button>
+                  </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold text-gray-900">
-                    {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
-                  </p>
-                  <p className="text-xs text-gray-400">{formatDate(q.createdAt)}</p>
-                </div>
+                {errors[q.id] && (
+                  <p className="text-xs text-red-500 mt-2">{errors[q.id]}</p>
+                )}
               </div>
             )
           })
