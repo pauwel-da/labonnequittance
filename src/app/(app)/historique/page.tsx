@@ -81,22 +81,21 @@ export default function HistoriquePage() {
               <div key={q.id} className="bg-white rounded-xl shadow-sm p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                        q.action === 'envoye' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-[#008020]'
-                      }`}>
-                        {q.action === 'envoye' ? <><Send size={10} /> Envoyée</> : <><Download size={10} /> Téléchargée</>}
-                      </span>
-                      <span className="text-xs text-gray-400 capitalize">{formatPeriode(q.periode)}</span>
-                    </div>
+                    <p className="text-sm font-semibold text-[#008020] capitalize mb-1">{formatPeriode(q.periode)}</p>
                     <p className="font-semibold text-gray-900 truncate">{q.locataireNomPrenom}</p>
-                    <p className="text-sm text-gray-500 truncate">{q.bienNom}</p>
+                    <p className="text-sm text-gray-500 truncate mb-2">{q.bienNom}</p>
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                      q.action === 'envoye' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-[#008020]'
+                    }`}>
+                      {q.action === 'envoye'
+                        ? <><Send size={10} /> Envoyée le {formatDate(q.createdAt)}</>
+                        : <><Download size={10} /> Téléchargée le {formatDate(q.createdAt)}</>}
+                    </span>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-bold text-gray-900">
+                    <p className="font-bold text-gray-900 mb-2">
                       {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
                     </p>
-                    <p className="text-xs text-gray-400 mb-2">{formatDate(q.createdAt)}</p>
                     <button
                       onClick={() => handleRegenerate(q)}
                       disabled={!!regenerating}
