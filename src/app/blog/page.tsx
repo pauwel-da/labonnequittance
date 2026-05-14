@@ -12,7 +12,7 @@ const articles = [
     slug: 'attestation-loyer-caf-bailleur',
     titre: 'Bailleur : comment remplir l\'attestation de loyer CAF ?',
     description: "Votre locataire touche les APL, l'ALF ou l'ALS ? Découvrez comment remplir le Cerfa 10842 en tant que bailleur : champs obligatoires, délais et erreurs à éviter.",
-    date: 'Mai 2026',
+    date: '14 mai 2026',
     tempsLecture: '4 min',
     tag: 'CAF & Aides',
   },
@@ -20,7 +20,7 @@ const articles = [
     slug: 'comment-faire-quittance-de-loyer',
     titre: 'Comment faire une (bonne) quittance de loyer ?',
     description: "Tout ce qu'il faut savoir pour rédiger une quittance de loyer conforme : mentions obligatoires, aspect légal, et bonnes pratiques.",
-    date: 'Mai 2026',
+    date: '14 mai 2026',
     tempsLecture: '5 min',
     tag: 'Quittances',
   },
@@ -29,9 +29,12 @@ const articles = [
 export default function BlogPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
+      <header className="bg-white border-b border-gray-100 px-4 py-4 flex items-center justify-between max-w-5xl mx-auto w-full">
         <Link href="/">
-          <Image src="/logo.png" alt="La Bonne Quittance" width={160} height={69} priority />
+          <Image src="/logo.png" alt="La Bonne Quittance" width={140} height={60} priority />
+        </Link>
+        <Link href="/signup" className="text-sm font-medium text-[#008020] border border-[#008020] hover:bg-green-50 px-4 py-2 rounded-xl transition-colors">
+          Espace bailleur →
         </Link>
       </header>
 
