@@ -4,10 +4,10 @@ Disallow: /biens
 Disallow: /locataires
 Disallow: /profil
 Disallow: /auth/
+Disallow: /login
+Disallow: /signup
 
 Allow: /
-Allow: /login
-Allow: /signup
 Allow: /cgu
 Allow: /mentions-legales
 Allow: /confidentialite
