@@ -81,7 +81,7 @@ export default function HistoriquePage() {
               <div key={q.id} className="bg-white rounded-xl shadow-sm p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#008020] capitalize mb-1">{formatPeriode(q.periode)}</p>
+                    <p className="text-sm font-semibold text-[#008020] capitalize mb-1">Période {formatPeriode(q.periode)}</p>
                     <p className="font-semibold text-gray-900 truncate">{q.locataireNomPrenom}</p>
                     <p className="text-sm text-gray-500 truncate mb-2">{q.bienNom}</p>
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
