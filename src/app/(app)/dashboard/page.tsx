@@ -38,6 +38,7 @@ export default function DashboardPage() {
   const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [historiqueOpen, setHistoriqueOpen] = useState(false)
   const [regenerating, setRegenerating] = useState<string | null>(null)
+  const [regenError, setRegenError] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -219,10 +220,16 @@ export default function DashboardPage() {
   async function handleRegenerate(q: QuittanceRecord) {
     const locataire = locataires.find(l => l.id === q.locataireId)
     const bien = biens.find(b => b.id === q.bienId)
-    if (!locataire || !bien || !proprietaire) return
+    if (!locataire || !bien || !proprietaire) {
+      setRegenError('Données introuvables.')
+      return
+    }
     setRegenerating(q.id)
+    setRegenError(null)
     try {
       await genererQuittance(locataire, bien, proprietaire, q.periode, q.datePaiement)
+    } catch {
+      setRegenError('Erreur lors du téléchargement.')
     } finally {
       setRegenerating(null)
     }
@@ -240,7 +247,18 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-6">
-        <h1 className="text-2xl font-bold mb-4">Générer des quittances</h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold">Générer des quittances</h1>
+          {quittances.length > 0 && (
+            <button
+              onClick={() => setHistoriqueOpen(true)}
+              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <History size={14} />
+              Historique
+            </button>
+          )}
+        </div>
         <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Période</p>
         <div className="relative" ref={pickerRef}>
           <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
@@ -475,65 +493,6 @@ export default function DashboardPage() {
         </>
       )}
 
-      {/* Section Historique */}
-      {quittances.length > 0 && (
-        <div className="px-4 lg:px-8 pb-6 max-w-4xl mx-auto">
-          <button
-            onClick={() => setHistoriqueOpen(o => !o)}
-            className="w-full flex items-center justify-between bg-white rounded-xl shadow-sm px-4 py-3 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
-              <History size={16} className="text-[#008020]" />
-              Généré récemment
-              <span className="text-xs font-normal text-gray-400">({quittances.length})</span>
-            </div>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${historiqueOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {historiqueOpen && (
-            <div className="mt-2 space-y-2">
-              {quittances.slice(0, 10).map(q => {
-                const total = q.montantLoyer + q.montantCharges
-                const isRegen = regenerating === q.id
-                return (
-                  <div key={q.id} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between gap-3 border border-gray-100">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-[#008020] capitalize mb-0.5">
-                        Période {new Date(q.periode).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 truncate">{q.locataireNomPrenom}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${
-                          q.action === 'envoye' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-[#008020]'
-                        }`}>
-                          {q.action === 'envoye' ? <><Send size={9} /> Envoyée</> : <><Download size={9} /> Téléchargée</>}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          le {new Date(q.createdAt).toLocaleDateString('fr-FR')}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold text-gray-900 mb-1.5">
-                        {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
-                      </p>
-                      <button
-                        onClick={() => handleRegenerate(q)}
-                        disabled={!!regenerating}
-                        className="flex items-center gap-1 text-xs font-medium text-[#008020] hover:bg-green-50 disabled:opacity-50 px-2 py-1 rounded-lg border border-green-200 transition-colors"
-                      >
-                        {isRegen ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
-                        {isRegen ? '...' : 'Re-télécharger'}
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Modal prévisualisation PDF — desktop (iframe) */}
       {previewUrl && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black/90">
@@ -550,6 +509,61 @@ export default function DashboardPage() {
             </div>
           </div>
           <iframe src={previewUrl} className="flex-1 w-full bg-gray-100" title="Prévisualisation quittance" />
+        </div>
+      )}
+
+      {/* Drawer historique */}
+      {historiqueOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setHistoriqueOpen(false)} />
+          <div className="relative w-full max-w-sm bg-white h-full flex flex-col shadow-xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <History size={16} className="text-[#008020]" />
+                <h2 className="font-semibold text-gray-900">Historique</h2>
+                <span className="text-xs text-gray-400">({quittances.length})</span>
+              </div>
+              <button onClick={() => setHistoriqueOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+              {quittances.slice(0, 20).map(q => {
+                const total = q.montantLoyer + q.montantCharges
+                const isRegen = regenerating === q.id
+                return (
+                  <div key={q.id} className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-[#008020] capitalize mb-0.5">
+                        Période {new Date(q.periode).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{q.locataireNomPrenom}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${
+                          q.action === 'envoye' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-[#008020]'
+                        }`}>
+                          {q.action === 'envoye' ? <><Send size={9} /> Envoyée</> : <><Download size={9} /> Téléchargée</>}
+                        </span>
+                        <span className="text-xs text-gray-400">le {new Date(q.createdAt).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-gray-900 mb-1.5">{total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</p>
+                      <button
+                        onClick={() => handleRegenerate(q)}
+                        disabled={!!regenerating}
+                        className="flex items-center gap-1 text-xs font-medium text-[#008020] hover:bg-green-50 disabled:opacity-50 px-2 py-1 rounded-lg border border-green-200 transition-colors"
+                      >
+                        {isRegen ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+                        {isRegen ? '...' : 'Re-télécharger'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+              {regenError && <p className="text-xs text-red-500 text-center">{regenError}</p>}
+            </div>
+          </div>
         </div>
       )}
 
