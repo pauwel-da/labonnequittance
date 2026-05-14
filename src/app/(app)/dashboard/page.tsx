@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getBiens, getLocataires, getProprietaire, addQuittance } from '@/lib/db'
+import { getBiens, getLocataires, getProprietaire, addQuittance, getQuittances } from '@/lib/db'
 import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/lib/quittance'
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
-import type { Locataire, Bien, Proprietaire } from '@/lib/types'
+import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import Link from 'next/link'
-import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight } from 'lucide-react'
+import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown } from 'lucide-react'
 
 function monthLabel(year: number, month: number) {
   return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -35,6 +35,9 @@ export default function DashboardPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewName, setPreviewName] = useState('')
   const [adminStats, setAdminStats] = useState<{ count: number; telecharge: number; envoye: number; visionne: number } | null>(null)
+  const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
+  const [historiqueOpen, setHistoriqueOpen] = useState(false)
+  const [regenerating, setRegenerating] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
   const pickerRef = useRef<HTMLDivElement>(null)
@@ -50,6 +53,8 @@ export default function DashboardPage() {
         setDatesReglement(init)
       })
       .finally(() => setLoading(false))
+
+    getQuittances().then(qs => setQuittances(qs.filter(q => q.action !== 'visionne')))
 
     // Stats admin
     fetch('/api/admin/stats')
@@ -209,6 +214,18 @@ export default function DashboardPage() {
     setMonth(m)
     shiftDates(y, m)
     setShowPicker(false)
+  }
+
+  async function handleRegenerate(q: QuittanceRecord) {
+    const locataire = locataires.find(l => l.id === q.locataireId)
+    const bien = biens.find(b => b.id === q.bienId)
+    if (!locataire || !bien || !proprietaire) return
+    setRegenerating(q.id)
+    try {
+      await genererQuittance(locataire, bien, proprietaire, q.periode, q.datePaiement)
+    } finally {
+      setRegenerating(null)
+    }
   }
 
   function closePreview() {
@@ -456,6 +473,65 @@ export default function DashboardPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Section Historique */}
+      {quittances.length > 0 && (
+        <div className="px-4 lg:px-8 pb-6 max-w-4xl mx-auto">
+          <button
+            onClick={() => setHistoriqueOpen(o => !o)}
+            className="w-full flex items-center justify-between bg-white rounded-xl shadow-sm px-4 py-3 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
+              <History size={16} className="text-[#008020]" />
+              Généré récemment
+              <span className="text-xs font-normal text-gray-400">({quittances.length})</span>
+            </div>
+            <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${historiqueOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {historiqueOpen && (
+            <div className="mt-2 space-y-2">
+              {quittances.slice(0, 10).map(q => {
+                const total = q.montantLoyer + q.montantCharges
+                const isRegen = regenerating === q.id
+                return (
+                  <div key={q.id} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between gap-3 border border-gray-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-[#008020] capitalize mb-0.5">
+                        Période {new Date(q.periode).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{q.locataireNomPrenom}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full ${
+                          q.action === 'envoye' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-[#008020]'
+                        }`}>
+                          {q.action === 'envoye' ? <><Send size={9} /> Envoyée</> : <><Download size={9} /> Téléchargée</>}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          le {new Date(q.createdAt).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-gray-900 mb-1.5">
+                        {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                      </p>
+                      <button
+                        onClick={() => handleRegenerate(q)}
+                        disabled={!!regenerating}
+                        className="flex items-center gap-1 text-xs font-medium text-[#008020] hover:bg-green-50 disabled:opacity-50 px-2 py-1 rounded-lg border border-green-200 transition-colors"
+                      >
+                        {isRegen ? <Loader2 size={11} className="animate-spin" /> : <Download size={11} />}
+                        {isRegen ? '...' : 'Re-télécharger'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Modal prévisualisation PDF — desktop (iframe) */}
