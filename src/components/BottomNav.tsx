@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { FileText, Home, Users, User, LogOut, Loader2 } from 'lucide-react'
+import { FileText, Home, Users, User, LogOut, Loader2, History } from 'lucide-react'
 import { useTransition } from 'react'
 import { signOut } from '@/app/(app)/actions'
 
 const links = [
   { href: '/dashboard', label: 'Quittances', icon: FileText },
+  { href: '/historique', label: 'Historique', icon: History },
   { href: '/biens', label: 'Biens', icon: Home },
   { href: '/locataires', label: 'Locataires', icon: Users },
   { href: '/profil', label: 'Profil', icon: User },

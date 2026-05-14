@@ -20,6 +20,20 @@ export interface Locataire {
   dateDebut: string
 }
 
+export interface QuittanceRecord {
+  id: string
+  locataireId: string | null
+  bienId: string | null
+  locataireNomPrenom: string
+  bienNom: string
+  periode: string
+  datePaiement: string
+  montantLoyer: number
+  montantCharges: number
+  action: 'telecharge' | 'envoye' | 'visionne'
+  createdAt: string
+}
+
 export interface Proprietaire {
   nom: string
   prenom: string

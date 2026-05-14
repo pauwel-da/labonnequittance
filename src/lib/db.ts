@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import type { Bien, Locataire, Proprietaire } from './types'
+import type { Bien, Locataire, Proprietaire, QuittanceRecord } from './types'
 
 // ── Biens ─────────────────────────────────────────────────────────────────────
 
@@ -142,5 +142,48 @@ export async function saveProprietaire(p: Proprietaire): Promise<void> {
     },
     { onConflict: 'user_id' }
   )
+  if (error) throw error
+}
+
+// ── Quittances (historique) ───────────────────────────────────────────────────
+
+export async function getQuittances(): Promise<QuittanceRecord[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('quittances')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data ?? []).map(r => ({
+    id: r.id,
+    locataireId: r.locataire_id,
+    bienId: r.bien_id,
+    locataireNomPrenom: r.locataire_nom_prenom,
+    bienNom: r.bien_nom,
+    periode: r.periode,
+    datePaiement: r.date_paiement,
+    montantLoyer: Number(r.montant_loyer),
+    montantCharges: Number(r.montant_charges),
+    action: r.action,
+    createdAt: r.created_at,
+  }))
+}
+
+export async function addQuittance(q: Omit<QuittanceRecord, 'id' | 'createdAt'>): Promise<void> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Non authentifié')
+  const { error } = await supabase.from('quittances').insert({
+    user_id: user.id,
+    locataire_id: q.locataireId,
+    bien_id: q.bienId,
+    locataire_nom_prenom: q.locataireNomPrenom,
+    bien_nom: q.bienNom,
+    periode: q.periode,
+    date_paiement: q.datePaiement,
+    montant_loyer: q.montantLoyer,
+    montant_charges: q.montantCharges,
+    action: q.action,
+  })
   if (error) throw error
 }
