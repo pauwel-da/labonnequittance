@@ -25,8 +25,11 @@ export default function SignupPage() {
   const [isPending, startTransition] = useTransition()
   const [googlePending, setGooglePending] = useState(false)
   const [googleConsent, setGoogleConsent] = useState(false)
+  const [consentError, setConsentError] = useState(false)
 
   async function handleGoogle() {
+    if (!googleConsent) { setConsentError(true); return }
+    setConsentError(false)
     setGooglePending(true)
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
@@ -37,6 +40,8 @@ export default function SignupPage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (!googleConsent) { setConsentError(true); return }
+    setConsentError(false)
     const formData = new FormData(e.currentTarget)
     setEmail(formData.get('email') as string)
     setError(null)
@@ -115,10 +120,14 @@ export default function SignupPage() {
                 </span>
               </label>
 
+              {consentError && (
+                <p className="text-xs text-red-500 -mt-2 mb-3">Veuillez accepter les conditions pour continuer.</p>
+              )}
+
               <button
                 type="button"
                 onClick={handleGoogle}
-                disabled={googlePending || isPending || !googleConsent}
+                disabled={googlePending || isPending}
                 className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
               >
                 {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
@@ -175,7 +184,7 @@ export default function SignupPage() {
 
                 <button
                   type="submit"
-                  disabled={isPending || !googleConsent}
+                  disabled={isPending}
                   className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
                 >
                   {isPending ? <><Loader2 size={16} className="animate-spin" /> Création...</> : 'Créer mon compte'}
