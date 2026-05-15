@@ -25,11 +25,11 @@ export default function SignupPage() {
   const [isPending, startTransition] = useTransition()
   const [googlePending, setGooglePending] = useState(false)
   const [googleConsent, setGoogleConsent] = useState(false)
-  const [consentError, setConsentError] = useState(false)
+  const [consentErrorSource, setConsentErrorSource] = useState<'google' | 'email' | null>(null)
 
   async function handleGoogle() {
-    if (!googleConsent) { setConsentError(true); return }
-    setConsentError(false)
+    if (!googleConsent) { setConsentErrorSource('google'); return }
+    setConsentErrorSource(null)
     setGooglePending(true)
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
