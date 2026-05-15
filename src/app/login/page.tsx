@@ -23,7 +23,6 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [googlePending, setGooglePending] = useState(false)
-  const [consent, setConsent] = useState(false)
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
 
@@ -69,27 +68,10 @@ function LoginForm() {
         </>
       )}
 
-      {/* Consentement */}
-      <label className="flex items-start gap-3 cursor-pointer mb-4">
-        <input
-          type="checkbox"
-          checked={consent}
-          onChange={e => setConsent(e.target.checked)}
-          className="mt-0.5 w-4 h-4 shrink-0 accent-[#008020] cursor-pointer"
-        />
-        <span className="text-xs text-gray-500 leading-relaxed">
-          En continuant, j&apos;accepte les{' '}
-          <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
-          , la{' '}
-          <Link href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</Link>
-          {' '}et d&apos;être inscrit à la newsletter.
-        </span>
-      </label>
-
       {/* Bouton Google */}
       <button
         onClick={handleGoogle}
-        disabled={googlePending || isPending || !consent}
+        disabled={googlePending || isPending}
         className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
       >
         {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}

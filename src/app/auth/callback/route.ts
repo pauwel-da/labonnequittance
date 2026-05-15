@@ -46,5 +46,17 @@ export async function GET(request: Request) {
     }
   }
 
+  // Confirmation email : sauvegarder l'optin explicitement
+  if (code) {
+    const supabase = await createClient()
+    const { data } = await supabase.auth.getUser()
+    if (data.user) {
+      await supabase.from('proprietaire').upsert(
+        { user_id: data.user.id, optin_marketing: true },
+        { onConflict: 'user_id' }
+      )
+    }
+  }
+
   return NextResponse.redirect(`${origin}/auth/confirmed`)
 }
