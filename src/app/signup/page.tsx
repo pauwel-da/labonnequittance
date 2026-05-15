@@ -182,6 +182,10 @@ export default function SignupPage() {
                   </p>
                 )}
 
+                {consentError && (
+                  <p className="text-xs text-red-500">Veuillez accepter les conditions pour continuer.</p>
+                )}
+
                 <button
                   type="submit"
                   disabled={isPending}
