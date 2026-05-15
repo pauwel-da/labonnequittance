@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         { onConflict: 'user_id', ignoreDuplicates: true }
       )
 
-      return NextResponse.redirect(`${origin}/dashboard`)
+      return NextResponse.redirect(`${origin}/onboarding`)
     }
   }
 
