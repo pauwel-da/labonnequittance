@@ -62,6 +62,10 @@ export async function fetchQuittanceBlob(
   return { blob: await response.blob(), filename: payload._filename }
 }
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+}
+
 export async function genererQuittance(
   locataire: Locataire,
   bien: Bien,
@@ -70,6 +74,16 @@ export async function genererQuittance(
   dateReglement: string,
 ): Promise<void> {
   const { blob, filename } = await fetchQuittanceBlob(locataire, bien, proprietaire, datePeriode, dateReglement)
+
+  // Sur iOS, utiliser le Web Share API pour déclencher "Enregistrer dans Fichiers"
+  if (isIOS() && navigator.share) {
+    const file = new File([blob], filename, { type: 'application/pdf' })
+    if (navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Quittance de loyer' })
+      return
+    }
+  }
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
