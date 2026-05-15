@@ -40,8 +40,8 @@ export default function SignupPage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!googleConsent) { setConsentError(true); return }
-    setConsentError(false)
+    if (!googleConsent) { setConsentErrorSource('email'); return }
+    setConsentErrorSource(null)
     const formData = new FormData(e.currentTarget)
     setEmail(formData.get('email') as string)
     setError(null)
@@ -120,7 +120,7 @@ export default function SignupPage() {
                 </span>
               </label>
 
-              {consentError && (
+              {consentErrorSource === 'google' && (
                 <p className="text-xs text-red-500 -mt-2 mb-3">Veuillez accepter les conditions pour continuer.</p>
               )}
 
@@ -182,7 +182,7 @@ export default function SignupPage() {
                   </p>
                 )}
 
-                {consentError && (
+                {consentErrorSource === 'email' && (
                   <p className="text-xs text-red-500">Veuillez accepter les conditions pour continuer.</p>
                 )}
 
