@@ -36,12 +36,13 @@ export async function GET(request: Request) {
           code_postal: '',
           ville: '',
           signature: '',
+          optin_marketing: true,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id', ignoreDuplicates: true }
       )
 
-      return NextResponse.redirect(`${origin}/onboarding`)
+      return NextResponse.redirect(`${origin}/dashboard`)
     }
   }
 

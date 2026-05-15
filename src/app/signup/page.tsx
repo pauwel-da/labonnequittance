@@ -24,6 +24,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [googlePending, setGooglePending] = useState(false)
+  const [googleConsent, setGoogleConsent] = useState(false)
 
   async function handleGoogle() {
     setGooglePending(true)
@@ -98,10 +99,26 @@ export default function SignupPage() {
               <h1 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h1>
               <p className="text-sm text-gray-500 mb-6">Gérez vos quittances en toute simplicité.</p>
 
+              <label className="flex items-start gap-3 cursor-pointer mb-4">
+                <input
+                  type="checkbox"
+                  checked={googleConsent}
+                  onChange={e => setGoogleConsent(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 shrink-0 accent-[#008020] cursor-pointer"
+                />
+                <span className="text-xs text-gray-500 leading-relaxed">
+                  En continuant, j&apos;accepte les{' '}
+                  <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
+                  , la{' '}
+                  <Link href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</Link>
+                  {' '}et d&apos;être inscrit à la newsletter.
+                </span>
+              </label>
+
               <button
                 type="button"
                 onClick={handleGoogle}
-                disabled={googlePending || isPending}
+                disabled={googlePending || isPending || !googleConsent}
                 className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
               >
                 {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
