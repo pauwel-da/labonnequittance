@@ -85,7 +85,7 @@ export default function Home() {
         {/* ── Captures d'écran ────────────────────────────────────────── */}
         <div className="w-full max-w-4xl relative mb-16 mt-4">
           {/* Desktop */}
-          <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+          <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100 transition-transform duration-300 hover:scale-[1.02] cursor-zoom-in">
             <Image
               src="/capture_ordinateur.png"
               alt="Dashboard La Bonne Quittance sur ordinateur"
@@ -95,7 +95,7 @@ export default function Home() {
             />
           </div>
           {/* Mobile — superposé en bas à droite */}
-          <div className="absolute -bottom-6 -right-2 sm:-right-6 w-28 sm:w-40 rounded-2xl overflow-hidden shadow-2xl border-2 border-white">
+          <div className="absolute -bottom-6 -right-2 sm:-right-6 w-28 sm:w-40 rounded-2xl overflow-hidden shadow-2xl border-2 border-white transition-transform duration-300 hover:scale-110 cursor-zoom-in z-10">
             <Image
               src="/capture_mobile.png"
               alt="Dashboard La Bonne Quittance sur mobile"
