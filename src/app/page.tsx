@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { FileText, Send, PenLine, ChevronRight } from 'lucide-react'
+import AppScreenshots from '@/components/AppScreenshots'
 
 const steps = [
   {
@@ -82,29 +83,15 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* ── Captures d'écran ────────────────────────────────────────── */}
-        <div className="w-full max-w-4xl relative mb-16 mt-4">
-          {/* Desktop */}
-          <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100 transition-transform duration-300 hover:scale-[1.02] cursor-zoom-in">
-            <Image
-              src="/capture_ordinateur.png"
-              alt="Dashboard La Bonne Quittance sur ordinateur"
-              width={1200}
-              height={750}
-              className="w-full"
-            />
-          </div>
-          {/* Mobile — superposé en bas à droite */}
-          <div className="absolute -bottom-6 -right-2 sm:-right-6 w-28 sm:w-40 rounded-2xl overflow-hidden shadow-2xl border-2 border-white transition-transform duration-300 hover:scale-110 cursor-zoom-in z-10">
-            <Image
-              src="/capture_mobile.png"
-              alt="Dashboard La Bonne Quittance sur mobile"
-              width={390}
-              height={844}
-              className="w-full"
-            />
-          </div>
+        {/* ── Signaux de réassurance ───────────────────────────────────── */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-10 text-sm text-gray-400">
+          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> Gratuit pour toujours</span>
+          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> Aucune carte requise</span>
+          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> Prêt en 30 secondes</span>
         </div>
+
+        {/* ── Captures d'écran ────────────────────────────────────────── */}
+        <AppScreenshots />
 
         {/* ── Comment ça marche ────────────────────────────────────────── */}
         <div className="w-full max-w-3xl border-t border-gray-100 pt-12 mb-12">
