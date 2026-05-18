@@ -42,13 +42,13 @@ export default function AppScreenshots() {
           className="absolute -bottom-6 -right-2 sm:-right-6 w-28 sm:w-40 cursor-zoom-in transition-transform duration-300 hover:scale-110 z-10"
         >
           {/* Corps du téléphone */}
-          <div className="relative bg-gray-900 rounded-[2.5rem] p-[4px] shadow-2xl">
+          <div className="relative bg-gray-900 rounded-3xl p-1 shadow-2xl">
             {/* Boutons latéraux */}
             <div className="absolute -left-[3px] top-16 w-[3px] h-6 bg-gray-700 rounded-l-sm" />
             <div className="absolute -left-[3px] top-24 w-[3px] h-6 bg-gray-700 rounded-l-sm" />
             <div className="absolute -right-[3px] top-20 w-[3px] h-8 bg-gray-700 rounded-r-sm" />
             {/* Écran */}
-            <div className="bg-black rounded-[2.2rem] overflow-hidden">
+            <div className="bg-black rounded-[1.3rem] overflow-hidden">
               {/* Notch / Dynamic island */}
               <div className="flex justify-center pt-2 pb-1">
                 <div className="w-16 h-4 bg-black rounded-full border border-gray-800" />
