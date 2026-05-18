@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ReadingProgress from '@/components/ReadingProgress'
 import FaqItem from '@/components/FaqItem'
+import BlogHeader from '@/components/BlogHeader'
 
 export const metadata: Metadata = {
   title: 'Comment faire une quittance de loyer conforme ? — La Bonne Quittance',
@@ -21,17 +22,7 @@ const toc = [
 export default function ArticlePage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-4 shadow-sm relative">
-        <div className="flex items-center justify-between max-w-5xl mx-auto">
-          <Link href="/">
-            <Image src="/logo.png" alt="La Bonne Quittance" width={140} height={60} priority />
-          </Link>
-          <Link href="/signup" className="text-sm font-medium text-[#008020] border border-[#008020] hover:bg-green-50 px-4 py-2 rounded-xl transition-colors">
-            Espace bailleur →
-          </Link>
-        </div>
-        <ReadingProgress />
-      </header>
+      <BlogHeader />
 
       {/* Hero */}
       <div className="bg-[#008020] text-white px-4 py-12">
