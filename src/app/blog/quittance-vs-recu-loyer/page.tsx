@@ -5,7 +5,7 @@ import ReadingProgress from '@/components/ReadingProgress'
 import FaqItem from '@/components/FaqItem'
 
 export const metadata: Metadata = {
-  title: 'Quittance de loyer vs reçu de loyer : quelle différence ? — La Bonne Quittance',
+  title: 'Quittance de loyer vs. reçu de loyer : quelle différence ? — La Bonne Quittance',
   description: 'Quittance et reçu de loyer sont souvent confondus. Voici la différence essentielle que tout bailleur doit connaître.',
 }
 
@@ -35,7 +35,7 @@ export default function ArticlePage() {
             <span className="text-green-100">Quittance vs reçu</span>
           </p>
           <span className="inline-block bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">Quittances</span>
-          <h1 className="text-3xl font-bold mb-3 leading-tight">Quittance de loyer vs reçu de loyer : quelle différence ?</h1>
+          <h1 className="text-3xl font-bold mb-3 leading-tight">Quittance de loyer vs. reçu de loyer : quelle différence ?</h1>
           <p className="text-green-100 text-base leading-relaxed mb-5">
             Ces deux documents sont souvent confondus. Pourtant ils n&apos;ont pas la même valeur juridique. Voici ce que tout bailleur doit savoir.
           </p>
@@ -53,7 +53,7 @@ export default function ArticlePage() {
         <div className="grid grid-cols-2 gap-3 mb-10">
           {[
             { stat: '100%', label: 'Du loyer payé pour obtenir une quittance' },
-            { stat: '0%', label: 'Du loyer payé pour un reçu (paiement partiel)' },
+            { stat: '3 ans', label: 'Durée de conservation obligatoire d\'une quittance' },
           ].map((s, i) => (
             <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 text-center">
               <p className="text-2xl font-bold text-[#008020]">{s.stat}</p>
@@ -77,10 +77,10 @@ export default function ArticlePage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-3">Le reçu : paiement partiel</h2>
             <p className="leading-relaxed">
-              Le <strong>reçu de loyer</strong> (ou reçu de paiement partiel) est délivré lorsque le locataire n&apos;a payé <strong>qu&apos;une partie</strong> de la somme due. Il reconnaît l&apos;encaissement d&apos;un acompte, mais ne libère pas le locataire de sa dette pour le solde restant.
+              Le <strong>reçu de loyer</strong> (ou reçu de paiement partiel) est délivré lorsque le locataire n&apos;a payé <strong>qu&apos;une partie</strong>{' '}de la somme due. Il reconnaît l&apos;encaissement d&apos;un acompte, mais ne libère pas le locataire de sa dette pour le solde restant.
             </p>
             <p className="leading-relaxed mt-3">
-              Le bailleur <strong>ne peut pas délivrer une quittance</strong> si le loyer n&apos;est pas entièrement réglé — cela reviendrait à reconnaître un paiement complet alors que ce n&apos;est pas le cas.
+              Le bailleur <strong>ne peut pas délivrer une quittance</strong>{' '}si le loyer n&apos;est pas entièrement réglé — cela reviendrait à reconnaître un paiement complet alors que ce n&apos;est pas le cas.
             </p>
           </section>
 
@@ -97,19 +97,19 @@ export default function ArticlePage() {
               <div className="bg-white border border-gray-100 rounded-xl p-4">
                 <p className="font-bold text-[#008020] mb-2">Quittance de loyer</p>
                 <ul className="space-y-1.5 text-gray-600">
-                  <li>✓ Paiement complet</li>
-                  <li>✓ Libère totalement le locataire</li>
-                  <li>✓ Obligatoire sur demande</li>
-                  <li>✓ Annule les reçus partiels</li>
+                  <li>— Paiement complet</li>
+                  <li>— Libère totalement le locataire</li>
+                  <li>— Obligatoire sur demande</li>
+                  <li>— Annule les reçus partiels</li>
                 </ul>
               </div>
               <div className="bg-white border border-gray-100 rounded-xl p-4">
                 <p className="font-bold text-gray-700 mb-2">Reçu de loyer</p>
                 <ul className="space-y-1.5 text-gray-600">
-                  <li>✓ Paiement partiel</li>
-                  <li>✗ Ne libère pas totalement</li>
-                  <li>✓ Bonne pratique</li>
-                  <li>✗ N&apos;annule pas la dette</li>
+                  <li>— Paiement partiel</li>
+                  <li>— Ne libère pas totalement</li>
+                  <li>— Bonne pratique</li>
+                  <li>— N&apos;annule pas la dette</li>
                 </ul>
               </div>
             </div>
