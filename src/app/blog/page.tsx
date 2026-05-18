@@ -9,6 +9,14 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: 'quittance-vs-recu-loyer',
+    titre: 'Quittance de loyer vs reçu de loyer : quelle différence ?',
+    description: "Ces deux documents sont souvent confondus. Pourtant ils n'ont pas la même valeur juridique. Voici ce que tout bailleur doit savoir.",
+    date: '18 mai 2026',
+    tempsLecture: '2 min',
+    tag: 'Quittances',
+  },
+  {
     slug: 'attestation-loyer-caf-bailleur',
     titre: 'Bailleur : comment remplir l\'attestation de loyer CAF ?',
     description: "Votre locataire touche les APL, l'ALF ou l'ALS ? Découvrez comment remplir le Cerfa 10842 en tant que bailleur : champs obligatoires, délais et erreurs à éviter.",
