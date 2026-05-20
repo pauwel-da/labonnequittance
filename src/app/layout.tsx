@@ -35,6 +35,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           gtag('config', 'AW-18008672783');
         `}</Script>
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" />
+        <Script id="schema-website" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          'name': 'La Bonne Quittance',
+          'url': 'https://labonnequittance.fr',
+        }) }} />
       </body>
     </html>
   );
