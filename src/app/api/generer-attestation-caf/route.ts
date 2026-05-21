@@ -1,21 +1,29 @@
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda'
 import { NextRequest, NextResponse } from 'next/server'
 
-const FUNCTION_URL = 'https://x2mwf6adko4xkbninaedvruqfq0rspmm.lambda-url.us-east-1.on.aws/'
+const lambda = new LambdaClient({ region: 'us-east-1' })
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
 
-  const response = await fetch(FUNCTION_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+  const command = new InvokeCommand({
+    FunctionName: 'labonnequittance-attestation-caf',
+    Payload: JSON.stringify({
+      requestContext: { http: { method: 'POST' } },
+      body: JSON.stringify(body),
+      isBase64Encoded: false,
+    }),
   })
 
-  if (!response.ok) {
+  const response = await lambda.send(command)
+
+  const result = JSON.parse(new TextDecoder().decode(response.Payload))
+
+  if (result.statusCode !== 200) {
     return NextResponse.json({ error: 'Erreur génération attestation CAF' }, { status: 500 })
   }
 
-  const pdfBuffer = await response.arrayBuffer()
+  const pdfBuffer = Buffer.from(result.body, 'base64')
 
   return new NextResponse(pdfBuffer, {
     status: 200,
