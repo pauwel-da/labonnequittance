@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
   const result = JSON.parse(new TextDecoder().decode(response.Payload))
 
   if (result.statusCode !== 200) {
+    console.error('[attestation-caf] Lambda error:', result.statusCode, result.body)
     return NextResponse.json({ error: 'Erreur génération attestation CAF' }, { status: 500 })
   }
 
