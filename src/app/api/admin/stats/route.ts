@@ -20,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ error: usersError?.message || statsError?.message }, { status: 500 })
   }
 
-  const stats = { telecharge: 0, envoye: 0, visionne: 0 }
+  const stats = { telecharge: 0, envoye: 0, visionne: 0, caf: 0 }
   for (const row of (statsData ?? [])) {
     if (row.action in stats) stats[row.action as keyof typeof stats] = Number(row.total)
   }

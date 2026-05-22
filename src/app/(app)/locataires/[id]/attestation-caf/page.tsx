@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire } from '@/lib/db'
+import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire, addQuittance } from '@/lib/db'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import { ArrowLeft, FileCheck, Download, Loader2, PenLine, Trash2, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -155,7 +155,7 @@ export default function AttestationCafPage() {
       adresse_locataire: bien.adresse,
       date_debut: locataire.dateDebut,
       // Bien
-      localisation: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
+      localisation: proprietaire.ville,
       loyer_hors_charges: locataire.loyer,
       charges: locataire.charges,
       type_location: bien.typeLocation,
@@ -189,6 +189,9 @@ export default function AttestationCafPage() {
       a.download = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
       a.click()
       URL.revokeObjectURL(url)
+      const now = new Date()
+      const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+      addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(() => {})
     } catch {
       setError('Erreur lors de la génération. Vérifiez votre connexion et réessayez.')
     } finally {
