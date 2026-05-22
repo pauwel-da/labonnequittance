@@ -289,7 +289,7 @@ export default function AttestationCafPage() {
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Contact bailleur</p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone <span className="text-gray-400 font-normal">(facultatif)</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
             <input type="tel" value={telephone} onChange={e => setTelephone(e.target.value)}
               placeholder="0612345678"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
