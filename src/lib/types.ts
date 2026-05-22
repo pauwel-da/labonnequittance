@@ -30,7 +30,7 @@ export interface QuittanceRecord {
   datePaiement: string
   montantLoyer: number
   montantCharges: number
-  action: 'telecharge' | 'envoye' | 'visionne'
+  action: 'telecharge' | 'envoye' | 'visionne' | 'caf'
   createdAt: string
 }
 
