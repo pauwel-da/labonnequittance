@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire } from '@/lib/db'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
-import { ArrowLeft, FileCheck, Download, Loader2, PenLine, Trash2 } from 'lucide-react'
+import { ArrowLeft, FileCheck, Download, Loader2, PenLine, Trash2, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 function isValidEmail(v: string) {
@@ -300,9 +300,9 @@ export default function AttestationCafPage() {
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Logement</p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Surface habitable (m²) <span className="text-gray-400 font-normal">(facultatif)</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Surface habitable (m²)</label>
             <input type="number" min="1" value={surface} onChange={e => setSurface(e.target.value)}
-              placeholder="45"
+              placeholder="45" required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
           </div>
           <div>
@@ -319,7 +319,25 @@ export default function AttestationCafPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Ce logement respecte-t-il les caractéristiques de décence ?</label>
+            <div className="flex items-center gap-1.5 mb-2">
+              <label className="text-sm font-medium text-gray-700">Ce logement respecte-t-il les caractéristiques de décence ?</label>
+              <div className="relative group">
+                <Info size={14} className="text-gray-400 cursor-help shrink-0" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-gray-900 text-white text-xs rounded-lg px-3 py-2.5 hidden group-hover:block z-10 shadow-lg">
+                  <p className="font-semibold mb-1">Décret n° 2002-120 du 30 jan. 2002</p>
+                  <ul className="space-y-0.5 list-disc list-inside text-gray-300">
+                    <li>Surface ≥ 9 m² et hauteur ≥ 2,20 m (ou volume ≥ 20 m³)</li>
+                    <li>Structure solide, étanchéité, ventilation correcte</li>
+                    <li>Eau potable, WC intérieur, évacuation des eaux usées</li>
+                    <li>Chauffage et production d'eau chaude</li>
+                    <li>Coin cuisine avec évier et branchements</li>
+                    <li>Réseau électrique conforme, éclairage naturel</li>
+                    <li>Absence d'animaux nuisibles et de parasites</li>
+                  </ul>
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+                </div>
+              </div>
+            </div>
             <div className="flex gap-3">
               {[{ v: true, l: 'Oui' }, { v: false, l: 'Non' }].map(opt => (
                 <button key={String(opt.v)} type="button" onClick={() => setLogementDecent(opt.v)}
