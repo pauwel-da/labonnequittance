@@ -200,19 +200,23 @@ export default function AttestationCafPage() {
       const blob = await res.blob()
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
       const file = new File([blob], filename, { type: 'application/pdf' })
-      const canShare = 'share' in navigator && 'canShare' in navigator && navigator.canShare({ files: [file] })
-      const shared = canShare
+      const shared = 'share' in navigator
         ? await navigator.share({ files: [file], title: 'Attestation CAF' }).then(() => true).catch(() => false)
         : false
       if (!shared) {
         const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        setTimeout(() => URL.revokeObjectURL(url), 5000)
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        if (isMobile) {
+          window.open(url, '_blank')
+        } else {
+          const a = document.createElement('a')
+          a.href = url
+          a.download = filename
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 10000)
       }
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
