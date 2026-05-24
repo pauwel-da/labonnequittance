@@ -200,7 +200,8 @@ export default function AttestationCafPage() {
       const blob = await res.blob()
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
       const file = new File([blob], filename, { type: 'application/pdf' })
-      const shared = navigator.share && navigator.canShare?.({ files: [file] })
+      const canShare = 'share' in navigator && 'canShare' in navigator && navigator.canShare({ files: [file] })
+      const shared = canShare
         ? await navigator.share({ files: [file], title: 'Attestation CAF' }).then(() => true).catch(() => false)
         : false
       if (!shared) {
