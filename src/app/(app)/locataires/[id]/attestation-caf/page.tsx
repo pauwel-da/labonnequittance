@@ -199,22 +199,21 @@ export default function AttestationCafPage() {
       if (!res.ok) throw new Error('Erreur génération')
       const blob = await res.blob()
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
-      const file = new File([blob], filename, { type: 'application/pdf' })
 
-      if (navigator.share && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Attestation CAF' }).catch(() => {})
-        return
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && navigator.share) {
+        const file = new File([blob], filename, { type: 'application/pdf' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Attestation CAF' })
+          return
+        }
       }
 
       const url = URL.createObjectURL(blob)
-      const opened = window.open(url, '_blank')
-      if (!opened) {
-        const a = document.createElement('a')
-        a.href = url
-        a.download = filename
-        a.click()
-      }
-      setTimeout(() => URL.revokeObjectURL(url), 10000)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
@@ -254,7 +253,7 @@ export default function AttestationCafPage() {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} noValidate className="px-4 lg:px-8 mt-6 max-w-2xl mx-auto space-y-5 pb-10">
+      <div className="px-4 lg:px-8 mt-6 max-w-2xl mx-auto space-y-5 pb-10">
 
         {/* Données pré-remplies */}
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-1">
@@ -519,7 +518,7 @@ export default function AttestationCafPage() {
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
         )}
 
-        <button type="submit" disabled={generating}
+        <button type="button" onClick={handleSubmit} disabled={generating}
           className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
           {generating
             ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
@@ -527,7 +526,7 @@ export default function AttestationCafPage() {
           }
         </button>
 
-      </form>
+      </div>
     </div>
   )
 }
