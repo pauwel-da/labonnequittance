@@ -202,7 +202,7 @@ export default function AttestationCafPage() {
       if (navigator.share) {
         const file = new File([blob], filename, { type: 'application/pdf' })
         if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Attestation CAF' })
+          await navigator.share({ files: [file], title: 'Attestation CAF' }).catch(() => {})
         }
       } else {
         const url = URL.createObjectURL(blob)
