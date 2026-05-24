@@ -517,7 +517,7 @@ export default function AttestationCafPage() {
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
         )}
 
-        <button type="button" onClick={handleSubmit} disabled={generating}
+        <button type="submit" disabled={generating}
           className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
           {generating
             ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
