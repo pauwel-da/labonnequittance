@@ -24,7 +24,6 @@ export default function AttestationCafPage() {
   const [error, setError] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('')
   const [savingSignature, setSavingSignature] = useState(false)
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
 
   // Champs formulaire
   const [telephone, setTelephone] = useState('')
@@ -135,26 +134,6 @@ export default function AttestationCafPage() {
     }
   }
 
-  async function handleDownload() {
-    if (!pdfBlob || !locataire) return
-    const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
-    if (navigator.share) {
-      const file = new File([pdfBlob], filename, { type: 'application/pdf' })
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Attestation CAF' })
-        return
-      }
-    }
-    const url = URL.createObjectURL(pdfBlob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 5000)
-  }
-
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     if (!locataire || !bien || !proprietaire) {
@@ -219,7 +198,22 @@ export default function AttestationCafPage() {
       })
       if (!res.ok) throw new Error('Erreur génération')
       const blob = await res.blob()
-      setPdfBlob(blob)
+      const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
+      if (navigator.share) {
+        const file = new File([blob], filename, { type: 'application/pdf' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Attestation CAF' })
+        }
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        setTimeout(() => URL.revokeObjectURL(url), 5000)
+      }
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
@@ -524,20 +518,13 @@ export default function AttestationCafPage() {
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
         )}
 
-        {pdfBlob ? (
-          <button type="button" onClick={handleDownload}
-            className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-            <Download size={16} /> Télécharger l&apos;attestation CAF
-          </button>
-        ) : (
-          <button type="submit" disabled={generating}
-            className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-            {generating
-              ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
-              : <><Download size={16} /> Générer l&apos;attestation CAF</>
-            }
-          </button>
-        )}
+        <button type="submit" disabled={generating}
+          className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+          {generating
+            ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
+            : <><Download size={16} /> Télécharger l&apos;attestation CAF</>
+          }
+        </button>
 
       </form>
     </div>
