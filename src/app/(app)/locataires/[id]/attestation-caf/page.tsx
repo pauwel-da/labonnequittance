@@ -199,25 +199,20 @@ export default function AttestationCafPage() {
       if (!res.ok) throw new Error('Erreur génération')
       const blob = await res.blob()
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
-      const file = new File([blob], filename, { type: 'application/pdf' })
-      const shared = 'share' in navigator
-        ? await navigator.share({ files: [file], title: 'Attestation CAF' }).then(() => true).catch(() => false)
-        : false
-      if (!shared) {
-        const url = URL.createObjectURL(blob)
-        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-        if (isMobile) {
-          window.open(url, '_blank')
-        } else {
-          const a = document.createElement('a')
-          a.href = url
-          a.download = filename
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && navigator.share) {
+        const file = new File([blob], filename, { type: 'application/pdf' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Attestation CAF' })
+          return
         }
-        setTimeout(() => URL.revokeObjectURL(url), 10000)
       }
+
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
