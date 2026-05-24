@@ -199,12 +199,11 @@ export default function AttestationCafPage() {
       if (!res.ok) throw new Error('Erreur génération')
       const blob = await res.blob()
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
-      if (navigator.share) {
-        const file = new File([blob], filename, { type: 'application/pdf' })
-        if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Attestation CAF' }).catch(() => {})
-        }
-      } else {
+      const file = new File([blob], filename, { type: 'application/pdf' })
+      const shared = navigator.share && navigator.canShare?.({ files: [file] })
+        ? await navigator.share({ files: [file], title: 'Attestation CAF' }).then(() => true).catch(() => false)
+        : false
+      if (!shared) {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
