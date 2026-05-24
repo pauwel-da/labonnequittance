@@ -136,7 +136,22 @@ export default function AttestationCafPage() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
-    if (!locataire || !bien || !proprietaire) return
+    if (!locataire || !bien || !proprietaire) {
+      setError('Données manquantes. Vérifiez votre profil propriétaire.')
+      return
+    }
+    if (!surface.trim()) {
+      setError('Veuillez renseigner la surface habitable.')
+      return
+    }
+    if (!locataireAJour && !dernierLoyerImpaye.trim()) {
+      setError('Veuillez indiquer le mois et l\'année du dernier loyer payé.')
+      return
+    }
+    if (colocation && (!nombreColoc || !montantColoc)) {
+      setError('Veuillez renseigner le nombre de colocataires et le montant total.')
+      return
+    }
     setGenerating(true)
     setError(null)
 
@@ -152,7 +167,7 @@ export default function AttestationCafPage() {
       telephone,
       // Locataire
       nom_prenom_locataire1: locataire.nomPrenom,
-      adresse_locataire: bien.adresse,
+      adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
       date_debut: locataire.dateDebut,
       // Bien
       localisation: proprietaire.ville,
@@ -228,7 +243,7 @@ export default function AttestationCafPage() {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="px-4 lg:px-8 mt-6 max-w-2xl mx-auto space-y-5 pb-10">
+      <form onSubmit={handleSubmit} noValidate className="px-4 lg:px-8 mt-6 max-w-2xl mx-auto space-y-5 pb-10">
 
         {/* Données pré-remplies */}
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-1">
@@ -305,7 +320,7 @@ export default function AttestationCafPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Surface habitable (m²)</label>
             <input type="number" min="1" value={surface} onChange={e => setSurface(e.target.value)}
-              placeholder="45" required
+              placeholder="45"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
           </div>
           <div>
@@ -374,12 +389,12 @@ export default function AttestationCafPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de colocataires</label>
-                <input type="number" min="2" value={nombreColoc} onChange={e => setNombreColoc(e.target.value)} required
+                <input type="number" min="2" value={nombreColoc} onChange={e => setNombreColoc(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Montant total charges incluses (€)</label>
-                <input type="number" min="0" step="0.01" value={montantColoc} onChange={e => setMontantColoc(e.target.value)} required
+                <input type="number" min="0" step="0.01" value={montantColoc} onChange={e => setMontantColoc(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
               </div>
             </div>
@@ -424,7 +439,7 @@ export default function AttestationCafPage() {
               {typeSousLoc === 'autre' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Précision</label>
-                  <input value={sousLocPrecision} onChange={e => setSousLocPrecision(e.target.value)} required
+                  <input value={sousLocPrecision} onChange={e => setSousLocPrecision(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
                 </div>
               )}
@@ -470,7 +485,7 @@ export default function AttestationCafPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mois et année du dernier loyer payé (MM/AAAA)</label>
               <input value={dernierLoyerImpaye} onChange={e => setDernierLoyerImpaye(e.target.value)}
-                placeholder="03/2026" required
+                placeholder="03/2026"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
             </div>
           )}
