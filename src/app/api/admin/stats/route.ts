@@ -11,9 +11,9 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const [{ data: usersData, error: usersError }, { data: statsData, error: statsError }] = await Promise.all([
+  const [{ data: usersData, error: usersError }, { data: quittancesData, error: statsError }] = await Promise.all([
     supabase.rpc('count_users'),
-    supabase.rpc('get_quittance_stats'),
+    supabase.from('quittances').select('action'),
   ])
 
   if (usersError || statsError) {
@@ -21,8 +21,8 @@ export async function GET() {
   }
 
   const stats = { telecharge: 0, envoye: 0, visionne: 0, caf: 0 }
-  for (const row of (statsData ?? [])) {
-    if (row.action in stats) stats[row.action as keyof typeof stats] = Number(row.total)
+  for (const row of (quittancesData ?? [])) {
+    if (row.action in stats) stats[row.action as keyof typeof stats]++
   }
 
   return NextResponse.json({ count: Number(usersData), ...stats })

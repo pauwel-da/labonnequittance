@@ -202,11 +202,14 @@ export default function AttestationCafPage() {
       const a = document.createElement('a')
       a.href = url
       a.download = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
+      a.style.display = 'none'
+      document.body.appendChild(a)
       a.click()
-      URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(() => {})
+      addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
     } catch {
       setError('Erreur lors de la génération. Vérifiez votre connexion et réessayez.')
     } finally {
