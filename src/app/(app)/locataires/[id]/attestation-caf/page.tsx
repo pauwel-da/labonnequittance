@@ -24,6 +24,8 @@ export default function AttestationCafPage() {
   const [error, setError] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('')
   const [savingSignature, setSavingSignature] = useState(false)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [pdfFilename, setPdfFilename] = useState('')
 
   // Champs formulaire
   const [telephone, setTelephone] = useState('')
@@ -198,15 +200,11 @@ export default function AttestationCafPage() {
       })
       if (!res.ok) throw new Error('Erreur génération')
       const blob = await res.blob()
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl)
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
-      a.style.display = 'none'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      setTimeout(() => URL.revokeObjectURL(url), 10000)
+      const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
+      setPdfUrl(url)
+      setPdfFilename(filename)
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
@@ -511,13 +509,26 @@ export default function AttestationCafPage() {
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
         )}
 
-        <button type="submit" disabled={generating}
-          className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          {generating
-            ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
-            : <><Download size={16} /> Générer l&apos;attestation CAF</>
-          }
-        </button>
+        {pdfUrl ? (
+          <div className="space-y-2">
+            <a href={pdfUrl} download={pdfFilename}
+              className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+              <Download size={16} /> Télécharger l&apos;attestation CAF
+            </a>
+            <button type="submit" disabled={generating}
+              className="w-full border border-gray-300 text-gray-600 font-medium py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm">
+              {generating ? <><Loader2 size={14} className="animate-spin" /> Génération...</> : 'Regénérer'}
+            </button>
+          </div>
+        ) : (
+          <button type="submit" disabled={generating}
+            className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
+            {generating
+              ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
+              : <><Download size={16} /> Générer l&apos;attestation CAF</>
+            }
+          </button>
+        )}
 
       </form>
     </div>
