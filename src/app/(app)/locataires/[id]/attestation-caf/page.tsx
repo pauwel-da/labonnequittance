@@ -199,8 +199,10 @@ export default function AttestationCafPage() {
       if (!res.ok) throw new Error('Erreur génération')
       const blob = await res.blob()
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
+      alert(`blob ok: ${blob.size} bytes | UA: ${navigator.userAgent.slice(0, 80)}`)
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && navigator.share) {
         const file = new File([blob], filename, { type: 'application/pdf' })
+        alert(`iOS share: canShare=${navigator.canShare({ files: [file] })}`)
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: 'Attestation CAF' })
           return
@@ -208,10 +210,12 @@ export default function AttestationCafPage() {
       }
 
       const url = URL.createObjectURL(blob)
+      alert(`url créée: ${url.slice(0, 50)}`)
       const a = document.createElement('a')
       a.href = url
       a.download = filename
       a.click()
+      alert('a.click() appelé')
       URL.revokeObjectURL(url)
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
