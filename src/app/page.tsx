@@ -41,7 +41,7 @@ const faqs = [
   },
   {
     q: 'Mes données sont-elles sécurisées ?',
-    a: 'Vos données sont hébergées en Europe et ne sont jamais revendues à des tiers.',
+    a: 'Vos données sont hébergées en Europe et ne sont jamais revendues à des tiers. Aucun cookie de tracking, votre navigation reste anonyme.',
   },
 ]
 
