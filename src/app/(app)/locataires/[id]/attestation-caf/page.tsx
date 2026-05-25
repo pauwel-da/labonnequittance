@@ -392,7 +392,7 @@ export default function AttestationCafPage() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Logement</p>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Surface habitable (m²)</label>
-            <input type="number" min="1" value={surface} onChange={e => setSurface(e.target.value)}
+            <input type="number" min="1" value={surface} onChange={e => { setSurface(e.target.value); if (e.target.value.trim()) setError(null) }}
               placeholder="45"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
           </div>
