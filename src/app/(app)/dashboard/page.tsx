@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getBiens, getLocataires, getProprietaire, addQuittance, getQuittances } from '@/lib/db'
-import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/lib/quittance'
+import { fetchQuittanceBlob, buildQuittancePayload } from '@/lib/quittance'
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import Link from 'next/link'
@@ -42,6 +42,17 @@ export default function DashboardPage() {
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
   const pickerRef = useRef<HTMLDivElement>(null)
+  const blobCache = useRef<Record<string, { blob: Blob; filename: string; key: string }>>({})
+
+  function getBlob(l: Locataire, bien: Bien, datePeriode: string, dateReglement: string) {
+    const key = `${l.id}-${datePeriode}-${dateReglement}`
+    const cached = blobCache.current[l.id]
+    if (cached?.key === key) return Promise.resolve({ blob: cached.blob, filename: cached.filename })
+    return fetchQuittanceBlob(l, bien, proprietaire!, datePeriode, dateReglement).then(result => {
+      blobCache.current[l.id] = { ...result, key }
+      return result
+    })
+  }
 
   useEffect(() => {
     Promise.all([getLocataires(), getBiens(), getProprietaire()])
@@ -126,7 +137,20 @@ export default function DashboardPage() {
     clearError(l.id)
     trackEvent('quittance_telecharger')
     try {
-      await genererQuittance(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
+      const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement)
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && navigator.share) {
+        const file = new File([blob], filename, { type: 'application/pdf' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Quittance de loyer' })
+        }
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.click()
+        URL.revokeObjectURL(url)
+      }
       addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' }).catch(() => {})
     } catch {
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la génération.' }))
@@ -144,7 +168,7 @@ export default function DashboardPage() {
     trackEvent('quittance_voir')
     try {
       addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' }).catch(() => {})
-      const { blob, filename } = await fetchQuittanceBlob(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
+      const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement)
       setPreviewName(filename)
       if (window.innerWidth < 1024) {
         // Mobile : rendu en image via pdf.js
