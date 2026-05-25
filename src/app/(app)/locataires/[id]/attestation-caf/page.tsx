@@ -41,10 +41,14 @@ export default function AttestationCafPage() {
   const [dernierLoyerImpaye, setDernierLoyerImpaye] = useState('')
   const [recevoirAide, setRecevoirAide] = useState(false)
 
+  const [pregenBlob, setPregenBlob] = useState<Blob | null>(null)
+  const [pregenLoading, setPregenLoading] = useState(false)
+
   // Signature pad
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawing = useRef(false)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [signatureEmpty, setSignatureEmpty] = useState(true)
 
   useEffect(() => {
@@ -74,6 +78,65 @@ export default function AttestationCafPage() {
     }
     load().finally(() => setLoading(false))
   }, [id])
+
+  // Pré-génération debounced
+  useEffect(() => {
+    if (!locataire || !bien || !proprietaire || !surface.trim()) {
+      setPregenBlob(null)
+      setPregenLoading(false)
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      return
+    }
+
+    setPregenBlob(null)
+    setPregenLoading(true)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    debounceRef.current = setTimeout(async () => {
+      const signatureImage = proprietaire.signature ||
+        (!signatureEmpty && canvasRef.current ? canvasRef.current.toDataURL('image/png') : '')
+      try {
+        const res = await fetch('/api/generer-attestation-caf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom_prenom_bailleur: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
+            adresse_bailleur: `${proprietaire.adresse}, ${proprietaire.codePostal} ${proprietaire.ville}`,
+            email_bailleur: userEmail,
+            signature_image: signatureImage,
+            telephone,
+            nom_prenom_locataire1: locataire.nomPrenom,
+            adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
+            date_debut: locataire.dateDebut,
+            localisation: proprietaire.ville,
+            loyer_hors_charges: locataire.loyer,
+            charges: locataire.charges,
+            type_location: bien.typeLocation,
+            surface,
+            colocation,
+            nombre_colocataires: nombreColoc,
+            montant_total_colocation: montantColoc,
+            piece_unique: pieceUnique,
+            sous_location: sousLocation,
+            hotel_pension: hotelPension,
+            type_sous_location: typeSousLoc,
+            sous_location_precision: sousLocPrecision,
+            logement_decent: logementDecent,
+            locataire_a_jour: locataireAJour,
+            mois_dernier_loyer_impaye: dernierLoyerImpaye,
+            recevoir_aide: recevoirAide,
+          }),
+        })
+        if (res.ok) setPregenBlob(await res.blob())
+      } catch {
+        // silently fail, fallback to génération au clic
+      } finally {
+        setPregenLoading(false)
+      }
+    }, 800)
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [locataire, bien, proprietaire, userEmail, telephone, surface, colocation, nombreColoc, montantColoc, pieceUnique, sousLocation, hotelPension, typeSousLoc, sousLocPrecision, logementDecent, locataireAJour, dernierLoyerImpaye, recevoirAide, signatureEmpty])
 
   // Signature pad handlers
   function getXY(e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) {
@@ -152,58 +215,57 @@ export default function AttestationCafPage() {
       setError('Veuillez renseigner le nombre de colocataires et le montant total.')
       return
     }
+
     setGenerating(true)
     setError(null)
 
-    const signatureImage = proprietaire.signature ||
-      (!signatureEmpty && canvasRef.current ? canvasRef.current.toDataURL('image/png') : '')
-
-    const payload = {
-      // Bailleur
-      nom_prenom_bailleur: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
-      adresse_bailleur: `${proprietaire.adresse}, ${proprietaire.codePostal} ${proprietaire.ville}`,
-      email_bailleur: userEmail,
-      signature_image: signatureImage,
-      telephone,
-      // Locataire
-      nom_prenom_locataire1: locataire.nomPrenom,
-      adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
-      date_debut: locataire.dateDebut,
-      // Bien
-      localisation: proprietaire.ville,
-      loyer_hors_charges: locataire.loyer,
-      charges: locataire.charges,
-      type_location: bien.typeLocation,
-      surface,
-      // Formulaire
-      colocation,
-      nombre_colocataires: nombreColoc,
-      montant_total_colocation: montantColoc,
-      piece_unique: pieceUnique,
-      sous_location: sousLocation,
-      hotel_pension: hotelPension,
-      type_sous_location: typeSousLoc,
-      sous_location_precision: sousLocPrecision,
-      logement_decent: logementDecent,
-      locataire_a_jour: locataireAJour,
-      mois_dernier_loyer_impaye: dernierLoyerImpaye,
-      recevoir_aide: recevoirAide,
-    }
-
     try {
-      const res = await fetch('/api/generer-attestation-caf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (!res.ok) throw new Error('Erreur génération')
-      const blob = await res.blob()
+      let blob = pregenBlob && !pregenLoading ? pregenBlob : null
+
+      if (!blob) {
+        const signatureImage = proprietaire.signature ||
+          (!signatureEmpty && canvasRef.current ? canvasRef.current.toDataURL('image/png') : '')
+        const res = await fetch('/api/generer-attestation-caf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom_prenom_bailleur: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
+            adresse_bailleur: `${proprietaire.adresse}, ${proprietaire.codePostal} ${proprietaire.ville}`,
+            email_bailleur: userEmail,
+            signature_image: signatureImage,
+            telephone,
+            nom_prenom_locataire1: locataire.nomPrenom,
+            adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
+            date_debut: locataire.dateDebut,
+            localisation: proprietaire.ville,
+            loyer_hors_charges: locataire.loyer,
+            charges: locataire.charges,
+            type_location: bien.typeLocation,
+            surface,
+            colocation,
+            nombre_colocataires: nombreColoc,
+            montant_total_colocation: montantColoc,
+            piece_unique: pieceUnique,
+            sous_location: sousLocation,
+            hotel_pension: hotelPension,
+            type_sous_location: typeSousLoc,
+            sous_location_precision: sousLocPrecision,
+            logement_decent: logementDecent,
+            locataire_a_jour: locataireAJour,
+            mois_dernier_loyer_impaye: dernierLoyerImpaye,
+            recevoir_aide: recevoirAide,
+          }),
+        })
+        if (!res.ok) throw new Error('Erreur génération')
+        blob = await res.blob()
+      }
+
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
 
-      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && navigator.share) {
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent) && 'share' in navigator) {
         const file = new File([blob], filename, { type: 'application/pdf' })
         if (navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'Attestation CAF' })
+          await navigator.share({ files: [file], title: 'Attestation CAF' }).catch(() => {})
           return
         }
       }
@@ -214,6 +276,7 @@ export default function AttestationCafPage() {
       a.download = filename
       a.click()
       URL.revokeObjectURL(url)
+
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
@@ -525,6 +588,12 @@ export default function AttestationCafPage() {
             : <><Download size={16} /> Télécharger l&apos;attestation CAF</>
           }
         </button>
+
+        {pregenLoading && !generating && (
+          <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
+            <Loader2 size={10} className="animate-spin" /> Préparation du document...
+          </p>
+        )}
 
       </div>
     </div>
