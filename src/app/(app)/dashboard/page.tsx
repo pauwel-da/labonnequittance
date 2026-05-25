@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getBiens, getLocataires, getProprietaire, addQuittance, getQuittances } from '@/lib/db'
-import { fetchQuittanceBlob, buildQuittancePayload } from '@/lib/quittance'
+import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/lib/quittance'
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import Link from 'next/link'
@@ -42,7 +42,7 @@ export default function DashboardPage() {
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
   const pickerRef = useRef<HTMLDivElement>(null)
-  const blobCache = useRef<Record<string, { blob: Blob; filename: string; key: string }>>({})
+  const blobCache = useRef<Record<string, { blob: Blob; filename: string; key: string; imageDataUrl?: string }>>({})
 
   function getBlob(l: Locataire, bien: Bien, datePeriode: string, dateReglement: string) {
     const key = `${l.id}-${datePeriode}-${dateReglement}`
@@ -171,9 +171,15 @@ export default function DashboardPage() {
       const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement)
       setPreviewName(filename)
       if (window.innerWidth < 1024) {
-        // Mobile : rendu en image via pdf.js
-        const imageDataUrl = await renderPdfFirstPage(blob)
-        setPreviewImage(imageDataUrl)
+        const cacheEntry = blobCache.current[l.id]
+        const cacheKey = `${l.id}-${datePeriode}-${v.dateReglement}`
+        if (cacheEntry?.key === cacheKey && cacheEntry.imageDataUrl) {
+          setPreviewImage(cacheEntry.imageDataUrl)
+        } else {
+          const imageDataUrl = await renderPdfFirstPage(blob)
+          if (blobCache.current[l.id]) blobCache.current[l.id].imageDataUrl = imageDataUrl
+          setPreviewImage(imageDataUrl)
+        }
       } else {
         // Desktop : iframe
         if (previewUrl) URL.revokeObjectURL(previewUrl)
