@@ -43,6 +43,8 @@ next-env.d.ts
 .aws-sam
 client_secret_*.json
 
+feature-to-do-1.txt
+
 # Lambda (code déplacé dans labonnequittance-lambda)
 lambda/
 supabase_schema.sql
