@@ -581,19 +581,13 @@ export default function AttestationCafPage() {
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
         )}
 
-        <button type="button" onClick={handleSubmit} disabled={generating}
+        <button type="button" onClick={handleSubmit} disabled={generating || pregenLoading}
           className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          {generating
-            ? <><Loader2 size={16} className="animate-spin" /> Génération...</>
+          {generating || pregenLoading
+            ? <><Loader2 size={16} className="animate-spin" /> Génération en cours...</>
             : <><Download size={16} /> Télécharger l&apos;attestation CAF</>
           }
         </button>
-
-        {pregenLoading && !generating && (
-          <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
-            <Loader2 size={10} className="animate-spin" /> Préparation du document...
-          </p>
-        )}
 
       </div>
     </div>
