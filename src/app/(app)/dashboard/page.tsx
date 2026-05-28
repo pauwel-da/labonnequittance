@@ -219,7 +219,9 @@ export default function DashboardPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erreur envoi.')
+      const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye', createdAt: new Date().toISOString() }
       addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye' }).catch(() => {})
+      setQuittances(qs => [...qs, sentRecord])
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
     } catch (err: unknown) {
@@ -493,7 +495,7 @@ export default function DashboardPage() {
                       {!didSend && alreadySent && (
                         <div className="flex items-center gap-2 text-green-700 text-xs mb-3 bg-green-50 rounded-lg px-3 py-2">
                           <CheckCircle size={13} className="shrink-0" />
-                          <span>Quittance envoyée le{' '}{new Date(alreadySent.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                          <span>Quittance envoyée le{' '}{new Date(alreadySent.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}{' à '}{new Date(alreadySent.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       )}
 
