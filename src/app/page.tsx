@@ -84,20 +84,20 @@ export default async function Home() {
   return (
     <div className="min-h-screen flex flex-col">
 
+      {/* ── HEADER ── */}
+      <header className="bg-white border-b border-gray-100 px-6 py-4 flex justify-center">
+        <Image
+          src="/logo.png"
+          alt="La Bonne Quittance"
+          width={200}
+          height={86}
+          priority
+        />
+      </header>
+
       {/* ── HERO ── */}
       <section className="bg-[#008020] text-white px-6 pt-14 pb-20 text-center">
         <div className="max-w-2xl mx-auto">
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/logo.png"
-              alt="La Bonne Quittance"
-              width={260}
-              height={112}
-              priority
-              className="brightness-0 invert"
-            />
-          </div>
-
           <span className="inline-block bg-white/20 text-white text-xs font-semibold px-4 py-1.5 rounded-full border border-white/30 mb-6">
             100% gratuit · Sans abonnement · Sans carte bancaire
           </span>
@@ -132,17 +132,6 @@ export default async function Home() {
           )}
         </div>
       </section>
-
-      {/* ── TRUST SIGNALS ── */}
-      <div className="bg-white border-b border-gray-100 px-6 py-4">
-        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-sm text-gray-500">
-          {['100 % gratuit', 'Aucune carte requise', 'Prêt en 30 secondes', 'Conforme légalement'].map(t => (
-            <span key={t} className="flex items-center gap-1.5">
-              <span className="text-[#008020] font-bold">✓</span> {t}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {/* ── SCREENSHOTS ── */}
       <section className="bg-white px-6 pt-16 pb-8 flex flex-col items-center">
