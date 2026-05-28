@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, FileText, Send, Shield, Clock } from 'lucide-react'
 import AppScreenshots from '@/components/AppScreenshots'
 import { createClient } from '@/lib/supabase/server'
 
@@ -18,7 +18,30 @@ const steps = [
   {
     number: '3',
     title: 'Envoyez par email',
-    desc: 'Transmettez directement à votre locataire depuis l\'application, avec votre signature.',
+    desc: "Transmettez directement à votre locataire depuis l'application, avec votre signature.",
+  },
+]
+
+const features = [
+  {
+    icon: FileText,
+    title: 'Quittance PDF conforme',
+    desc: '9 mentions légales obligatoires, signature numérique intégrée, document infalsifiable.',
+  },
+  {
+    icon: Send,
+    title: 'Envoi email en 1 clic',
+    desc: 'Votre locataire reçoit sa quittance directement dans sa boîte mail, sans manipulation.',
+  },
+  {
+    icon: Shield,
+    title: 'Attestation CAF incluse',
+    desc: 'Cerfa n° 10842 pré-rempli automatiquement avec vos données, sans rien ressaisir.',
+  },
+  {
+    icon: Clock,
+    title: '30 secondes chrono',
+    desc: "De l'inscription à la première quittance envoyée, en moins d'une minute.",
   },
 ]
 
@@ -59,126 +82,152 @@ export default async function Home() {
   const userCount = await getUserCount()
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen flex flex-col">
 
-      <main className="flex-1 flex flex-col items-center px-6 pt-10 lg:pt-16 pb-0 text-center">
+      {/* ── HERO ── */}
+      <section className="bg-[#008020] text-white px-6 pt-14 pb-20 text-center">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-center mb-8">
+            <Image
+              src="/logo.png"
+              alt="La Bonne Quittance"
+              width={260}
+              height={112}
+              priority
+              className="brightness-0 invert"
+            />
+          </div>
 
-        {/* Logo */}
-        <Image
-          src="/logo.png"
-          alt="La Bonne Quittance"
-          width={300}
-          height={129}
-          priority
-          className="mt-6 mb-6 lg:mt-0 lg:mb-8 lg:w-[340px]"
-        />
+          <span className="inline-block bg-white/20 text-white text-xs font-semibold px-4 py-1.5 rounded-full border border-white/30 mb-6">
+            100% gratuit · Sans abonnement · Sans carte bancaire
+          </span>
 
-        {/* Badge gratuit */}
-        <span className="inline-block bg-green-50 text-[#008020] text-xs font-semibold px-4 py-1.5 rounded-full border border-green-200 mb-5">
-          100% gratuit · Sans abonnement · Sans carte bancaire
-        </span>
-
-        {/* Headline */}
-        <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight max-w-xl">
-          Fini les quittances Word<br className="hidden lg:block" /> chaque mois
-        </h1>
-        <p className="text-gray-500 text-base lg:text-lg max-w-sm lg:max-w-lg mb-6">
-          Générez et envoyez vos quittances de loyer en PDF en 1 clic.
-          Attestation CAF incluse. Signature numérique. Conforme légalement.
-        </p>
-
-        {/* Preuve sociale */}
-        {userCount && userCount > 0 && (
-          <p className="text-sm text-gray-400 mb-6">
-            Déjà <span className="font-semibold text-gray-700">{userCount}+ bailleurs</span> inscrits
+          <h1 className="text-3xl lg:text-5xl font-bold mb-5 leading-tight">
+            Fini les quittances Word<br className="hidden sm:block" /> chaque mois
+          </h1>
+          <p className="text-green-100 text-base lg:text-lg max-w-lg mx-auto mb-8 leading-relaxed">
+            Générez et envoyez vos quittances PDF en 1 clic.
+            Attestation CAF incluse. Signature numérique. Conforme légalement.
           </p>
-        )}
 
-        {/* CTA */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs sm:max-w-none sm:justify-center mb-6">
-          <Link href="/signup" className="bg-[#008020] hover:bg-green-800 text-white font-semibold px-8 py-3.5 rounded-xl text-sm transition-colors">
-            Créer un compte gratuit
-          </Link>
-          <Link href="/login" className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-8 py-3.5 rounded-xl text-sm transition-colors">
-            Se connecter
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            <Link
+              href="/signup"
+              className="bg-white text-[#008020] font-semibold px-8 py-3.5 rounded-xl text-sm hover:bg-green-50 transition-colors"
+            >
+              Créer un compte gratuit
+            </Link>
+            <Link
+              href="/login"
+              className="border border-white/40 text-white font-medium px-8 py-3.5 rounded-xl text-sm hover:bg-white/10 transition-colors"
+            >
+              Se connecter
+            </Link>
+          </div>
+
+          {userCount && userCount > 0 && (
+            <p className="text-green-200 text-sm">
+              Déjà <span className="font-semibold text-white">{userCount}+ bailleurs</span> inscrits
+            </p>
+          )}
         </div>
+      </section>
 
-        {/* Signaux de réassurance */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mb-12 text-sm text-gray-400">
-          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> 100 % gratuit</span>
-          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> Aucune carte requise</span>
-          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> Prêt en 30 secondes</span>
-          <span className="flex items-center gap-1.5"><span className="text-[#008020] font-bold">✓</span> Conforme légalement</span>
+      {/* ── TRUST SIGNALS ── */}
+      <div className="bg-white border-b border-gray-100 px-6 py-4">
+        <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-center gap-5 sm:gap-10 text-sm text-gray-500">
+          {['100 % gratuit', 'Aucune carte requise', 'Prêt en 30 secondes', 'Conforme légalement'].map(t => (
+            <span key={t} className="flex items-center gap-1.5">
+              <span className="text-[#008020] font-bold">✓</span> {t}
+            </span>
+          ))}
         </div>
+      </div>
 
-        {/* Comment ça marche */}
-        <div className="w-full max-w-3xl border-t border-gray-100 pt-12 mb-12">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-8">Comment ça marche</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-            {steps.map((s, i) => (
-              <div key={s.number} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-full bg-[#008020] text-white text-sm font-bold flex items-center justify-center shrink-0">
-                    {s.number}
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className="hidden sm:block mt-2">
-                      <ChevronRight size={16} className="text-gray-300" />
-                    </div>
-                  )}
+      {/* ── SCREENSHOTS ── */}
+      <section className="bg-white px-6 pt-16 pb-8 flex flex-col items-center">
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-10">L&apos;application</p>
+        <AppScreenshots />
+      </section>
+
+      {/* ── COMMENT ÇA MARCHE ── */}
+      <section className="bg-gray-50 px-6 py-16 border-t border-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-center mb-2">Fonctionnement</p>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Simple comme bonjour</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {steps.map((s) => (
+              <div key={s.number} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-[#008020] text-white text-sm font-bold flex items-center justify-center mb-4">
+                  {s.number}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 mb-1">{s.title}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
-                </div>
+                <p className="font-semibold text-gray-900 mb-2">{s.title}</p>
+                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Captures d'écran */}
-        <AppScreenshots />
-
-        {/* Feature CAF */}
-        <div className="w-full max-w-3xl mt-16 mb-12 bg-green-50 border border-green-100 rounded-2xl px-8 py-8 text-left">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#008020] mb-3">Fonctionnalité incluse</p>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Attestation CAF en 1 clic</h2>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Générez le formulaire Cerfa n° 10842 pré-rempli avec les données de votre locataire.
-            Un document souvent demandé par la CAF, créé en quelques secondes sans rien ressaisir.
-          </p>
+      {/* ── FEATURES ── */}
+      <section className="bg-white px-6 py-16 border-t border-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-center mb-2">Fonctionnalités</p>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Tout ce qu&apos;il faut, rien de plus</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {features.map((f) => {
+              const Icon = f.icon
+              return (
+                <div key={f.title} className="flex gap-4 bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                  <div className="bg-green-100 rounded-xl p-2.5 shrink-0 h-fit">
+                    <Icon size={18} className="text-[#008020]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-1 text-sm">{f.title}</p>
+                    <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
+      </section>
 
-        {/* FAQ */}
-        <div className="w-full max-w-3xl mb-12 text-left">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-8 text-center">Questions fréquentes</p>
+      {/* ── FAQ ── */}
+      <section className="bg-gray-50 px-6 py-16 border-t border-gray-100">
+        <div className="max-w-2xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-center mb-2">FAQ</p>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Questions fréquentes</h2>
           <div className="space-y-3">
             {faqs.map((faq) => (
-              <details key={faq.q} className="group bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <details key={faq.q} className="group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                 <summary className="flex items-center justify-between px-5 py-4 cursor-pointer text-sm font-semibold text-gray-900 list-none">
                   {faq.q}
                   <ChevronRight size={16} className="text-gray-400 shrink-0 ml-3 transition-transform group-open:rotate-90" />
                 </summary>
-                <p className="px-5 pb-4 text-sm text-gray-500 leading-relaxed">{faq.a}</p>
+                <p className="px-5 pb-5 text-sm text-gray-500 leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
         </div>
+      </section>
 
-        {/* Second CTA */}
-        <div className="w-full max-w-3xl bg-[#008020] rounded-2xl px-8 py-10 mb-12 text-center">
-          <p className="text-2xl font-bold text-white mb-2">Prêt à gagner du temps ?</p>
-          <p className="text-green-100 text-sm mb-6">Créez votre compte en 30 secondes. C&apos;est gratuit, sans engagement.</p>
-          <Link href="/signup" className="inline-block bg-white text-[#008020] font-semibold px-8 py-3.5 rounded-xl text-sm hover:bg-green-50 transition-colors">
+      {/* ── BOTTOM CTA ── */}
+      <section className="bg-[#008020] px-6 py-16 text-center">
+        <div className="max-w-xl mx-auto">
+          <p className="text-2xl font-bold text-white mb-3">Prêt à gagner du temps ?</p>
+          <p className="text-green-100 text-sm mb-8">Créez votre compte en 30 secondes. C&apos;est gratuit, sans engagement.</p>
+          <Link
+            href="/signup"
+            className="inline-block bg-white text-[#008020] font-semibold px-8 py-3.5 rounded-xl text-sm hover:bg-green-50 transition-colors"
+          >
             Créer mon compte gratuit →
           </Link>
         </div>
+      </section>
 
-      </main>
-
-      {/* Footer */}
-      <footer className="py-6 text-center text-xs text-gray-400 border-t border-gray-100 space-y-2">
+      {/* ── FOOTER ── */}
+      <footer className="bg-white py-8 text-center text-xs text-gray-400 border-t border-gray-100 space-y-2">
         <p>© {new Date().getFullYear()} La Bonne Quittance · Gratuit pour tous les bailleurs</p>
         <p className="text-gray-300">Ce site n&apos;utilise aucun cookie de suivi ni publicitaire.</p>
         <p className="flex items-center justify-center gap-4">
