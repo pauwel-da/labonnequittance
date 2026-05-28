@@ -15,6 +15,7 @@ export default function ProfilPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isSigningOut, startSignOut] = useTransition()
   const [isResubscribing, startResubscribe] = useTransition()
+  const [resubscribed, setResubscribed] = useState(false)
 
   useEffect(() => { getProprietaire().then(setForm) }, [])
 
@@ -125,7 +126,13 @@ export default function ProfilPage() {
           </button>
         </form>
 
-        {form.optinRappelMensuel === false && (
+        {resubscribed && (
+          <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-[#008020] font-medium text-center">
+            ✓ Vous êtes de nouveau inscrit aux rappels mensuels.
+          </div>
+        )}
+
+        {form.optinRappelMensuel === false && !resubscribed && (
           <div className="mt-4 bg-white rounded-xl shadow-sm p-4 flex items-center justify-between gap-4 border border-gray-100">
             <div>
               <p className="text-sm font-medium text-gray-700">Rappels mensuels</p>
@@ -135,6 +142,7 @@ export default function ProfilPage() {
               onClick={() => startResubscribe(async () => {
                 await reinscrireRappel()
                 setForm(f => ({ ...f, optinRappelMensuel: true }))
+                setResubscribed(true)
               })}
               disabled={isResubscribing}
               className="shrink-0 text-xs font-semibold text-[#008020] border border-[#008020] rounded-lg px-3 py-2 hover:bg-green-50 transition-colors disabled:opacity-50"
