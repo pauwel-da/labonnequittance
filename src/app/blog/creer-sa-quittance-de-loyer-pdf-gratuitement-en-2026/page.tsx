@@ -4,8 +4,8 @@ import FaqItem from '@/components/FaqItem'
 import BlogHeader from '@/components/BlogHeader'
 
 export const metadata: Metadata = {
-  title: 'Modèle quittance de loyer PDF gratuit 2026 — La Bonne Quittance',
-  description: 'Téléchargez ou générez gratuitement votre modèle de quittance de loyer PDF 2026 conforme à la loi. Signature numérique incluse, envoi par email en 1 clic.',
+  title: 'Créer sa quittance de loyer PDF gratuitement en 2026 — La Bonne Quittance',
+  description: 'Créez gratuitement votre quittance de loyer PDF 2026 conforme à la loi en 30 secondes. Signature numérique incluse, envoi par email en 1 clic.',
 }
 
 const toc = [
@@ -32,9 +32,9 @@ export default function ArticlePage() {
             <span className="text-green-100">Modèle quittance PDF</span>
           </p>
           <span className="inline-block bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">Quittances</span>
-          <h1 className="text-3xl font-bold mb-3 leading-tight">Modèle quittance de loyer PDF gratuit 2026</h1>
+          <h1 className="text-3xl font-bold mb-3 leading-tight">Créer sa quittance de loyer PDF gratuitement en 2026</h1>
           <p className="text-green-100 text-base leading-relaxed mb-5">
-            Fini le modèle Word qu&apos;on retape chaque mois. Voici comment générer une quittance PDF conforme, avec signature numérique, gratuitement et en 30 secondes.
+            Fini le modèle Word qu&apos;on retape chaque mois. Voici comment créer une quittance PDF conforme, avec signature numérique, gratuitement et en 30 secondes.
           </p>
           <div className="flex items-center gap-3 text-sm text-green-200">
             <span>28 mai 2026</span>

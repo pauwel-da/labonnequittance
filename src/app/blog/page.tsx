@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 const articles = [
   {
-    slug: 'modele-quittance-de-loyer-pdf-gratuit-2026',
-    titre: 'Modèle quittance de loyer PDF gratuit 2026',
-    description: 'Fini le modèle Word à ressaisir chaque mois. Générez gratuitement une quittance PDF conforme, avec signature numérique, en 30 secondes.',
+    slug: 'creer-sa-quittance-de-loyer-pdf-gratuitement-en-2026',
+    titre: 'Créer sa quittance de loyer PDF gratuitement en 2026',
+    description: 'Fini le modèle Word à ressaisir chaque mois. Créez gratuitement une quittance PDF conforme, avec signature numérique, en 30 secondes.',
     date: '28 mai 2026',
     tempsLecture: '4 min',
     tag: 'Quittances',
