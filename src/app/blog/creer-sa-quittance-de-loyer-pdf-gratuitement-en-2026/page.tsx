@@ -218,7 +218,7 @@ export default function ArticlePage() {
             {[
               'Une quittance Word est risquée : falsifiable et sans signature valide',
               'Le PDF est le format recommandé : infalsifiable et archivable',
-              'Un générateur en ligne pré-remplit tout et intègre la signature numérique',
+              'Un générateur en ligne doit intégrer la signature numérique pour que la quittance soit valide',
               'La quittance doit comporter 9 mentions obligatoires pour être valide',
               'La Bonne Quittance génère vos quittances PDF gratuitement en 1 clic',
             ].map((point, i) => (
