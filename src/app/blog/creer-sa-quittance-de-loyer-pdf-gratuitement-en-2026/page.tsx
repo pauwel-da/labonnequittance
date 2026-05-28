@@ -216,7 +216,7 @@ export default function ArticlePage() {
           <p className="text-[#008020] font-bold text-sm uppercase tracking-wide mb-4">À retenir</p>
           <ul className="space-y-2.5">
             {[
-              'Un modèle Word est gratuit mais risqué : falsifiable et sans signature valide',
+              'Une quittance Word est risquée : falsifiable et sans signature valide',
               'Le PDF est le format recommandé : infalsifiable et archivable',
               'Un générateur en ligne pré-remplit tout et intègre la signature numérique',
               'La quittance doit comporter 9 mentions obligatoires pour être valide',
