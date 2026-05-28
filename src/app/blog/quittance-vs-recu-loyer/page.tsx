@@ -57,7 +57,7 @@ export default function ArticlePage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-3">La quittance : paiement complet</h2>
             <p className="leading-relaxed">
-              La <strong>quittance de loyer</strong> est remise par le bailleur au locataire lorsque ce dernier a payé <strong>l&apos;intégralité</strong> du loyer et des charges pour la période concernée. Elle atteste que le bailleur a bien reçu la totalité de la somme due.
+              La <strong>quittance de loyer</strong>{' '}est remise par le bailleur au locataire lorsque ce dernier a payé <strong>l&apos;intégralité</strong>{' '}du loyer et des charges pour la période concernée. Elle atteste que le bailleur a bien reçu la totalité de la somme due.
             </p>
             <p className="leading-relaxed mt-3">
               C&apos;est le document de référence en cas de litige. Le bailleur est légalement tenu de la remettre gratuitement sur demande du locataire (article 21 de la loi du 6 juillet 1989).
@@ -77,7 +77,7 @@ export default function ArticlePage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-3">Ce que dit la loi</h2>
             <div className="bg-green-50 border-l-4 border-[#008020] rounded-r-xl px-5 py-4 text-sm leading-relaxed">
-              <p>La quittance <strong>annule tous les reçus partiels</strong> qui auraient pu être établis précédemment pour la même période. Une fois la quittance délivrée, le locataire est considéré comme à jour pour ce terme.</p>
+              <p>La quittance <strong>annule tous les reçus partiels</strong>{' '}qui auraient pu être établis précédemment pour la même période. Une fois la quittance délivrée, le locataire est considéré comme à jour pour ce terme.</p>
             </div>
           </section>
 

@@ -130,7 +130,7 @@ export default function ArticlePage() {
             <h2 className="text-xl font-bold text-gray-900 mb-3">4. Point d&apos;attention : le lien de parenté</h2>
             <div className="bg-amber-50 border-l-4 border-amber-400 rounded-r-xl px-5 py-4 text-sm leading-relaxed">
               <p>
-                Si le bailleur est un <strong>ascendant ou descendant</strong> du locataire (parent, enfant, grand-parent), le locataire ne peut pas percevoir les APL. Ce lien de parenté ne figure pas dans le Cerfa 10842 lui-même, mais la CAF le vérifie par d&apos;autres moyens. En cas de fausse déclaration, le locataire s&apos;expose à un remboursement des aides perçues.
+                Si le bailleur est un <strong>ascendant ou descendant</strong>{' '}du locataire (parent, enfant, grand-parent), le locataire ne peut pas percevoir les APL. Ce lien de parenté ne figure pas dans le Cerfa 10842 lui-même, mais la CAF le vérifie par d&apos;autres moyens. En cas de fausse déclaration, le locataire s&apos;expose à un remboursement des aides perçues.
               </p>
             </div>
           </section>
@@ -154,7 +154,7 @@ export default function ArticlePage() {
           <section id="delais">
             <h2 className="text-xl font-bold text-gray-900 mb-3">6. Combien de temps pour traiter la demande ?</h2>
             <p className="leading-relaxed">
-              Une fois l&apos;attestation transmise, la CAF dispose généralement de <strong>1 à 2 mois</strong> pour instruire le dossier. Les aides sont versées avec un mois de décalage. Il est donc conseillé de remplir et renvoyer le document le plus rapidement possible après la demande du locataire.
+              Une fois l&apos;attestation transmise, la CAF dispose généralement de <strong>1 à 2 mois</strong>{' '}pour instruire le dossier. Les aides sont versées avec un mois de décalage. Il est donc conseillé de remplir et renvoyer le document le plus rapidement possible après la demande du locataire.
             </p>
           </section>
 
