@@ -441,6 +441,8 @@ export default function DashboardPage() {
                 const isSend = sending === l.id
                 const isBusy = !!generating || !!previewing || !!sending || profileIncomplete
                 const didSend = sendSuccess === l.id
+                const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
+                const alreadySent = quittances.find(q => q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)
                 return (
                   <div key={l.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div className="p-4">
@@ -485,6 +487,13 @@ export default function DashboardPage() {
                       {didSend && (
                         <div className="flex items-center gap-2 text-green-700 text-sm mb-3 bg-green-50 rounded-lg px-3 py-2">
                           <CheckCircle size={14} /> Quittance envoyée à {l.email}
+                        </div>
+                      )}
+
+                      {!didSend && alreadySent && (
+                        <div className="flex items-center gap-2 text-green-700 text-xs mb-3 bg-green-50 rounded-lg px-3 py-2">
+                          <CheckCircle size={13} className="shrink-0" />
+                          <span>Quittance envoyée le{' '}{new Date(alreadySent.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                         </div>
                       )}
 
