@@ -1,7 +1,7 @@
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda'
 import { NextRequest, NextResponse } from 'next/server'
 
-const lambda = new LambdaClient({ region: 'us-east-1' })
+const lambda = new LambdaClient({ region: 'eu-west-1' })
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
