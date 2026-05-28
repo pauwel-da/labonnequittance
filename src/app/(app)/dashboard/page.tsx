@@ -221,7 +221,7 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error(data.error || 'Erreur envoi.')
       const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye', createdAt: new Date().toISOString() }
       addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye' }).catch(() => {})
-      setQuittances(qs => [...qs, sentRecord])
+      setQuittances(qs => [...qs.filter(q => !(q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)), sentRecord])
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
     } catch (err: unknown) {
