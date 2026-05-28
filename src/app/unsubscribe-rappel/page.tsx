@@ -1,17 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default async function UnsubscribeRappelPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  await supabase
-    .from('proprietaire')
-    .update({ optin_rappel_mensuel: false })
-    .eq('user_id', user.id)
-
+export default function UnsubscribeRappelPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full text-center">
@@ -20,7 +9,7 @@ export default async function UnsubscribeRappelPage() {
         </div>
         <h1 className="text-xl font-bold text-gray-900 mb-2">Désinscription confirmée</h1>
         <p className="text-sm text-gray-500 mb-8">
-          Vous ne recevrez plus les rappels mensuels. Vous pouvez vous réinscrire à tout moment depuis votre profil.
+          Vous ne recevrez plus les rappels mensuels. Vous pouvez vous réinscrire depuis votre profil.
         </p>
         <Link
           href="/dashboard"
