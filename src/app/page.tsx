@@ -135,6 +135,10 @@ export default async function Home() {
 
       {/* ── SCREENSHOTS ── */}
       <section className="bg-white px-6 pt-16 pb-8 flex flex-col items-center">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Tout depuis une seule interface</h2>
+          <p className="text-sm text-gray-500">Vos biens, vos locataires, vos quittances. En un coup d&apos;œil.</p>
+        </div>
         <AppScreenshots />
       </section>
 
