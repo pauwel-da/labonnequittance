@@ -85,7 +85,7 @@ export default function ArticlePage() {
               Une quittance de loyer est un reçu écrit remis par le bailleur au locataire, attestant que ce dernier a bien payé l&apos;intégralité du loyer et des charges pour une période donnée. Elle se distingue du <strong>reçu de paiement partiel</strong>, qui n&apos;est délivré que lorsque le locataire n&apos;a payé qu&apos;une partie de la somme due.
             </p>
             <p className="leading-relaxed mt-3">
-              Contrairement à une idée reçue, le bailleur n&apos;est pas obligé d&apos;envoyer spontanément une quittance chaque mois. En revanche, il est tenu de la remettre <strong>gratuitement</strong> dès que le locataire en fait la demande. C&apos;est une obligation légale.
+              Contrairement à une idée reçue, le bailleur n&apos;est pas obligé d&apos;envoyer spontanément une quittance chaque mois. En revanche, il est tenu de la remettre <strong>gratuitement</strong>{' '}dès que le locataire en fait la demande. C&apos;est une obligation légale.
             </p>
           </section>
 
@@ -99,7 +99,7 @@ export default function ArticlePage() {
               La quittance engage la responsabilité du bailleur : en la signant, il reconnaît avoir reçu le paiement complet. Elle <strong>annule tout reçu partiel</strong> antérieur pour la même période.
             </p>
             <p className="leading-relaxed mt-3">
-              Par ailleurs, la loi impose au locataire de <strong>conserver sa quittance pendant 3 ans</strong> à compter de la date d&apos;échéance du terme (article 7-1 de la loi du 6 juillet 1989). Le bailleur a quant à lui intérêt à en garder une copie pour la même durée.
+              Par ailleurs, la loi impose au locataire de <strong>conserver sa quittance pendant 3 ans</strong>{' '}à compter de la date d&apos;échéance du terme (article 7-1 de la loi du 6 juillet 1989). Le bailleur a quant à lui intérêt à en garder une copie pour la même durée.
             </p>
           </section>
 
@@ -148,7 +148,7 @@ export default function ArticlePage() {
           <section id="numerique">
             <h2 className="text-xl font-bold text-gray-900 mb-3">5. Quittance papier ou numérique ?</h2>
             <p className="leading-relaxed">
-              La loi n&apos;impose pas de format particulier. Une quittance peut être remise en main propre, par courrier ou par email. Le format <strong>PDF</strong> est aujourd&apos;hui le standard : il est infalsifiable, facile à archiver et à transmettre.
+              La loi n&apos;impose pas de format particulier. Une quittance peut être remise en main propre, par courrier ou par email. Le format <strong>PDF</strong>{' '}est aujourd&apos;hui le standard : il est infalsifiable, facile à archiver et à transmettre.
             </p>
             <p className="leading-relaxed mt-3">
               La <strong>signature numérique</strong> est légalement valide depuis la directive européenne eIDAS et sa transposition en droit français. Un bailleur peut donc tout à fait signer ses quittances électroniquement.
