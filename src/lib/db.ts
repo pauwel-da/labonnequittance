@@ -114,7 +114,7 @@ export async function getProprietaire(): Promise<Proprietaire> {
     .select('*')
     .maybeSingle()
   if (error) throw error
-  if (!data) return { nom: '', prenom: '', adresse: '', codePostal: '', ville: '', signature: '' }
+  if (!data) return { nom: '', prenom: '', adresse: '', codePostal: '', ville: '', signature: '', optinRappelMensuel: true }
   return {
     nom: data.nom,
     prenom: data.prenom,
@@ -122,6 +122,7 @@ export async function getProprietaire(): Promise<Proprietaire> {
     codePostal: data.code_postal,
     ville: data.ville,
     signature: data.signature,
+    optinRappelMensuel: data.optin_rappel_mensuel,
   }
 }
 

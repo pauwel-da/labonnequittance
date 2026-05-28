@@ -4,16 +4,17 @@ import { useState, useEffect, useTransition } from 'react'
 import { getProprietaire, saveProprietaire } from '@/lib/db'
 import type { Proprietaire } from '@/lib/types'
 import SignaturePad from '@/components/SignaturePad'
-import { signOut } from '@/app/(app)/actions'
+import { signOut, reinscrireRappel } from '@/app/(app)/actions'
 
 
 export default function ProfilPage() {
   const [form, setForm] = useState<Proprietaire>({
-    nom: '', prenom: '', adresse: '', codePostal: '', ville: '', signature: '',
+    nom: '', prenom: '', adresse: '', codePostal: '', ville: '', signature: '', optinRappelMensuel: true,
   })
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isSigningOut, startSignOut] = useTransition()
+  const [isResubscribing, startResubscribe] = useTransition()
 
   useEffect(() => { getProprietaire().then(setForm) }, [])
 
@@ -123,6 +124,25 @@ export default function ProfilPage() {
             {saved ? '✓ Enregistré !' : 'Enregistrer'}
           </button>
         </form>
+
+        {form.optinRappelMensuel === false && (
+          <div className="mt-4 bg-white rounded-xl shadow-sm p-4 flex items-center justify-between gap-4 border border-gray-100">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Rappels mensuels</p>
+              <p className="text-xs text-gray-400 mt-0.5">Vous êtes désinscrit des rappels automatiques.</p>
+            </div>
+            <button
+              onClick={() => startResubscribe(async () => {
+                await reinscrireRappel()
+                setForm(f => ({ ...f, optinRappelMensuel: true }))
+              })}
+              disabled={isResubscribing}
+              className="shrink-0 text-xs font-semibold text-[#008020] border border-[#008020] rounded-lg px-3 py-2 hover:bg-green-50 transition-colors disabled:opacity-50"
+            >
+              {isResubscribing ? '...' : 'Se réinscrire'}
+            </button>
+          </div>
+        )}
 
         {/* Bouton déconnexion — visible uniquement sur mobile (le sidebar desktop a le sien) */}
         <button

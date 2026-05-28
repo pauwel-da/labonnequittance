@@ -8,3 +8,13 @@ export async function signOut() {
   await supabase.auth.signOut()
   redirect('/login')
 }
+
+export async function reinscrireRappel() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  await supabase
+    .from('proprietaire')
+    .update({ optin_rappel_mensuel: true })
+    .eq('user_id', user.id)
+}

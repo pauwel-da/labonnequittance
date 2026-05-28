@@ -41,4 +41,5 @@ export interface Proprietaire {
   codePostal: string
   ville: string
   signature: string
+  optinRappelMensuel?: boolean | null
 }
