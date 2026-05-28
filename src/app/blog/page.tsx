@@ -9,6 +9,14 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: 'modele-quittance-de-loyer-pdf-gratuit-2026',
+    titre: 'Modèle quittance de loyer PDF gratuit 2026',
+    description: 'Fini le modèle Word à ressaisir chaque mois. Générez gratuitement une quittance PDF conforme, avec signature numérique, en 30 secondes.',
+    date: '28 mai 2026',
+    tempsLecture: '4 min',
+    tag: 'Quittances',
+  },
+  {
     slug: 'quittance-vs-recu-loyer',
     titre: 'Quittance de loyer vs. reçu de loyer : quelle différence ?',
     description: "Ces deux documents sont souvent confondus. Pourtant ils n'ont pas la même valeur juridique. Voici ce que tout bailleur doit savoir.",
