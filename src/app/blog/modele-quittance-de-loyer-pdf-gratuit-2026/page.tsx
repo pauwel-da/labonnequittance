@@ -82,7 +82,7 @@ export default function ArticlePage() {
               La quittance de loyer est un document juridique. Si elle est mal rédigée — mentions manquantes, montants incorrects, absence de signature — elle peut être contestée par le locataire ou refusée par la CAF.
             </p>
             <p className="leading-relaxed mt-3">
-              Un bon modèle garantit que vous n&apos;oubliez aucune mention obligatoire, que les montants sont correctement ventilés entre loyer et charges, et que votre signature est opposable. C&apos;est aussi un gain de temps considérable : un bailleur avec 3 locataires passe en moyenne <strong>45 minutes par mois</strong> sur ses quittances sans outil dédié.
+              Un bon modèle garantit que vous n&apos;oubliez aucune mention obligatoire, que les montants sont correctement ventilés entre loyer et charges, et que votre signature est opposable. C&apos;est aussi un gain de temps considérable : un bailleur avec 3 locataires passe en moyenne <strong>45 minutes par mois</strong>{' '}sur ses quittances sans outil dédié.
             </p>
           </section>
 
