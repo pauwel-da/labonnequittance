@@ -85,7 +85,7 @@ export default async function Home() {
     <div className="min-h-screen flex flex-col">
 
       {/* ── HEADER ── */}
-      <header className="bg-white border-b border-gray-100 px-6 py-4 flex justify-center">
+      <header className="bg-white border-b border-gray-100 px-6 py-6 flex justify-center">
         <Image
           src="/logo.png"
           alt="La Bonne Quittance"
@@ -135,7 +135,6 @@ export default async function Home() {
 
       {/* ── SCREENSHOTS ── */}
       <section className="bg-white px-6 pt-16 pb-8 flex flex-col items-center">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-10">L&apos;application</p>
         <AppScreenshots />
       </section>
 
