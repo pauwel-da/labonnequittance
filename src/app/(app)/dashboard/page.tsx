@@ -6,7 +6,7 @@ import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/l
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import Link from 'next/link'
-import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown } from 'lucide-react'
+import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown, Percent } from 'lucide-react'
 
 function monthLabel(year: number, month: number) {
   return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -41,14 +41,15 @@ export default function DashboardPage() {
   const [regenError, setRegenError] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
+  const [proRata, setProRata] = useState<Record<string, { jourDebut: number; jourFin: number } | null>>({})
   const pickerRef = useRef<HTMLDivElement>(null)
   const blobCache = useRef<Record<string, { blob: Blob; filename: string; key: string; imageDataUrl?: string }>>({})
 
-  function getBlob(l: Locataire, bien: Bien, datePeriode: string, dateReglement: string) {
-    const key = `${l.id}-${datePeriode}-${dateReglement}`
+  function getBlob(l: Locataire, bien: Bien, datePeriode: string, dateReglement: string, pr?: { jourDebut: number; jourFin: number } | null) {
+    const key = `${l.id}-${datePeriode}-${dateReglement}-${pr ? `${pr.jourDebut}-${pr.jourFin}` : 'full'}`
     const cached = blobCache.current[l.id]
     if (cached?.key === key) return Promise.resolve({ blob: cached.blob, filename: cached.filename })
-    return fetchQuittanceBlob(l, bien, proprietaire!, datePeriode, dateReglement).then(result => {
+    return fetchQuittanceBlob(l, bien, proprietaire!, datePeriode, dateReglement, pr ?? undefined).then(result => {
       blobCache.current[l.id] = { ...result, key }
       return result
     })
@@ -133,11 +134,12 @@ export default function DashboardPage() {
     const v = validate(l)
     if (!v) return
     const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const pr = proRata[l.id] ?? null
     setGenerating(l.id)
     clearError(l.id)
     trackEvent('quittance_telecharger')
     try {
-      const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement)
+      const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement, pr)
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && navigator.share) {
         const file = new File([blob], filename, { type: 'application/pdf' })
         if (navigator.canShare({ files: [file] })) {
@@ -163,12 +165,13 @@ export default function DashboardPage() {
     const v = validate(l)
     if (!v) return
     const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const pr = proRata[l.id] ?? null
     setPreviewing(l.id)
     clearError(l.id)
     trackEvent('quittance_voir')
     try {
       addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' }).catch(() => {})
-      const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement)
+      const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement, pr)
       setPreviewName(filename)
       if (window.innerWidth < 1024) {
         const cacheEntry = blobCache.current[l.id]
@@ -201,7 +204,8 @@ export default function DashboardPage() {
       return
     }
     const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
-    const payload = buildQuittancePayload(l, v.bien, proprietaire!, datePeriode, v.dateReglement)
+    const pr = proRata[l.id] ?? null
+    const payload = buildQuittancePayload(l, v.bien, proprietaire!, datePeriode, v.dateReglement, pr ?? undefined)
     setSending(l.id)
     clearError(l.id)
     setSendSuccess(null)
@@ -219,8 +223,12 @@ export default function DashboardPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erreur envoi.')
-      const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye', createdAt: new Date().toISOString() }
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'envoye' }).catch(() => {})
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      const ratio = pr ? (pr.jourFin - pr.jourDebut + 1) / daysInMonth : 1
+      const loyerSave = pr ? Math.round(l.loyer * ratio * 100) / 100 : l.loyer
+      const chargesSave = pr ? Math.round(l.charges * ratio * 100) / 100 : l.charges
+      const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye', createdAt: new Date().toISOString() }
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye' }).catch(() => {})
       setQuittances(qs => [...qs.filter(q => !(q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)), sentRecord])
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
@@ -437,7 +445,6 @@ export default function DashboardPage() {
             ) : (
               locataires.map(l => {
                 const bien = getBien(l.bienId)
-                const total = l.loyer + l.charges
                 const isGen = generating === l.id
                 const isPrev = previewing === l.id
                 const isSend = sending === l.id
@@ -445,6 +452,12 @@ export default function DashboardPage() {
                 const didSend = sendSuccess === l.id
                 const datePeriode = `${year}-${String(month + 1).padStart(2, '0')}-01`
                 const alreadySent = quittances.find(q => q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)
+                const pr = proRata[l.id] ?? null
+                const daysInMonth = new Date(year, month + 1, 0).getDate()
+                const ratio = pr ? (pr.jourFin - pr.jourDebut + 1) / daysInMonth : 1
+                const loyerEffectif = pr ? Math.round(l.loyer * ratio * 100) / 100 : l.loyer
+                const chargesEffectif = pr ? Math.round(l.charges * ratio * 100) / 100 : l.charges
+                const totalEffectif = loyerEffectif + chargesEffectif
                 return (
                   <div key={l.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div className="p-4">
@@ -455,9 +468,9 @@ export default function DashboardPage() {
                         </div>
                         <div className="text-right">
                           <p className="font-bold text-[#008020] text-lg">
-                            {total.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                            {totalEffectif.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
                           </p>
-                          <p className="text-xs text-gray-400">/ mois</p>
+                          <p className="text-xs text-gray-400">{pr ? 'pro rata' : '/ mois'}</p>
                         </div>
                       </div>
 
@@ -479,6 +492,40 @@ export default function DashboardPage() {
                           className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
                         />
                       </div>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                          <Percent size={13} />
+                          Pro rata
+                        </span>
+                        <button
+                          onClick={() => setProRata(p => ({ ...p, [l.id]: pr ? null : { jourDebut: 1, jourFin: daysInMonth } }))}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${pr ? 'bg-[#008020]' : 'bg-gray-200'}`}
+                        >
+                          <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${pr ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                        </button>
+                      </div>
+
+                      {pr && (
+                        <div className="flex gap-3 mb-3">
+                          <div className="flex-1">
+                            <label className="text-xs text-gray-500 mb-1 block">Jour début</label>
+                            <input
+                              type="number" min={1} max={pr.jourFin} value={pr.jourDebut}
+                              onChange={e => setProRata(p => ({ ...p, [l.id]: { ...pr, jourDebut: Math.max(1, Math.min(pr.jourFin, parseInt(e.target.value) || 1)) } }))}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-xs text-gray-500 mb-1 block">Jour fin</label>
+                            <input
+                              type="number" min={pr.jourDebut} max={daysInMonth} value={pr.jourFin}
+                              onChange={e => setProRata(p => ({ ...p, [l.id]: { ...pr, jourFin: Math.max(pr.jourDebut, Math.min(daysInMonth, parseInt(e.target.value) || daysInMonth)) } }))}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       {errors[l.id] && (
                         <div className="flex items-center gap-2 text-red-600 text-sm mb-3">
