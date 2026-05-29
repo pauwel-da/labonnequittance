@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const [regenError, setRegenError] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState(false)
   const [pickerYear, setPickerYear] = useState(today.getFullYear())
-  const [proRata, setProRata] = useState<Record<string, { jourDebut: number | ''; jourFin: number | '' } | null>>({})
+  const [proRata, setProRata] = useState<Record<string, { jourDebut: number | null; jourFin: number | null } | null>>({})
   const pickerRef = useRef<HTMLDivElement>(null)
   const blobCache = useRef<Record<string, { blob: Blob; filename: string; key: string; imageDataUrl?: string }>>({})
 
@@ -132,8 +132,8 @@ export default function DashboardPage() {
 
   function getValidPr(locataireId: string): { jourDebut: number; jourFin: number } | null {
     const pr = proRata[locataireId] ?? null
-    if (!pr || pr.jourDebut === '' || pr.jourFin === '') return null
-    return { jourDebut: pr.jourDebut as number, jourFin: pr.jourFin as number }
+    if (!pr || pr.jourDebut === null || pr.jourFin === null) return null
+    return { jourDebut: pr.jourDebut, jourFin: pr.jourFin }
   }
 
   async function handleGenerate(l: Locataire) {
@@ -230,7 +230,7 @@ export default function DashboardPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Erreur envoi.')
       const daysInMonth = new Date(year, month + 1, 0).getDate()
-      const ratio = pr ? (pr.jourFin - pr.jourDebut + 1) / daysInMonth : 1
+      const ratio = pr ? (pr.jourFin! - pr.jourDebut! + 1) / daysInMonth : 1
       const loyerSave = pr ? Math.round(l.loyer * ratio * 100) / 100 : l.loyer
       const chargesSave = pr ? Math.round(l.charges * ratio * 100) / 100 : l.charges
       const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye', createdAt: new Date().toISOString() }
@@ -459,9 +459,9 @@ export default function DashboardPage() {
                 const alreadySent = quittances.find(q => q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)
                 const pr = proRata[l.id] ?? null
                 const daysInMonth = new Date(year, month + 1, 0).getDate()
-                const prValid = !!pr && pr.jourDebut !== '' && pr.jourFin !== '' && (pr.jourDebut as number) >= 1 && (pr.jourFin as number) <= daysInMonth && (pr.jourDebut as number) <= (pr.jourFin as number)
+                const prValid = !!pr && pr.jourDebut !== null && pr.jourFin !== null && pr.jourDebut >= 1 && pr.jourFin <= daysInMonth && pr.jourDebut <= pr.jourFin
                 const prInvalid = !!pr && !prValid
-                const ratio = prValid ? ((pr!.jourFin as number) - (pr!.jourDebut as number) + 1) / daysInMonth : 1
+                const ratio = prValid ? (pr!.jourFin! - pr!.jourDebut! + 1) / daysInMonth : 1
                 const loyerEffectif = prValid ? Math.round(l.loyer * ratio * 100) / 100 : l.loyer
                 const chargesEffectif = prValid ? Math.round(l.charges * ratio * 100) / 100 : l.charges
                 const totalEffectif = loyerEffectif + chargesEffectif
@@ -519,17 +519,17 @@ export default function DashboardPage() {
                           <div className="flex-1">
                             <label className="text-xs text-gray-500 mb-1 block">Jour début</label>
                             <input
-                              type="number" value={pr.jourDebut}
-                              onChange={e => { const n = parseInt(e.target.value); setProRata(p => ({ ...p, [l.id]: { ...pr, jourDebut: isNaN(n) ? '' : n } })) }}
-                              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${pr.jourDebut === '' || (pr.jourFin !== '' && pr.jourDebut !== '' && (pr.jourDebut as number) > (pr.jourFin as number)) || (pr.jourDebut !== '' && (pr.jourDebut as number) < 1) ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-[#008020]'}`}
+                              type="number" value={pr.jourDebut ?? ''}
+                              onChange={e => { const n = parseInt(e.target.value); setProRata(p => ({ ...p, [l.id]: { ...pr, jourDebut: isNaN(n) ? null : n } })) }}
+                              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${pr.jourDebut === null || pr.jourDebut < 1 || (pr.jourFin !== null && pr.jourDebut > pr.jourFin) ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-[#008020]'}`}
                             />
                           </div>
                           <div className="flex-1">
                             <label className="text-xs text-gray-500 mb-1 block">Jour fin</label>
                             <input
-                              type="number" value={pr.jourFin}
-                              onChange={e => { const n = parseInt(e.target.value); setProRata(p => ({ ...p, [l.id]: { ...pr, jourFin: isNaN(n) ? '' : n } })) }}
-                              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${pr.jourFin === '' || (pr.jourFin !== '' && (pr.jourFin as number) > daysInMonth) || (pr.jourDebut !== '' && pr.jourFin !== '' && (pr.jourDebut as number) > (pr.jourFin as number)) ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-[#008020]'}`}
+                              type="number" value={pr.jourFin ?? ''}
+                              onChange={e => { const n = parseInt(e.target.value); setProRata(p => ({ ...p, [l.id]: { ...pr, jourFin: isNaN(n) ? null : n } })) }}
+                              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${pr.jourFin === null || pr.jourFin > daysInMonth || (pr.jourDebut !== null && pr.jourDebut > pr.jourFin) ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-[#008020]'}`}
                             />
                           </div>
                         </div>
