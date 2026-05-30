@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire, addQuittance } from '@/lib/db'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
-import { ArrowLeft, FileCheck, Download, Loader2, PenLine, Trash2, Info } from 'lucide-react'
+import { ArrowLeft, FileCheck, Download, Loader2, PenLine, Trash2, Info, Upload } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 function isValidEmail(v: string) {
@@ -40,6 +40,11 @@ export default function AttestationCafPage() {
   const [locataireAJour, setLocataireAJour] = useState(true)
   const [dernierLoyerImpaye, setDernierLoyerImpaye] = useState('')
   const [recevoirAide, setRecevoirAide] = useState(false)
+  const [iban, setIban] = useState('')
+  const [bic, setBic] = useState('')
+  const [domiciliationBanque, setDomiciliationBanque] = useState('')
+  const [ocrLoading, setOcrLoading] = useState(false)
+  const [ocrError, setOcrError] = useState<string | null>(null)
 
   const [pregenBlob, setPregenBlob] = useState<Blob | null>(null)
   const [pregenLoading, setPregenLoading] = useState(false)
@@ -125,6 +130,9 @@ export default function AttestationCafPage() {
             locataire_a_jour: locataireAJour,
             mois_dernier_loyer_impaye: dernierLoyerImpaye,
             recevoir_aide: recevoirAide,
+            iban,
+            bic,
+            domiciliation_banque: domiciliationBanque,
           }),
         })
         if (res.ok) setPregenBlob(await res.blob())
@@ -136,7 +144,7 @@ export default function AttestationCafPage() {
     }, 800)
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [locataire, bien, proprietaire, userEmail, telephone, surface, colocation, nombreColoc, montantColoc, pieceUnique, sousLocation, hotelPension, typeSousLoc, sousLocPrecision, logementDecent, locataireAJour, dernierLoyerImpaye, recevoirAide, signatureEmpty])
+  }, [locataire, bien, proprietaire, userEmail, telephone, surface, colocation, nombreColoc, montantColoc, pieceUnique, sousLocation, hotelPension, typeSousLoc, sousLocPrecision, logementDecent, locataireAJour, dernierLoyerImpaye, recevoirAide, iban, bic, domiciliationBanque, signatureEmpty])
 
   // Signature pad handlers
   function getXY(e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) {
@@ -197,6 +205,38 @@ export default function AttestationCafPage() {
     }
   }
 
+  async function handleRibUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      setOcrError('Le fichier dépasse 5 Mo. Veuillez utiliser un fichier plus léger.')
+      return
+    }
+    setOcrError(null)
+    setOcrLoading(true)
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(',')[1]
+      try {
+        const res = await fetch('/api/ocr-iban', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_b64: base64 }),
+        })
+        const data = await res.json()
+        if (data.iban) setIban(data.iban)
+        if (data.bic) setBic(data.bic)
+        if (data.domiciliation) setDomiciliationBanque(data.domiciliation)
+        if (!data.iban && !data.bic) setOcrError('IBAN non détecté. Vérifiez l\'image ou saisissez manuellement.')
+      } catch {
+        setOcrError('Erreur lors de la lecture du document.')
+      } finally {
+        setOcrLoading(false)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
     if (!locataire || !bien || !proprietaire) {
@@ -254,6 +294,9 @@ export default function AttestationCafPage() {
             locataire_a_jour: locataireAJour,
             mois_dernier_loyer_impaye: dernierLoyerImpaye,
             recevoir_aide: recevoirAide,
+            iban,
+            bic,
+            domiciliation_banque: domiciliationBanque,
           }),
         })
         if (!res.ok) throw new Error('Erreur génération')
@@ -331,7 +374,7 @@ export default function AttestationCafPage() {
           ].map(r => (
             <div key={r.label} className="flex justify-between text-sm py-1 border-b border-gray-50 last:border-0">
               <span className="text-gray-500">{r.label}</span>
-              <span className="font-medium text-gray-800">{r.value}</span>
+              <span className="font-medium text-gray-800 text-right ml-4">{r.value}</span>
             </div>
           ))}
         </div>
@@ -516,21 +559,21 @@ export default function AttestationCafPage() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
                 </div>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">S&apos;agit-il d&apos;un hôtel ou pension de famille ?</label>
-                <div className="flex gap-3">
-                  {[{ v: true, l: 'Oui' }, { v: false, l: 'Non' }].map(opt => (
-                    <button key={String(opt.v)} type="button" onClick={() => setHotelPension(opt.v)}
-                      className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
-                        hotelPension === opt.v ? 'border-[#008020] bg-green-50 text-[#008020]' : 'border-gray-200 text-gray-600'
-                      }`}>
-                      {opt.l}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </>
           )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">S&apos;agit-il d&apos;un hôtel ou pension de famille ?</label>
+            <div className="flex gap-3">
+              {[{ v: true, l: 'Oui' }, { v: false, l: 'Non' }].map(opt => (
+                <button key={String(opt.v)} type="button" onClick={() => setHotelPension(opt.v)}
+                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                    hotelPension === opt.v ? 'border-[#008020] bg-green-50 text-[#008020]' : 'border-gray-200 text-gray-600'
+                  }`}>
+                  {opt.l}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Paiement */}
@@ -575,6 +618,48 @@ export default function AttestationCafPage() {
               ))}
             </div>
           </div>
+          {recevoirAide && (
+            <div className="space-y-4 pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 flex items-start gap-2">
+                <Info size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                Ces données ne sont pas conservées par La Bonne Quittance. Elles servent uniquement à remplir le Cerfa.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  RIB <span className="text-gray-400 font-normal">(aide à la saisie automatique)</span>
+                </label>
+                <p className="text-xs text-gray-400 mb-2">Importez votre RIB (image ou PDF, max 5 Mo) pour remplir automatiquement l&apos;IBAN et le BIC.</p>
+                <label className={`flex items-center gap-2 w-full border-2 border-dashed rounded-lg px-3 py-2.5 text-sm cursor-pointer transition-colors ${ocrLoading ? 'opacity-50 pointer-events-none' : 'border-gray-300 hover:border-[#008020] hover:bg-green-50'}`}>
+                  {ocrLoading
+                    ? <><Loader2 size={14} className="animate-spin text-[#008020]" /> Analyse en cours...</>
+                    : <><Upload size={14} className="text-gray-400" /> Importer un RIB</>
+                  }
+                  <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={handleRibUpload} disabled={ocrLoading} />
+                </label>
+                {ocrError && <p className="text-xs text-red-500 mt-1.5">{ocrError}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">IBAN</label>
+                <input type="text" value={iban} onChange={e => setIban(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                  placeholder="FR7612345678901234567890123"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">BIC / SWIFT</label>
+                  <input type="text" value={bic} onChange={e => setBic(e.target.value.toUpperCase())}
+                    placeholder="BNPAFRPP"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Domiciliation</label>
+                  <input type="text" value={domiciliationBanque} onChange={e => setDomiciliationBanque(e.target.value)}
+                    placeholder="BNP Paribas Paris"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (
