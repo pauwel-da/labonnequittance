@@ -160,7 +160,8 @@ export default function DashboardPage() {
         URL.revokeObjectURL(url)
       }
       addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' }).catch(() => {})
-    } catch {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') return
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la génération.' }))
     } finally {
       setGenerating(null)
