@@ -27,13 +27,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr" className={geist.className}>
       <body className="min-h-screen bg-gray-50 antialiased">
         {children}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=AW-18008672783" strategy="afterInteractive" />
-        <Script id="google-ads-tag" strategy="afterInteractive">{`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'AW-18008672783');
-        `}</Script>
         <Script src="https://scripts.simpleanalyticscdn.com/latest.js" strategy="afterInteractive" />
         <Script id="schema-website" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context': 'https://schema.org',

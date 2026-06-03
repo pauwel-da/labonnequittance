@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ChevronRight, FileText, Send, Shield, Clock } from 'lucide-react'
+import { ChevronRight, FileText, Send, Shield, Clock, Star } from 'lucide-react'
 import AppScreenshots from '@/components/AppScreenshots'
 import { createClient } from '@/lib/supabase/server'
 
@@ -44,6 +44,16 @@ const features = [
     desc: "De l'inscription à la première quittance envoyée, en moins d'une minute.",
   },
 ]
+
+const reviews = [
+  { name: 'Dibrilou', text: "J'ai testé, j'ai adopté. Excellent service pour les propriétaires qui visent l'efficacité, je ne peux que recommander." },
+  { name: 'Ferroudja', text: 'Simple à utiliser et très efficace.' },
+  { name: 'Abdelwahad', text: 'Application vraiment intuitive, je recommande.' },
+  { name: 'Tim', text: 'Très utile. On peut envoyer les quittances directement à ses locataires.' },
+  { name: 'Tim', text: "L'application est plutôt simple d'utilisation et très intuitive." },
+]
+
+const GOOGLE_REVIEWS_URL = 'https://share.google/xKaaXjgXP5ZjBHYF6'
 
 const faqs = [
   {
@@ -91,6 +101,7 @@ export default async function Home() {
           alt="La Bonne Quittance"
           width={200}
           height={86}
+          sizes="200px"
           priority
         />
       </header>
@@ -126,10 +137,24 @@ export default async function Home() {
           </div>
 
           {userCount && userCount > 0 && (
-            <p className="text-green-200 text-sm">
+            <p className="text-green-200 text-sm mb-4">
               Déjà <span className="font-semibold text-white">{userCount}+ bailleurs</span> inscrits
             </p>
           )}
+
+          <a
+            href={GOOGLE_REVIEWS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-green-100 text-xs hover:text-white transition-colors"
+          >
+            <span className="flex gap-0.5">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Star key={i} size={12} className="fill-yellow-300 text-yellow-300" />
+              ))}
+            </span>
+            <span className="font-medium">Noté 5,0 sur Google</span>
+          </a>
         </div>
       </section>
 
@@ -140,6 +165,54 @@ export default async function Home() {
           <p className="text-sm text-gray-500">Vos biens, vos locataires, vos quittances. En un coup d&apos;œil.</p>
         </div>
         <AppScreenshots />
+      </section>
+
+      {/* ── REVIEWS ── */}
+      <section className="bg-white px-6 pb-16 pt-4 border-t border-transparent">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col items-center mb-10">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="flex gap-0.5">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <Star key={i} size={18} className="fill-yellow-400 text-yellow-400" />
+                ))}
+              </span>
+              <span className="text-sm font-semibold text-gray-900">Noté 5,0 sur Google</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 text-center">Ils utilisent déjà La Bonne Quittance</h2>
+          </div>
+
+          <div className="overflow-hidden marquee-mask">
+            <div className="flex gap-4 animate-marquee">
+              {[...reviews, ...reviews].map((r, i) => (
+                <div
+                  key={i}
+                  className="shrink-0 w-[78vw] sm:w-[320px] bg-gray-50 rounded-2xl p-5 border border-gray-100 flex flex-col"
+                >
+                  <span className="flex gap-0.5 mb-3">
+                    {[0, 1, 2, 3, 4].map((j) => (
+                      <Star key={j} size={13} className="fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </span>
+                  <p className="text-sm text-gray-700 leading-relaxed mb-4 flex-1">&ldquo;{r.text}&rdquo;</p>
+                  <p className="text-xs font-semibold text-gray-900">{r.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <a
+              href={GOOGLE_REVIEWS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-[#008020] transition-colors"
+            >
+              Voir tous les avis sur Google
+              <ChevronRight size={14} />
+            </a>
+          </div>
+        </div>
       </section>
 
       {/* ── COMMENT ÇA MARCHE ── */}

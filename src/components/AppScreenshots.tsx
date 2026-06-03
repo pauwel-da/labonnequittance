@@ -32,6 +32,7 @@ export default function AppScreenshots() {
             alt="Dashboard La Bonne Quittance sur ordinateur"
             width={1200}
             height={750}
+            sizes="(min-width: 1024px) 896px, 100vw"
             className="w-full"
           />
         </div>
@@ -58,6 +59,7 @@ export default function AppScreenshots() {
                 alt="Dashboard La Bonne Quittance sur mobile"
                 width={390}
                 height={844}
+                sizes="(min-width: 640px) 160px, 112px"
                 className="w-full"
               />
             </div>
