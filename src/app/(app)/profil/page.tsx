@@ -202,67 +202,63 @@ export default function ProfilPage() {
           </div>
         )}
 
-        {/* Section Mot de passe */}
-        <div className="mt-5 bg-white rounded-xl shadow-sm p-4 space-y-4">
-          <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Mot de passe</h2>
-
-          {provider === null ? (
-            <p className="text-sm text-gray-400">Chargement…</p>
-          ) : provider !== 'email' ? (
-            <p className="text-sm text-gray-500">
-              Vous êtes connecté avec {provider === 'google' ? 'Google' : provider}. Pour modifier votre mot de passe, gérez-le directement sur votre compte {provider === 'google' ? 'Google' : provider}.
-            </p>
-          ) : pwdSaved ? (
-            <p className="text-sm text-[#008020] bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 font-medium">
+        {/* Mot de passe — bloc discret */}
+        {provider === 'email' && (
+          pwdSaved ? (
+            <p className="mt-4 text-center text-sm text-[#008020] font-medium">
               ✓ Mot de passe modifié avec succès.
             </p>
           ) : !pwdOpen ? (
             <button
               type="button"
               onClick={() => setPwdOpen(true)}
-              className="w-full text-sm font-medium text-[#008020] border border-[#008020] rounded-xl py-2.5 hover:bg-green-50 transition-colors"
+              className="mt-4 w-full text-center text-sm text-gray-500 hover:text-[#008020] hover:underline transition-colors"
             >
               Modifier mon mot de passe
             </button>
           ) : (
-            <form onSubmit={handlePasswordChange} className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-                <input
-                  type="password"
-                  value={currentPwd}
-                  onChange={e => setCurrentPwd(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
-                />
+            <form onSubmit={handlePasswordChange} className="mt-4 bg-white rounded-xl shadow-sm p-4 space-y-3">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Mot de passe</h2>
+                <button
+                  type="button"
+                  onClick={() => { setPwdOpen(false); resetPwdForm() }}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  Annuler
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-                <input
-                  type="password"
-                  value={newPwd}
-                  onChange={e => setNewPwd(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  placeholder="6 caractères minimum"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le nouveau mot de passe</label>
-                <input
-                  type="password"
-                  value={confirmPwd}
-                  onChange={e => setConfirmPwd(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
-                />
-              </div>
+
+              <input
+                type="password"
+                value={currentPwd}
+                onChange={e => setCurrentPwd(e.target.value)}
+                required
+                autoComplete="current-password"
+                autoFocus
+                placeholder="Mot de passe actuel"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+              />
+              <input
+                type="password"
+                value={newPwd}
+                onChange={e => setNewPwd(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+                placeholder="Nouveau mot de passe (6 caractères min.)"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+              />
+              <input
+                type="password"
+                value={confirmPwd}
+                onChange={e => setConfirmPwd(e.target.value)}
+                required
+                minLength={6}
+                autoComplete="new-password"
+                placeholder="Confirmer le nouveau mot de passe"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+              />
 
               {pwdError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -270,26 +266,16 @@ export default function ProfilPage() {
                 </p>
               )}
 
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => { setPwdOpen(false); resetPwdForm() }}
-                  disabled={isChangingPwd}
-                  className="flex-1 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl py-2.5 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={isChangingPwd}
-                  className="flex-1 bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-75 transition-colors"
-                >
-                  {isChangingPwd ? 'Modification…' : 'Modifier'}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={isChangingPwd}
+                className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-75 transition-colors"
+              >
+                {isChangingPwd ? 'Modification…' : 'Modifier'}
+              </button>
             </form>
-          )}
-        </div>
+          )
+        )}
 
         {/* Bouton déconnexion — visible uniquement sur mobile (le sidebar desktop a le sien) */}
         <button
