@@ -4,12 +4,7 @@ Disallow: /biens
 Disallow: /locataires
 Disallow: /profil
 Disallow: /auth/
-Disallow: /login
-Disallow: /signup
 
 Allow: /
-Allow: /cgu
-Allow: /mentions-legales
-Allow: /confidentialite
 
 Sitemap: https://labonnequittance.fr/sitemap.xml
