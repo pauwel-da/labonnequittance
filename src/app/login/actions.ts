@@ -14,7 +14,10 @@ export async function login(formData: FormData) {
   if (error) {
     const msg = error.message
     if (msg === 'Invalid login credentials') return { error: 'Email ou mot de passe incorrect.' }
-    if (msg === 'Email not confirmed') return { error: 'Vous devez confirmer votre email avant de vous connecter.' }
+    if (msg === 'Email not confirmed') return {
+      error: 'Cet email n\'est pas encore confirmé.',
+      kind: 'unconfirmed' as const,
+    }
     return { error: msg }
   }
 

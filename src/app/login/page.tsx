@@ -4,8 +4,9 @@ import { useState, useTransition, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, Mail, Lock, MailCheck } from 'lucide-react'
+import { Loader2, Mail, Lock, MailCheck, Send } from 'lucide-react'
 import { login } from './actions'
+import { resendConfirmation } from '@/app/signup/actions'
 import { createClient } from '@/lib/supabase/client'
 
 function GoogleIcon() {
@@ -21,6 +22,10 @@ function GoogleIcon() {
 
 function LoginForm() {
   const [error, setError] = useState<string | null>(null)
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>('idle')
+  const [resendError, setResendError] = useState<string | null>(null)
+  const [isResending, startResend] = useTransition()
   const [isPending, startTransition] = useTransition()
   const [googlePending, setGooglePending] = useState(false)
   const searchParams = useSearchParams()
@@ -30,10 +35,33 @@ function LoginForm() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
+    const submittedEmail = formData.get('email') as string
     setError(null)
+    setUnconfirmedEmail(null)
+    setResendStatus('idle')
+    setResendError(null)
     startTransition(async () => {
       const result = await login(formData)
-      if (result?.error) setError(result.error)
+      if (result?.kind === 'unconfirmed') {
+        setError(result.error)
+        setUnconfirmedEmail(submittedEmail)
+      } else if (result?.error) {
+        setError(result.error)
+      }
+    })
+  }
+
+  function handleResend() {
+    if (!unconfirmedEmail) return
+    setResendError(null)
+    startResend(async () => {
+      const result = await resendConfirmation(unconfirmedEmail)
+      if (result?.error) {
+        setResendStatus('error')
+        setResendError(result.error)
+      } else {
+        setResendStatus('sent')
+      }
     })
   }
 
@@ -124,10 +152,37 @@ function LoginForm() {
           </div>
         </div>
 
-        {error && (
+        {error && !unconfirmedEmail && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
             {error}
           </p>
+        )}
+
+        {unconfirmedEmail && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-3 space-y-2">
+            <p className="text-sm text-orange-800">{error}</p>
+
+            {resendStatus === 'sent' ? (
+              <p className="text-sm text-[#008020] font-medium">
+                ✓ Email de confirmation renvoyé à <span className="font-semibold">{unconfirmedEmail}</span>. Vérifiez votre boîte (et vos spams).
+              </p>
+            ) : (
+              <>
+                {resendStatus === 'error' && resendError && (
+                  <p className="text-xs text-red-600">{resendError}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="flex items-center justify-center gap-2 w-full bg-white border border-orange-300 hover:bg-orange-50 disabled:opacity-50 text-orange-800 font-medium py-2 rounded-lg text-sm transition-colors"
+                >
+                  {isResending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                  Renvoyer le lien de confirmation
+                </button>
+              </>
+            )}
+          </div>
         )}
 
         <button
