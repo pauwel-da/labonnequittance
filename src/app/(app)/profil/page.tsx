@@ -19,12 +19,20 @@ export default function ProfilPage() {
   const [resubscribed, setResubscribed] = useState(false)
 
   const [provider, setProvider] = useState<string | null>(null)
+  const [pwdOpen, setPwdOpen] = useState(false)
   const [currentPwd, setCurrentPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
   const [pwdError, setPwdError] = useState<string | null>(null)
   const [pwdSaved, setPwdSaved] = useState(false)
   const [isChangingPwd, startChangePwd] = useTransition()
+
+  function resetPwdForm() {
+    setCurrentPwd('')
+    setNewPwd('')
+    setConfirmPwd('')
+    setPwdError(null)
+  }
 
   useEffect(() => { getProprietaire().then(setForm) }, [])
 
@@ -55,10 +63,9 @@ export default function ProfilPage() {
         return
       }
       setPwdSaved(true)
-      setCurrentPwd('')
-      setNewPwd('')
-      setConfirmPwd('')
-      setTimeout(() => setPwdSaved(false), 3000)
+      resetPwdForm()
+      setPwdOpen(false)
+      setTimeout(() => setPwdSaved(false), 4000)
     })
   }
 
@@ -205,6 +212,18 @@ export default function ProfilPage() {
             <p className="text-sm text-gray-500">
               Vous êtes connecté avec {provider === 'google' ? 'Google' : provider}. Pour modifier votre mot de passe, gérez-le directement sur votre compte {provider === 'google' ? 'Google' : provider}.
             </p>
+          ) : pwdSaved ? (
+            <p className="text-sm text-[#008020] bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 font-medium">
+              ✓ Mot de passe modifié avec succès.
+            </p>
+          ) : !pwdOpen ? (
+            <button
+              type="button"
+              onClick={() => setPwdOpen(true)}
+              className="w-full text-sm font-medium text-[#008020] border border-[#008020] rounded-xl py-2.5 hover:bg-green-50 transition-colors"
+            >
+              Modifier mon mot de passe
+            </button>
           ) : (
             <form onSubmit={handlePasswordChange} className="space-y-3">
               <div>
@@ -215,6 +234,7 @@ export default function ProfilPage() {
                   onChange={e => setCurrentPwd(e.target.value)}
                   required
                   autoComplete="current-password"
+                  autoFocus
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
                 />
               </div>
@@ -250,19 +270,23 @@ export default function ProfilPage() {
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={isChangingPwd}
-                className={`w-full font-semibold py-2.5 rounded-xl text-sm transition-all ${
-                  pwdSaved
-                    ? 'bg-green-100 text-[#008020] border-2 border-[#008020]'
-                    : 'bg-[#008020] hover:bg-green-800 text-white disabled:opacity-75'
-                }`}
-              >
-                {pwdSaved
-                  ? '✓ Mot de passe modifié'
-                  : isChangingPwd ? 'Modification…' : 'Modifier le mot de passe'}
-              </button>
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setPwdOpen(false); resetPwdForm() }}
+                  disabled={isChangingPwd}
+                  className="flex-1 text-sm font-medium text-gray-600 border border-gray-300 rounded-xl py-2.5 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPwd}
+                  className="flex-1 bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm disabled:opacity-75 transition-colors"
+                >
+                  {isChangingPwd ? 'Modification…' : 'Modifier'}
+                </button>
+              </div>
             </form>
           )}
         </div>
