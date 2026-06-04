@@ -25,6 +25,7 @@ function LoginForm() {
   const [googlePending, setGooglePending] = useState(false)
   const searchParams = useSearchParams()
   const message = searchParams.get('message')
+  const prefillEmail = searchParams.get('prefill') ?? ''
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -96,6 +97,7 @@ function LoginForm() {
               name="email"
               type="email"
               required
+              defaultValue={prefillEmail}
               placeholder="vous@exemple.fr"
               className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
             />

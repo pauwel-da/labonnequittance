@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, Mail, Lock, ArrowRight } from 'lucide-react'
-import { signup } from './actions'
+import { Loader2, Mail, Lock, ArrowRight, UserCheck, Send } from 'lucide-react'
+import { signup, resendConfirmation } from './actions'
 import { createClient } from '@/lib/supabase/client'
 
 function GoogleIcon() {
@@ -22,6 +22,10 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [success, setSuccess] = useState(false)
+  const [existing, setExisting] = useState(false)
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>('idle')
+  const [resendError, setResendError] = useState<string | null>(null)
+  const [isResending, startResend] = useTransition()
   const [isPending, startTransition] = useTransition()
   const [googlePending, setGooglePending] = useState(false)
   const [googleConsent, setGoogleConsent] = useState(false)
@@ -47,8 +51,26 @@ export default function SignupPage() {
     setError(null)
     startTransition(async () => {
       const result = await signup(formData)
-      if (result?.error) setError(result.error)
-      else setSuccess(true)
+      if (result?.kind === 'existing') {
+        setExisting(true)
+      } else if (result?.error) {
+        setError(result.error)
+      } else {
+        setSuccess(true)
+      }
+    })
+  }
+
+  function handleResend() {
+    setResendError(null)
+    startResend(async () => {
+      const result = await resendConfirmation(email)
+      if (result?.error) {
+        setResendStatus('error')
+        setResendError(result.error)
+      } else {
+        setResendStatus('sent')
+      }
     })
   }
 
@@ -97,6 +119,52 @@ export default function SignupPage() {
                 className="flex items-center justify-center gap-2 w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
               >
                 Aller à la connexion <ArrowRight size={16} />
+              </Link>
+            </div>
+          ) : existing ? (
+            <div className="text-center">
+              <div className="bg-orange-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-5">
+                <UserCheck size={28} className="text-orange-600" />
+              </div>
+
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Ce compte existe déjà</h2>
+              <p className="text-sm text-gray-500 mb-1">Un compte est déjà inscrit avec</p>
+              <p className="text-sm font-semibold text-gray-800 mb-6">{email}</p>
+
+              {resendStatus === 'sent' && (
+                <p className="text-sm text-[#008020] bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-4">
+                  ✓ Email de confirmation renvoyé. Vérifiez votre boîte (et vos spams).
+                </p>
+              )}
+              {resendStatus === 'error' && resendError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+                  {resendError}
+                </p>
+              )}
+
+              <div className="space-y-2.5 mb-4">
+                <Link
+                  href={`/login?prefill=${encodeURIComponent(email)}`}
+                  className="flex items-center justify-center gap-2 w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  Se connecter <ArrowRight size={16} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isResending || resendStatus === 'sent'}
+                  className="flex items-center justify-center gap-2 w-full border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  {isResending ? <Loader2 size={16} className="animate-spin" /> : <Send size={14} />}
+                  Renvoyer le lien de confirmation
+                </button>
+              </div>
+
+              <Link
+                href={`/auth/reset-password?prefill=${encodeURIComponent(email)}`}
+                className="text-xs text-gray-500 hover:text-[#008020] hover:underline"
+              >
+                Mot de passe oublié ?
               </Link>
             </div>
           ) : (

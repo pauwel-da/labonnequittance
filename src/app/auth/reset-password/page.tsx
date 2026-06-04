@@ -13,11 +13,11 @@ const INCOMING_ERRORS: Record<string, string> = {
 }
 
 function ResetPasswordForm() {
+  const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(searchParams.get('prefill') ?? '')
   const [isPending, startTransition] = useTransition()
-  const searchParams = useSearchParams()
   const incomingError = INCOMING_ERRORS[searchParams.get('error') ?? '']
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
