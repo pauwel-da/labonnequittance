@@ -7,9 +7,13 @@ export async function GET(request: Request) {
   const type = searchParams.get('type')
 
   if (type === 'recovery') {
-    if (code) {
-      const supabase = await createClient()
-      await supabase.auth.exchangeCodeForSession(code)
+    if (!code) {
+      return NextResponse.redirect(`${origin}/auth/reset-password?error=link_expired`)
+    }
+    const supabase = await createClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      return NextResponse.redirect(`${origin}/auth/reset-password?error=link_expired`)
     }
     return NextResponse.redirect(`${origin}/auth/update-password`)
   }

@@ -36,6 +36,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  if (!user && pathname === '/auth/update-password') {
+    return NextResponse.redirect(new URL('/auth/reset-password?error=session_expired', request.url))
+  }
+
   if (user && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
