@@ -172,14 +172,21 @@ export default function SignupPage() {
               <h1 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h1>
               <p className="text-sm text-gray-500 mb-6">Gérez vos quittances en toute simplicité.</p>
 
-              <label className="flex items-start gap-3 cursor-pointer mb-4">
+              <label className={`flex items-start gap-3 cursor-pointer mb-4 rounded-lg px-3 py-2.5 -mx-3 transition-colors ${
+                consentErrorSource ? 'bg-red-50 border border-red-300' : 'border border-transparent'
+              }`}>
                 <input
                   type="checkbox"
                   checked={googleConsent}
-                  onChange={e => setGoogleConsent(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 shrink-0 accent-[#008020] cursor-pointer"
+                  onChange={e => {
+                    setGoogleConsent(e.target.checked)
+                    if (e.target.checked) setConsentErrorSource(null)
+                  }}
+                  className={`mt-0.5 w-4 h-4 shrink-0 cursor-pointer ${
+                    consentErrorSource ? 'accent-red-500' : 'accent-[#008020]'
+                  }`}
                 />
-                <span className="text-xs text-gray-500 leading-relaxed">
+                <span className={`text-xs leading-relaxed ${consentErrorSource ? 'text-red-700' : 'text-gray-500'}`}>
                   En continuant, j&apos;accepte les{' '}
                   <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
                   , la{' '}
