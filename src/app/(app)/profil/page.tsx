@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { getProprietaire, saveProprietaire } from '@/lib/db'
+import { createClient } from '@/lib/supabase/client'
 import type { Proprietaire } from '@/lib/types'
 import SignaturePad from '@/components/SignaturePad'
-import { signOut, reinscrireRappel } from '@/app/(app)/actions'
+import { signOut, reinscrireRappel, changePassword } from '@/app/(app)/actions'
 
 
 export default function ProfilPage() {
@@ -17,7 +18,49 @@ export default function ProfilPage() {
   const [isResubscribing, startResubscribe] = useTransition()
   const [resubscribed, setResubscribed] = useState(false)
 
+  const [provider, setProvider] = useState<string | null>(null)
+  const [currentPwd, setCurrentPwd] = useState('')
+  const [newPwd, setNewPwd] = useState('')
+  const [confirmPwd, setConfirmPwd] = useState('')
+  const [pwdError, setPwdError] = useState<string | null>(null)
+  const [pwdSaved, setPwdSaved] = useState(false)
+  const [isChangingPwd, startChangePwd] = useTransition()
+
   useEffect(() => { getProprietaire().then(setForm) }, [])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      setProvider(data.user?.app_metadata?.provider ?? 'email')
+    })
+  }, [])
+
+  function handlePasswordChange(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setPwdError(null)
+
+    if (newPwd !== confirmPwd) {
+      setPwdError('Les mots de passe ne correspondent pas.')
+      return
+    }
+    if (newPwd.length < 6) {
+      setPwdError('Le nouveau mot de passe doit faire au moins 6 caractères.')
+      return
+    }
+
+    startChangePwd(async () => {
+      const result = await changePassword(currentPwd, newPwd)
+      if (result?.error) {
+        setPwdError(result.error)
+        return
+      }
+      setPwdSaved(true)
+      setCurrentPwd('')
+      setNewPwd('')
+      setConfirmPwd('')
+      setTimeout(() => setPwdSaved(false), 3000)
+    })
+  }
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
@@ -151,6 +194,78 @@ export default function ProfilPage() {
             </button>
           </div>
         )}
+
+        {/* Section Mot de passe */}
+        <div className="mt-5 bg-white rounded-xl shadow-sm p-4 space-y-4">
+          <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide">Mot de passe</h2>
+
+          {provider === null ? (
+            <p className="text-sm text-gray-400">Chargement…</p>
+          ) : provider !== 'email' ? (
+            <p className="text-sm text-gray-500">
+              Vous êtes connecté avec {provider === 'google' ? 'Google' : provider}. Pour modifier votre mot de passe, gérez-le directement sur votre compte {provider === 'google' ? 'Google' : provider}.
+            </p>
+          ) : (
+            <form onSubmit={handlePasswordChange} className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
+                <input
+                  type="password"
+                  value={currentPwd}
+                  onChange={e => setCurrentPwd(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={newPwd}
+                  onChange={e => setNewPwd(e.target.value)}
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  placeholder="6 caractères minimum"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={confirmPwd}
+                  onChange={e => setConfirmPwd(e.target.value)}
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]"
+                />
+              </div>
+
+              {pwdError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {pwdError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isChangingPwd}
+                className={`w-full font-semibold py-2.5 rounded-xl text-sm transition-all ${
+                  pwdSaved
+                    ? 'bg-green-100 text-[#008020] border-2 border-[#008020]'
+                    : 'bg-[#008020] hover:bg-green-800 text-white disabled:opacity-75'
+                }`}
+              >
+                {pwdSaved
+                  ? '✓ Mot de passe modifié'
+                  : isChangingPwd ? 'Modification…' : 'Modifier le mot de passe'}
+              </button>
+            </form>
+          )}
+        </div>
 
         {/* Bouton déconnexion — visible uniquement sur mobile (le sidebar desktop a le sien) */}
         <button
