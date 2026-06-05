@@ -14,7 +14,7 @@ const reviews = [
   { name: 'Tim', text: "L'application est plutôt simple d'utilisation et très intuitive." },
 ]
 
-const GOOGLE_REVIEWS_URL = 'https://share.google/xKaaXjgXP5ZjBHYF6'
+const GOOGLE_REVIEWS_URL = 'https://www.google.com/maps/search/?api=1&query=La+Bonne+Quittance+Lyon'
 
 const faqs = [
   {

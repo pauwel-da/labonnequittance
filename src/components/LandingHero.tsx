@@ -51,7 +51,7 @@ export default function LandingHero({ userCount }: { userCount: number | null })
           {/* Social proof inline */}
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 text-sm text-gray-500 justify-center lg:justify-start">
             <a
-              href="https://share.google/xKaaXjgXP5ZjBHYF6"
+              href="https://www.google.com/maps/search/?api=1&query=La+Bonne+Quittance+Lyon"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 hover:text-gray-700 transition-colors"
