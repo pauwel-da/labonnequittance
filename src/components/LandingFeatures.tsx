@@ -1,7 +1,7 @@
 'use client'
 
-import { motion } from 'motion/react'
 import { Clock, Send, Shield } from 'lucide-react'
+import { useInView } from '@/lib/useInView'
 
 const features = [
   {
@@ -22,42 +22,35 @@ const features = [
 ]
 
 export default function LandingFeatures() {
+  const { ref, inView } = useInView<HTMLDivElement>()
+
   return (
     <section className="bg-white px-6 py-20 lg:py-28 border-t border-gray-100">
-      <div className="max-w-5xl mx-auto">
+      <div ref={ref} className="max-w-5xl mx-auto">
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-14"
-        >
+        <div className={`text-center mb-14 reveal ${inView ? 'in-view' : ''}`}>
           <p className="text-xs font-semibold uppercase tracking-widest text-[#008020] mb-2">Fonctionnalités</p>
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
             Tout ce qu&apos;il faut.<br className="sm:hidden" />
             <span className="text-gray-400">Rien de plus.</span>
           </h2>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {features.map((f, i) => {
             const Icon = f.icon
             return (
-              <motion.div
+              <div
                 key={f.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="bg-gradient-to-b from-gray-50 to-white rounded-2xl p-7 border border-gray-100 hover:border-green-200 hover:shadow-lg hover:shadow-green-900/5 transition-all"
+                className={`bg-gradient-to-b from-gray-50 to-white rounded-2xl p-7 border border-gray-100 hover:border-green-200 hover:shadow-lg hover:shadow-green-900/5 transition-all reveal ${inView ? 'in-view' : ''}`}
+                style={{ transitionDelay: inView ? `${i * 100}ms` : '0ms' }}
               >
                 <div className="bg-[#008020] text-white rounded-xl w-12 h-12 flex items-center justify-center mb-5 shadow-md shadow-green-900/20">
                   <Icon size={22} strokeWidth={2.2} />
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2 text-lg">{f.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
-              </motion.div>
+              </div>
             )
           })}
         </div>

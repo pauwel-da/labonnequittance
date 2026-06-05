@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'motion/react'
 import { ArrowRight } from 'lucide-react'
+import { useInView } from '@/lib/useInView'
 
 export default function LandingCTA() {
+  const { ref, inView } = useInView<HTMLDivElement>()
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#008020] via-[#006619] to-[#004d12] px-6 py-20 lg:py-24">
       {/* Decorative pattern */}
@@ -13,12 +15,9 @@ export default function LandingCTA() {
         backgroundSize: '40px 40px, 30px 30px',
       }} />
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-50px' }}
-        transition={{ duration: 0.5 }}
-        className="relative max-w-2xl mx-auto text-center"
+      <div
+        ref={ref}
+        className={`relative max-w-2xl mx-auto text-center reveal ${inView ? 'in-view' : ''}`}
       >
         <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight tracking-tight">
           Prêt à gagner du temps&nbsp;?
@@ -33,7 +32,7 @@ export default function LandingCTA() {
           Créer mon compte gratuit
           <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
         </Link>
-      </motion.div>
+      </div>
     </section>
   )
 }

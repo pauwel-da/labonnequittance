@@ -1,8 +1,5 @@
-'use client'
-
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion } from 'motion/react'
 import { Star, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function LandingHero({ userCount }: { userCount: number | null }) {
@@ -15,21 +12,14 @@ export default function LandingHero({ userCount }: { userCount: number | null })
       <div className="relative max-w-6xl mx-auto grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
 
         {/* ── LEFT : Copy ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-center lg:text-left"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="inline-flex items-center gap-2 bg-white border border-green-200 text-[#008020] px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 shadow-sm"
+        <div className="text-center lg:text-left anim-fade-up">
+          <div
+            className="inline-flex items-center gap-2 bg-white border border-green-200 text-[#008020] px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6 shadow-sm anim-fade-scale"
+            style={{ animationDelay: '0.1s' }}
           >
             <Sparkles size={13} className="fill-[#008020]" />
             100% gratuit · Sans carte bancaire
-          </motion.div>
+          </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.05] tracking-tight mb-5">
             La quittance de loyer,<br />
@@ -83,15 +73,10 @@ export default function LandingHero({ userCount }: { userCount: number | null })
               </>
             )}
           </div>
-        </motion.div>
+        </div>
 
         {/* ── RIGHT : Product mockup ── */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: 'easeOut' }}
-          className="relative"
-        >
+        <div className="relative anim-fade-mockup" style={{ animationDelay: '0.15s' }}>
           {/* Browser frame */}
           <div className="rounded-2xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,128,32,0.25)] border border-gray-200 bg-white">
             <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
@@ -118,11 +103,9 @@ export default function LandingHero({ userCount }: { userCount: number | null })
           </div>
 
           {/* Floating mobile mockup */}
-          <motion.div
-            initial={{ opacity: 0, y: 30, x: -10 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.5, ease: 'easeOut' }}
-            className="absolute -bottom-6 -left-4 sm:-left-12 w-24 sm:w-36"
+          <div
+            className="absolute -bottom-6 -left-4 sm:-left-12 w-24 sm:w-36 anim-fade-mobile"
+            style={{ animationDelay: '0.5s' }}
           >
             <div className="bg-gray-900 rounded-2xl p-1 shadow-2xl">
               <div className="bg-black rounded-xl overflow-hidden">
@@ -139,8 +122,8 @@ export default function LandingHero({ userCount }: { userCount: number | null })
                 />
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
       </div>
     </section>
