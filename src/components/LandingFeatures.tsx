@@ -31,7 +31,7 @@ export default function LandingFeatures() {
         <div className={`text-center mb-14 reveal ${inView ? 'in-view' : ''}`}>
           <p className="text-xs font-semibold uppercase tracking-widest text-[#008020] mb-2">Fonctionnalités</p>
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-            Tout ce qu&apos;il faut.<br className="sm:hidden" />
+            Tout ce qu&apos;il faut.<br className="sm:hidden" />{' '}
             <span className="text-gray-400">Rien de plus.</span>
           </h2>
         </div>
