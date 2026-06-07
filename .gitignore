@@ -52,3 +52,6 @@ template.yaml
 *.pdf
 __pycache__/
 *.pyc
+
+# iCloud Drive bypass (any *.nosync folder)
+*.nosync/

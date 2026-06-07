@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronRight, Star } from 'lucide-react'
 import LandingHero from '@/components/LandingHero'
+import LandingShowcase from '@/components/LandingShowcase'
 import LandingFeatures from '@/components/LandingFeatures'
 import LandingCTA from '@/components/LandingCTA'
 import { createClient } from '@/lib/supabase/server'
@@ -81,6 +82,9 @@ export default async function Home() {
 
       {/* ── HERO ── */}
       <LandingHero userCount={userCount} />
+
+      {/* ── SHOWCASE PDF ── */}
+      <LandingShowcase />
 
       {/* ── REVIEWS (marquee) ── */}
       <section className="bg-white px-0 py-14 border-t border-gray-100">

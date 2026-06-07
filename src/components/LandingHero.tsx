@@ -4,10 +4,10 @@ import { Star, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function LandingHero({ userCount }: { userCount: number | null }) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-green-50/40 via-white to-white pt-12 pb-20 lg:pt-20 lg:pb-28 px-6">
-      {/* Subtle decorative blobs */}
+    <section className="relative overflow-hidden bg-gradient-to-b from-green-50/40 to-green-50/15 pt-12 pb-16 lg:pt-20 lg:pb-24 px-6">
+      {/* Subtle decorative blobs (fully inside section to avoid hard clips at the edges) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-green-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 right-0 w-[400px] h-[400px] bg-emerald-100/40 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-[300px] h-[300px] bg-emerald-100/40 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative max-w-6xl mx-auto grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
 
