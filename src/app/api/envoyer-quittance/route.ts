@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   // Générer le PDF via Lambda
   const command = new InvokeCommand({
-    FunctionName: 'labonnequittance-generate',
+    FunctionName: 'labonnequittance-generate-v2',
     Payload: JSON.stringify({
       requestContext: { http: { method: 'POST' } },
       body: JSON.stringify({ ...pdfPayload, proprietaire_prenom_nom }),
