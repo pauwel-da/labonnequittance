@@ -674,9 +674,9 @@ export default function DashboardPage() {
               <X size={20} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto bg-gray-100 flex justify-center p-4">
+          <div className="flex-1 overflow-y-auto bg-gray-100 flex justify-center items-start p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewImage} alt="Prévisualisation quittance" className="w-full max-w-lg rounded shadow-lg" />
+            <img src={previewImage} alt="Prévisualisation quittance" className="w-full max-w-lg h-auto rounded shadow-lg" />
           </div>
         </div>
       )}
