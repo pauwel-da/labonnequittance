@@ -11,9 +11,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-
   const [
     { data: usersData, error: usersError },
     { data: statsData, error: statsError },
@@ -21,7 +18,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase.rpc('count_users'),
     supabase.rpc('get_quittance_stats'),
-    supabase.from('quittances').select('action').gte('created_at', todayStart.toISOString()),
+    supabase.rpc('get_quittance_stats_today'),
   ])
 
   if (usersError || statsError || todayError) {
@@ -37,7 +34,7 @@ export async function GET() {
   const todayActions = { telecharge: 0, envoye: 0, visionne: 0, caf: 0 }
   for (const row of (todayData ?? [])) {
     const action = row.action as keyof typeof todayActions
-    if (action in todayActions) todayActions[action]++
+    if (action in todayActions) todayActions[action] = Number(row.count)
   }
 
   const users = (usersData as Array<{ total: number; today: number }> | null)?.[0] ?? { total: 0, today: 0 }
