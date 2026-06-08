@@ -40,7 +40,8 @@ async function getUserCount(): Promise<number | null> {
   try {
     const supabase = await createClient()
     const { data } = await supabase.rpc('count_users')
-    return data ? Number(data) + 400 : null
+    const total = (data as Array<{ total: number; today: number }> | null)?.[0]?.total
+    return total != null ? Number(total) + 400 : null
   } catch {
     return null
   }
