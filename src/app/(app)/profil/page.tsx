@@ -88,6 +88,7 @@ export default function ProfilPage() {
     try {
       await saveProprietaire(form)
       setSaved(true)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde.')
