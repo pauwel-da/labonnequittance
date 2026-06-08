@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getBiens, addBien, updateBien, deleteBien, getLocataires } from '@/lib/db'
-import type { Bien, BienType, Locataire } from '@/lib/types'
+import { getBiens, addBien, updateBien, deleteBien, getLocataires, getProprietaire, getQuittances } from '@/lib/db'
+import type { Bien, BienType, Locataire, Proprietaire, QuittanceRecord } from '@/lib/types'
 import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle } from 'lucide-react'
+import OnboardingChecklist from '@/components/OnboardingChecklist'
 
 const TYPES: { value: BienType; label: string }[] = [
   { value: 'meuble', label: 'Meublé' },
@@ -15,6 +16,8 @@ const emptyForm = { nom: '', adresse: '', codePostal: '', ville: '', typeLocatio
 export default function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
   const [locataires, setLocataires] = useState<Locataire[]>([])
+  const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
+  const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -24,9 +27,11 @@ export default function BiensPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ bien: Bien; affected: Locataire[] } | null>(null)
 
   async function reload() {
-    const [bs, locs] = await Promise.all([getBiens(), getLocataires()])
+    const [bs, locs, prop, qs] = await Promise.all([getBiens(), getLocataires(), getProprietaire(), getQuittances()])
     setBiens(bs)
     setLocataires(locs)
+    setProprietaire(prop)
+    setQuittances(qs)
   }
 
   useEffect(() => {
@@ -84,6 +89,15 @@ export default function BiensPage() {
         <h1 className="text-2xl font-bold">Mes biens</h1>
         <p className="text-green-100 text-sm mt-1">{biens.length} bien{biens.length !== 1 ? 's' : ''}</p>
       </header>
+
+      {!loading && (
+        <OnboardingChecklist
+          proprietaire={proprietaire}
+          biens={biens}
+          locataires={locataires}
+          quittances={quittances}
+        />
+      )}
 
       <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
         <button

@@ -6,7 +6,8 @@ import { fetchQuittanceBlob, genererQuittance, buildQuittancePayload } from '@/l
 import { renderPdfFirstPage } from '@/lib/pdfPreview'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import Link from 'next/link'
-import { FileText, Download, ChevronLeft, ChevronRight, Home, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown, Percent } from 'lucide-react'
+import { FileText, Download, ChevronLeft, ChevronRight, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown, Percent } from 'lucide-react'
+import OnboardingChecklist from '@/components/OnboardingChecklist'
 
 function monthLabel(year: number, month: number) {
   return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -360,6 +361,15 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {!loading && (
+        <OnboardingChecklist
+          proprietaire={proprietaire}
+          biens={biens}
+          locataires={locataires}
+          quittances={quittances}
+        />
+      )}
+
       {adminStats !== null && (
         <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
           <div className="bg-gray-900 text-white rounded-xl px-4 py-4">
@@ -433,23 +443,7 @@ export default function DashboardPage() {
           )}
 
           <div className="px-4 lg:px-8 pb-6 space-y-3 max-w-4xl mx-auto">
-            {locataires.length === 0 ? (
-              <div className="text-center py-16 text-gray-400">
-                <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Home size={28} className="text-gray-400" />
-                </div>
-                <p className="font-medium text-gray-600 mb-1">Aucun locataire</p>
-                <p className="text-sm mb-6">Commencez par ajouter un bien puis un locataire.</p>
-                <div className="flex gap-3 justify-center">
-                  <Link href="/biens" className="bg-[#008020] text-white text-sm font-medium px-4 py-2 rounded-lg">
-                    Ajouter un bien
-                  </Link>
-                  <Link href="/locataires" className="border border-[#008020] text-[#008020] text-sm font-medium px-4 py-2 rounded-lg">
-                    Ajouter un locataire
-                  </Link>
-                </div>
-              </div>
-            ) : (
+            {locataires.length > 0 && (
               locataires.map(l => {
                 const bien = getBien(l.bienId)
                 const isGen = generating === l.id

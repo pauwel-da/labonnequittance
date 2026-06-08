@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getBiens, getLocataires, addLocataire, updateLocataire, deleteLocataire } from '@/lib/db'
-import type { Locataire, Bien } from '@/lib/types'
-import { Plus, Users, Pencil, Trash2, X, AlertTriangle, Loader2, Mail, FileCheck } from 'lucide-react'
+import { getBiens, getLocataires, addLocataire, updateLocataire, deleteLocataire, getProprietaire, getQuittances } from '@/lib/db'
+import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
+import { Plus, Users, Pencil, Trash2, X, Loader2, Mail, FileCheck, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import OnboardingChecklist from '@/components/OnboardingChecklist'
 
 const emptyForm = {
   nomPrenom: '',
@@ -23,6 +24,8 @@ function isValidEmail(v: string) {
 export default function LocatairesPage() {
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
+  const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
+  const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -31,9 +34,11 @@ export default function LocatairesPage() {
   const [emailError, setEmailError] = useState('')
 
   async function reload() {
-    const [locs, bs] = await Promise.all([getLocataires(), getBiens()])
+    const [locs, bs, prop, qs] = await Promise.all([getLocataires(), getBiens(), getProprietaire(), getQuittances()])
     setLocataires(locs)
     setBiens(bs)
+    setProprietaire(prop)
+    setQuittances(qs)
   }
 
   useEffect(() => {
@@ -123,20 +128,32 @@ export default function LocatairesPage() {
         <p className="text-green-100 text-sm mt-1">{locataires.length} locataire{locataires.length !== 1 ? 's' : ''}</p>
       </header>
 
-      <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
-        <button
-          onClick={openNew}
-          className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
-        >
-          <Plus size={18} /> Ajouter un locataire
-        </button>
-      </div>
-
-      {biens.length === 0 && !loading && (
-        <div className="mx-4 lg:mx-8 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 max-w-4xl mx-auto flex items-center gap-2">
-          <AlertTriangle size={14} className="shrink-0" /> Vous devez d&apos;abord créer un bien immobilier.
-        </div>
+      {!loading && (
+        <OnboardingChecklist
+          proprietaire={proprietaire}
+          biens={biens}
+          locataires={locataires}
+          quittances={quittances}
+        />
       )}
+
+      <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
+        {biens.length === 0 && !loading ? (
+          <Link
+            href="/biens"
+            className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+          >
+            Créer un bien d&apos;abord <ArrowRight size={16} />
+          </Link>
+        ) : (
+          <button
+            onClick={openNew}
+            className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={18} /> Ajouter un locataire
+          </button>
+        )}
+      </div>
 
       <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {loading ? (

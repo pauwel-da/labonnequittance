@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { getProprietaire, saveProprietaire } from '@/lib/db'
+import { getProprietaire, saveProprietaire, getBiens, getLocataires, getQuittances } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
-import type { Proprietaire } from '@/lib/types'
+import type { Proprietaire, Bien, Locataire, QuittanceRecord } from '@/lib/types'
 import SignaturePad from '@/components/SignaturePad'
+import OnboardingChecklist from '@/components/OnboardingChecklist'
 import { signOut, reinscrireRappel, changePassword } from '@/app/(app)/actions'
 
 
@@ -19,6 +20,10 @@ export default function ProfilPage() {
   const [resubscribed, setResubscribed] = useState(false)
 
   const [provider, setProvider] = useState<string | null>(null)
+  const [biens, setBiens] = useState<Bien[]>([])
+  const [locataires, setLocataires] = useState<Locataire[]>([])
+  const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
+  const [onboardingLoaded, setOnboardingLoaded] = useState(false)
   const [pwdOpen, setPwdOpen] = useState(false)
   const [currentPwd, setCurrentPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
@@ -34,7 +39,15 @@ export default function ProfilPage() {
     setPwdError(null)
   }
 
-  useEffect(() => { getProprietaire().then(setForm) }, [])
+  useEffect(() => {
+    getProprietaire().then(setForm)
+    Promise.all([getBiens(), getLocataires(), getQuittances()]).then(([bs, locs, qs]) => {
+      setBiens(bs)
+      setLocataires(locs)
+      setQuittances(qs)
+      setOnboardingLoaded(true)
+    })
+  }, [])
 
   useEffect(() => {
     const supabase = createClient()
@@ -87,6 +100,15 @@ export default function ProfilPage() {
         <h1 className="text-2xl font-bold">Mon profil</h1>
         <p className="text-green-100 text-sm mt-1">Informations du bailleur</p>
       </header>
+
+      {onboardingLoaded && (
+        <OnboardingChecklist
+          proprietaire={form}
+          biens={biens}
+          locataires={locataires}
+          quittances={quittances}
+        />
+      )}
 
       <div className="px-4 lg:px-8 mt-6 max-w-4xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-5">
