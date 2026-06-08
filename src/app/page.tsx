@@ -67,7 +67,7 @@ export default async function Home() {
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Link
               href="/login"
-              className="text-xs sm:text-sm text-gray-600 hover:text-gray-900 font-medium px-2 sm:px-3 py-2 transition-colors whitespace-nowrap"
+              className="hidden min-[360px]:inline-block text-xs sm:text-sm text-gray-600 hover:text-gray-900 font-medium px-2 sm:px-3 py-2 transition-colors whitespace-nowrap"
             >
               Se connecter
             </Link>
