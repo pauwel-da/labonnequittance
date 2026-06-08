@@ -6,6 +6,7 @@ import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types
 import { Plus, Users, Pencil, Trash2, X, Loader2, Mail, FileCheck, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
+import { isOnboardingComplete } from '@/lib/onboarding'
 
 const emptyForm = {
   nomPrenom: '',
@@ -137,23 +138,27 @@ export default function LocatairesPage() {
         />
       )}
 
-      <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
-        {biens.length === 0 && !loading ? (
-          <Link
-            href="/biens"
-            className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
-          >
-            Créer un bien d&apos;abord <ArrowRight size={16} />
-          </Link>
-        ) : (
-          <button
-            onClick={openNew}
-            className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
-          >
-            <Plus size={18} /> Ajouter un locataire
-          </button>
-        )}
-      </div>
+      {!loading && (
+        biens.length === 0 ? (
+          <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
+            <Link
+              href="/biens"
+              className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+            >
+              Créer un bien d&apos;abord <ArrowRight size={16} />
+            </Link>
+          </div>
+        ) : isOnboardingComplete(proprietaire, biens, locataires, quittances) ? (
+          <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
+            <button
+              onClick={openNew}
+              className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus size={18} /> Ajouter un locataire
+            </button>
+          </div>
+        ) : null
+      )}
 
       <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {loading ? (
@@ -161,11 +166,19 @@ export default function LocatairesPage() {
             <Loader2 size={20} className="animate-spin mr-2" /> Chargement...
           </div>
         ) : locataires.length === 0 ? (
-          <div className="text-center text-gray-400 py-12">
+          <div className="text-center py-12">
             <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <Users size={28} className="text-gray-400" />
             </div>
-            <p>Aucun locataire enregistré</p>
+            <p className="text-gray-400 mb-4">Aucun locataire enregistré</p>
+            {biens.length > 0 && (
+              <button
+                onClick={openNew}
+                className="inline-flex items-center gap-1.5 bg-[#008020] hover:bg-green-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Ajouter mon premier locataire <ArrowRight size={14} />
+              </button>
+            )}
           </div>
         ) : (
           locataires.map(l => {

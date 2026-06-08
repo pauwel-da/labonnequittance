@@ -3,17 +3,13 @@
 import Link from 'next/link'
 import { Check, ArrowRight, Sparkles } from 'lucide-react'
 import type { Proprietaire, Bien, Locataire, QuittanceRecord } from '@/lib/types'
+import { isProfileComplete } from '@/lib/onboarding'
 
 type Props = {
   proprietaire: Proprietaire | null
   biens: Bien[]
   locataires: Locataire[]
   quittances: QuittanceRecord[]
-}
-
-function isProfileComplete(p: Proprietaire | null) {
-  if (!p) return false
-  return !!(p.nom && p.prenom && p.adresse && p.codePostal && p.ville && p.signature)
 }
 
 export default function OnboardingChecklist({ proprietaire, biens, locataires, quittances }: Props) {

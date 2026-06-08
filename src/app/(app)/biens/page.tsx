@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { getBiens, addBien, updateBien, deleteBien, getLocataires, getProprietaire, getQuittances } from '@/lib/db'
 import type { Bien, BienType, Locataire, Proprietaire, QuittanceRecord } from '@/lib/types'
-import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle } from 'lucide-react'
+import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle, ArrowRight } from 'lucide-react'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
+import { isOnboardingComplete } from '@/lib/onboarding'
 
 const TYPES: { value: BienType; label: string }[] = [
   { value: 'meuble', label: 'Meublé' },
@@ -99,14 +100,16 @@ export default function BiensPage() {
         />
       )}
 
-      <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
-        <button
-          onClick={openNew}
-          className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
-        >
-          <Plus size={18} /> Ajouter un bien
-        </button>
-      </div>
+      {!loading && isOnboardingComplete(proprietaire, biens, locataires, quittances) && (
+        <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
+          <button
+            onClick={openNew}
+            className="w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={18} /> Ajouter un bien
+          </button>
+        </div>
+      )}
 
       <div className="px-4 lg:px-8 mt-4 space-y-3 max-w-4xl mx-auto">
         {loading ? (
@@ -114,11 +117,17 @@ export default function BiensPage() {
             <Loader2 size={20} className="animate-spin mr-2" /> Chargement...
           </div>
         ) : biens.length === 0 ? (
-          <div className="text-center text-gray-400 py-12">
+          <div className="text-center py-12">
             <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
               <Home size={28} className="text-gray-400" />
             </div>
-            <p>Aucun bien enregistré</p>
+            <p className="text-gray-400 mb-4">Aucun bien enregistré</p>
+            <button
+              onClick={openNew}
+              className="inline-flex items-center gap-1.5 bg-[#008020] hover:bg-green-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              Ajouter mon premier bien <ArrowRight size={14} />
+            </button>
           </div>
         ) : (
           biens.map(b => (
