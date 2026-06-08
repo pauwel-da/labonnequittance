@@ -77,43 +77,42 @@ function LoginForm() {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
       {message ? (
-        <>
-          <div className="flex flex-col items-center text-center mb-6">
-            <div className="bg-green-50 rounded-full w-14 h-14 flex items-center justify-center mb-4">
-              <MailCheck size={26} className="text-[#008020]" />
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Vérifiez vos emails</h1>
-            <p className="text-sm text-gray-500">{message}</p>
-            <p className="text-xs text-gray-400 mt-2">Pensez à vérifier vos spams.</p>
+        <div className="flex flex-col items-center text-center">
+          <div className="bg-green-50 rounded-full w-14 h-14 flex items-center justify-center mb-4">
+            <MailCheck size={26} className="text-[#008020]" />
           </div>
-          <div className="border-t border-gray-100 pt-5">
-            <p className="text-xs text-gray-400 text-center mb-4">Déjà confirmé votre compte ?</p>
-          </div>
-        </>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Vérifiez vos emails</h1>
+          <p className="text-sm text-gray-500">{message}</p>
+          <p className="text-xs text-gray-400 mt-2 mb-6">Pensez à vérifier vos spams.</p>
+          <Link
+            href="/login"
+            className="text-sm text-[#008020] font-medium hover:underline"
+          >
+            Déjà confirmé ? Se connecter
+          </Link>
+        </div>
       ) : (
         <>
           <h1 className="text-xl font-bold text-gray-900 mb-1">Bon retour !</h1>
           <p className="text-sm text-gray-500 mb-6">Connectez-vous à votre espace bailleur.</p>
-        </>
-      )}
 
-      {/* Bouton Google */}
-      <button
-        onClick={handleGoogle}
-        disabled={googlePending || isPending}
-        className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
-      >
-        {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
-        Continuer avec Google
-      </button>
+          {/* Bouton Google */}
+          <button
+            onClick={handleGoogle}
+            disabled={googlePending || isPending}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
+          >
+            {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
+            Continuer avec Google
+          </button>
 
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 border-t border-gray-200" />
-        <span className="text-xs text-gray-400">ou</span>
-        <div className="flex-1 border-t border-gray-200" />
-      </div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 border-t border-gray-200" />
+            <span className="text-xs text-gray-400">ou</span>
+            <div className="flex-1 border-t border-gray-200" />
+          </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Adresse email
@@ -185,14 +184,16 @@ function LoginForm() {
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={isPending || googlePending}
-          className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-        >
-          {isPending ? <><Loader2 size={16} className="animate-spin" /> Connexion...</> : 'Se connecter'}
-        </button>
-      </form>
+            <button
+              type="submit"
+              disabled={isPending || googlePending}
+              className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+            >
+              {isPending ? <><Loader2 size={16} className="animate-spin" /> Connexion...</> : 'Se connecter'}
+            </button>
+          </form>
+        </>
+      )}
     </div>
   )
 }
