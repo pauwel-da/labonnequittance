@@ -11,13 +11,21 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const [{ data: usersData, error: usersError }, { data: statsData, error: statsError }] = await Promise.all([
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
+  const [
+    { data: usersData, error: usersError },
+    { data: statsData, error: statsError },
+    { data: todayData, error: todayError },
+  ] = await Promise.all([
     supabase.rpc('count_users'),
     supabase.rpc('get_quittance_stats'),
+    supabase.from('quittances').select('action').gte('created_at', todayStart.toISOString()),
   ])
 
-  if (usersError || statsError) {
-    return NextResponse.json({ error: usersError?.message || statsError?.message }, { status: 500 })
+  if (usersError || statsError || todayError) {
+    return NextResponse.json({ error: usersError?.message || statsError?.message || todayError?.message }, { status: 500 })
   }
 
   const stats = { telecharge: 0, envoye: 0, visionne: 0, caf: 0 }
@@ -26,5 +34,18 @@ export async function GET() {
     if (action in stats) stats[action] = Number(row.count)
   }
 
-  return NextResponse.json({ count: Number(usersData), ...stats })
+  const todayActions = { telecharge: 0, envoye: 0, visionne: 0, caf: 0 }
+  for (const row of (todayData ?? [])) {
+    const action = row.action as keyof typeof todayActions
+    if (action in todayActions) todayActions[action]++
+  }
+
+  const users = (usersData as Array<{ total: number; today: number }> | null)?.[0] ?? { total: 0, today: 0 }
+
+  return NextResponse.json({
+    count: Number(users.total),
+    countToday: Number(users.today),
+    ...stats,
+    today: todayActions,
+  })
 }
