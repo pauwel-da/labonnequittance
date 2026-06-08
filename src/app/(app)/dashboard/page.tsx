@@ -392,23 +392,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {profileIncomplete && (
-        <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-            <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-amber-800">Profil incomplet</p>
-              <p className="text-sm text-amber-700 mt-0.5">
-                Ajoutez votre adresse et signature pour pouvoir générer et envoyer des quittances.
-              </p>
-              <Link href="/profil" className="inline-flex items-center gap-1.5 mt-2 text-sm font-medium text-amber-800 hover:underline">
-                Compléter mon profil <ArrowRight size={13} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
       {loading ? (
         <div className="flex items-center justify-center py-20 text-gray-400">
           <Loader2 size={24} className="animate-spin mr-2" /> Chargement...

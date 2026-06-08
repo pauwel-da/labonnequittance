@@ -23,7 +23,7 @@ export default function OnboardingChecklist({ proprietaire, biens, locataires, q
     { key: 'profile',    label: 'Compléter mon profil',          href: '/profil',     done: profileDone },
     { key: 'bien',       label: 'Ajouter un bien',                href: '/biens',      done: biensDone },
     { key: 'locataire',  label: 'Ajouter un locataire',           href: '/locataires', done: locatairesDone },
-    { key: 'quittance',  label: 'Générer ma première quittance',  href: null,          done: quittanceDone },
+    { key: 'quittance',  label: 'Générer ma première quittance',  href: '/dashboard',  done: quittanceDone },
   ] as const
 
   const doneCount = steps.filter(s => s.done).length
@@ -84,16 +84,13 @@ export default function OnboardingChecklist({ proprietaire, biens, locataires, q
                 </span>
 
                 {/* Action */}
-                {!step.done && step.href && isActive && (
+                {!step.done && isActive && (
                   <Link
                     href={step.href}
                     className="flex items-center gap-1 text-xs font-semibold text-[#008020] hover:underline shrink-0"
                   >
                     Faire <ArrowRight size={12} />
                   </Link>
-                )}
-                {!step.done && !step.href && isActive && (
-                  <span className="text-xs text-gray-400 shrink-0">Bientôt</span>
                 )}
                 {isLocked && (
                   <span className="text-xs text-gray-400 shrink-0">À venir</span>
