@@ -6,7 +6,7 @@ import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types
 import { Plus, Users, Pencil, Trash2, X, Loader2, Mail, FileCheck, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
-import { isOnboardingComplete } from '@/lib/onboarding'
+import { isOnboardingComplete, isProfileComplete } from '@/lib/onboarding'
 
 const emptyForm = {
   nomPrenom: '',
@@ -138,7 +138,7 @@ export default function LocatairesPage() {
         />
       )}
 
-      {!loading && (
+      {!loading && isProfileComplete(proprietaire) && (
         biens.length === 0 ? (
           <div className="px-4 lg:px-8 -mt-3 max-w-4xl mx-auto">
             <Link
@@ -171,7 +171,7 @@ export default function LocatairesPage() {
               <Users size={28} className="text-gray-400" />
             </div>
             <p className="text-gray-400 mb-4">Aucun locataire enregistré</p>
-            {biens.length > 0 && (
+            {biens.length > 0 && isProfileComplete(proprietaire) && (
               <button
                 onClick={openNew}
                 className="inline-flex items-center gap-1.5 bg-[#008020] hover:bg-green-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
