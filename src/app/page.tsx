@@ -53,26 +53,27 @@ export default async function Home() {
     <div className="min-h-screen flex flex-col bg-white">
 
       {/* ── HEADER ── */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <Image
             src="/logo.png"
             alt="La Bonne Quittance"
             width={180}
             height={77}
-            sizes="180px"
+            sizes="(min-width: 640px) 180px, 140px"
+            className="w-35 sm:w-45 h-auto shrink-0"
             priority
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Link
               href="/login"
-              className="text-sm text-gray-600 hover:text-gray-900 font-medium px-3 py-2 transition-colors hidden sm:block"
+              className="text-xs sm:text-sm text-gray-600 hover:text-gray-900 font-medium px-2 sm:px-3 py-2 transition-colors whitespace-nowrap"
             >
               Se connecter
             </Link>
             <Link
               href="/signup"
-              className="bg-[#008020] hover:bg-green-800 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              className="bg-[#008020] hover:bg-green-800 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-xl transition-colors whitespace-nowrap"
             >
               Créer un compte
             </Link>
