@@ -68,7 +68,7 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false))
 
-    getQuittances().then(qs => setQuittances(qs.filter(q => q.action !== 'visionne')))
+    getQuittances().then(setQuittances)
 
     // Stats admin
     fetch('/api/admin/stats')
@@ -160,7 +160,9 @@ export default function DashboardPage() {
         a.click()
         URL.revokeObjectURL(url)
       }
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' }).catch(() => {})
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' })
+        .then(() => getQuittances().then(setQuittances))
+        .catch(() => {})
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return
       setErrors(e => ({ ...e, [l.id]: 'Erreur lors de la génération.' }))
@@ -178,7 +180,9 @@ export default function DashboardPage() {
     clearError(l.id)
     trackEvent('quittance_voir')
     try {
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' }).catch(() => {})
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' })
+        .then(() => getQuittances().then(setQuittances))
+        .catch(() => {})
       const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement, pr)
       setPreviewName(filename)
       if (window.innerWidth < 1024) {
@@ -236,7 +240,9 @@ export default function DashboardPage() {
       const loyerSave = pr ? Math.round(l.loyer * ratio * 100) / 100 : l.loyer
       const chargesSave = pr ? Math.round(l.charges * ratio * 100) / 100 : l.charges
       const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye', createdAt: new Date().toISOString() }
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye' }).catch(() => {})
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye' })
+        .then(() => getQuittances().then(setQuittances))
+        .catch(() => {})
       setQuittances(qs => [...qs.filter(q => !(q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)), sentRecord])
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
@@ -291,13 +297,14 @@ export default function DashboardPage() {
 
   const totalMensuel = locataires.reduce((s, l) => s + l.loyer + l.charges, 0)
   const profileIncomplete = !loading && (!proprietaire?.adresse || !proprietaire?.codePostal || !proprietaire?.ville)
+  const quittancesHistorique = quittances.filter(q => q.action !== 'visionne')
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Générer des quittances</h1>
-          {quittances.length > 0 && (
+          {quittancesHistorique.length > 0 && (
             <button
               onClick={() => setHistoriqueOpen(true)}
               className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
@@ -596,14 +603,14 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <History size={16} className="text-[#008020]" />
                 <h2 className="font-semibold text-gray-900">Historique</h2>
-                <span className="text-xs text-gray-400">({quittances.length})</span>
+                <span className="text-xs text-gray-400">({quittancesHistorique.length})</span>
               </div>
               <button onClick={() => setHistoriqueOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
                 <X size={20} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-              {quittances.slice(0, 20).map(q => {
+              {quittancesHistorique.slice(0, 20).map(q => {
                 const total = q.montantLoyer + q.montantCharges
                 const isRegen = regenerating === q.id
                 return (

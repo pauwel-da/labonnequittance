@@ -14,6 +14,6 @@ export function isOnboardingComplete(
   if (!isProfileComplete(proprietaire)) return false
   if (biens.length === 0) return false
   if (locataires.length === 0) return false
-  if (!quittances.some(q => q.action === 'telecharge' || q.action === 'envoye')) return false
+  if (!quittances.some(q => q.action === 'telecharge' || q.action === 'envoye' || q.action === 'visionne')) return false
   return true
 }

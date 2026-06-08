@@ -16,8 +16,7 @@ export default function OnboardingChecklist({ proprietaire, biens, locataires, q
   const profileDone = isProfileComplete(proprietaire)
   const biensDone = biens.length > 0
   const locatairesDone = locataires.length > 0
-  // quittance "réelle" = téléchargée ou envoyée (pas juste visionnée)
-  const quittanceDone = quittances.some(q => q.action === 'telecharge' || q.action === 'envoye')
+  const quittanceDone = quittances.some(q => q.action === 'telecharge' || q.action === 'envoye' || q.action === 'visionne')
 
   const steps = [
     { key: 'profile',    label: 'Compléter mon profil',          href: '/profil',     done: profileDone },
