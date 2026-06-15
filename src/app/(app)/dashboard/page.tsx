@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
+  const [freshNotice, setFreshNotice] = useState(false)
   const [locataires, setLocataires] = useState<Locataire[]>([])
   const [biens, setBiens] = useState<Bien[]>([])
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null)
@@ -63,6 +64,32 @@ export default function DashboardPage() {
       return result
     })
   }
+
+  // Lecture des query params (?year=&month=&fresh=1) au mount,
+  // typiquement après le magic link du flow /quittance-en-ligne
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const yearParam = params.get('year')
+    const monthParam = params.get('month')
+    const fresh = params.get('fresh') === '1'
+
+    if (yearParam) {
+      const y = parseInt(yearParam, 10)
+      if (Number.isFinite(y) && y >= 2000 && y <= 2100) setYear(y)
+    }
+    if (monthParam) {
+      const m = parseInt(monthParam, 10)
+      if (Number.isFinite(m) && m >= 0 && m <= 11) setMonth(m)
+    }
+    if (fresh) {
+      setFreshNotice(true)
+      setTimeout(() => setFreshNotice(false), 8000)
+    }
+    if (yearParam || monthParam || fresh) {
+      window.history.replaceState({}, '', '/dashboard')
+    }
+  }, [])
 
   useEffect(() => {
     Promise.all([getLocataires(), getBiens(), getProprietaire()])
@@ -375,6 +402,27 @@ export default function DashboardPage() {
           )}
         </div>
       </header>
+
+      {freshNotice && (
+        <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+            <CheckCircle size={20} className="text-[#008020] shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[#008020]">Votre quittance est prête !</p>
+              <p className="text-sm text-green-700 mt-0.5">
+                Cliquez sur <strong>Voir</strong> ou <strong>Télécharger</strong> ci-dessous pour récupérer votre PDF.
+              </p>
+            </div>
+            <button
+              onClick={() => setFreshNotice(false)}
+              className="text-green-600 hover:text-green-800 shrink-0"
+              aria-label="Fermer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {!loading && (
         <OnboardingChecklist
