@@ -21,7 +21,6 @@ export type TrialFormData = {
     date_debut_periode: string
     date_fin_periode: string
     date_paiement: string
-    ville_emission: string
   }
   bailleur: {
     prenom: string
@@ -36,13 +35,20 @@ export type TrialFormData = {
 
 const STORAGE_KEY = 'trial_form_v1'
 
+// Bornes (premier/dernier jour) du mois "YYYY-MM" donné, au format YYYY-MM-DD
+function monthBounds(yearMonth: string): { first: string; last: string } {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const lastDay = new Date(y, m, 0).getDate()
+  return { first: `${yearMonth}-01`, last: `${yearMonth}-${String(lastDay).padStart(2, '0')}` }
+}
+
 const today = new Date()
-const firstOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
-const lastOfMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()).padStart(2, '0')}`
+const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+const { first: firstOfMonth, last: lastOfMonth } = monthBounds(currentYearMonth)
 const todayIso = today.toISOString().slice(0, 10)
 
 const defaultData: TrialFormData = {
-  bien: { adresse: '', code_postal: '', ville: '', type_location: 'meuble' },
+  bien: { adresse: '', code_postal: '', ville: '', type_location: 'non_meuble' },
   locataire: {
     nom_prenom: '',
     montant_loyer: '',
@@ -50,7 +56,6 @@ const defaultData: TrialFormData = {
     date_debut_periode: firstOfMonth,
     date_fin_periode: lastOfMonth,
     date_paiement: todayIso,
-    ville_emission: '',
   },
   bailleur: { prenom: '', nom: '', adresse: '', code_postal: '', ville: '', email: '' },
   signature: '',
@@ -67,7 +72,7 @@ export default function TrialForm() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitTried, setSubmitTried] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
-  const [submitted, setSubmitted] = useState<{ email: string; isExistingUser: boolean } | null>(null)
+  const [submitted, setSubmitted] = useState<{ email: string } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   // localStorage hydration
@@ -94,6 +99,10 @@ export default function TrialForm() {
   function updateLocataire<K extends keyof TrialFormData['locataire']>(key: K, value: TrialFormData['locataire'][K]) {
     setData((d) => ({ ...d, locataire: { ...d.locataire, [key]: value } }))
   }
+  function updatePeriode(yearMonth: string) {
+    const { first, last } = monthBounds(yearMonth)
+    setData((d) => ({ ...d, locataire: { ...d.locataire, date_debut_periode: first, date_fin_periode: last } }))
+  }
   function updateBailleur<K extends keyof TrialFormData['bailleur']>(key: K, value: TrialFormData['bailleur'][K]) {
     setData((d) => ({ ...d, bailleur: { ...d.bailleur, [key]: value } }))
   }
@@ -113,13 +122,8 @@ export default function TrialForm() {
     if (!loyer || loyer <= 0) e.montant_loyer = 'Montant du loyer requis'
     const charges = Number(data.locataire.montant_charges)
     if (data.locataire.montant_charges !== '' && (isNaN(charges) || charges < 0)) e.montant_charges = 'Montant invalide'
-    if (!data.locataire.date_debut_periode) e.date_debut_periode = 'Date début requise'
-    if (!data.locataire.date_fin_periode) e.date_fin_periode = 'Date fin requise'
-    if (data.locataire.date_debut_periode && data.locataire.date_fin_periode && data.locataire.date_debut_periode > data.locataire.date_fin_periode) {
-      e.date_fin_periode = 'Date de fin avant la date de début'
-    }
+    if (!data.locataire.date_debut_periode || !data.locataire.date_fin_periode) e.periode = 'Période requise'
     if (!data.locataire.date_paiement) e.date_paiement = 'Date de paiement requise'
-    if (!data.locataire.ville_emission.trim()) e.ville_emission = 'Ville d\'émission requise'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -131,6 +135,7 @@ export default function TrialForm() {
     if (!data.bailleur.code_postal.trim() || !/^\d{5}$/.test(data.bailleur.code_postal.trim())) e.b_code_postal = 'Code postal invalide'
     if (!data.bailleur.ville.trim()) e.b_ville = 'Ville requise'
     if (!isValidEmail(data.bailleur.email)) e.email = 'Email invalide'
+    if (!data.signature?.startsWith('data:image')) e.signature = 'Signature requise pour une quittance conforme'
     if (!consent) e.consent = 'Vous devez accepter pour continuer'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -180,7 +185,6 @@ export default function TrialForm() {
           date_debut_periode: data.locataire.date_debut_periode,
           date_fin_periode: data.locataire.date_fin_periode,
           date_paiement: data.locataire.date_paiement,
-          ville_emission: data.locataire.ville_emission.trim(),
         },
         bailleur: {
           prenom: data.bailleur.prenom.trim(),
@@ -200,7 +204,7 @@ export default function TrialForm() {
       if (!('ok' in res)) return
       // Clear localStorage on success
       try { localStorage.removeItem(STORAGE_KEY) } catch {}
-      setSubmitted({ email: data.bailleur.email.trim(), isExistingUser: res.isExistingUser ?? false })
+      setSubmitted({ email: data.bailleur.email.trim() })
     })
   }
 
@@ -212,44 +216,24 @@ export default function TrialForm() {
           <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-5">
             <MailCheck size={28} className="text-[#008020]" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            {submitted.isExistingUser ? 'Vous avez déjà un compte' : 'Email envoyé !'}
-          </h2>
-          {submitted.isExistingUser ? (
-            <>
-              <p className="text-sm text-gray-600 mb-2">
-                Nous avons ajouté votre quittance à votre compte existant.
-              </p>
-              <p className="text-sm text-gray-500 mb-1">Vous avez reçu un lien de connexion à</p>
-              <p className="text-sm font-semibold text-gray-800 mb-6">{submitted.email}</p>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition-colors"
-              >
-                Aller à la connexion <ArrowRight size={16} />
-              </Link>
-            </>
-          ) : (
-            <>
-              <p className="text-sm text-gray-500 mb-1">Un lien d'accès a été envoyé à</p>
-              <p className="text-sm font-semibold text-gray-800 mb-6">{submitted.email}</p>
-              <div className="text-left space-y-3 mb-6">
-                {[
-                  'Ouvrez votre boîte mail',
-                  'Cliquez sur le lien d\'accès',
-                  'Téléchargez votre quittance immédiatement',
-                ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-[#008020] text-white text-xs font-bold flex items-center justify-center shrink-0">
-                      {i + 1}
-                    </div>
-                    <span className="text-sm text-gray-600">{s}</span>
-                  </div>
-                ))}
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Email envoyé !</h2>
+          <p className="text-sm text-gray-500 mb-1">Un lien d&apos;accès a été envoyé à</p>
+          <p className="text-sm font-semibold text-gray-800 mb-6">{submitted.email}</p>
+          <div className="text-left space-y-3 mb-6">
+            {[
+              'Ouvrez votre boîte mail',
+              'Cliquez sur le lien d\'accès',
+              'Accédez à votre quittance',
+            ].map((s, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#008020] text-white text-xs font-bold flex items-center justify-center shrink-0">
+                  {i + 1}
+                </div>
+                <span className="text-sm text-gray-600">{s}</span>
               </div>
-              <p className="text-xs text-gray-400">Pensez à vérifier vos spams si vous ne le trouvez pas.</p>
-            </>
-          )}
+            ))}
+          </div>
+          <p className="text-xs text-gray-400">Pensez à vérifier vos spams si vous ne le trouvez pas.</p>
         </div>
 
         {/* Preview en parallèle (rappel visuel de ce qu'il aura) */}
@@ -344,7 +328,7 @@ export default function TrialForm() {
               </div>
               <Field label="Type de bail">
                 <div className="grid grid-cols-2 gap-3">
-                  {(['meuble', 'non_meuble'] as const).map((t) => (
+                  {(['non_meuble','meuble'] as const).map((t) => (
                     <button
                       key={t}
                       type="button"
@@ -402,38 +386,19 @@ export default function TrialForm() {
                   />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Du" error={submitTried ? errors.date_debut_periode : undefined}>
-                  <input
-                    type="date"
-                    value={data.locataire.date_debut_periode}
-                    onChange={(e) => updateLocataire('date_debut_periode', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
-                  />
-                </Field>
-                <Field label="Au" error={submitTried ? errors.date_fin_periode : undefined}>
-                  <input
-                    type="date"
-                    value={data.locataire.date_fin_periode}
-                    onChange={(e) => updateLocataire('date_fin_periode', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
-                  />
-                </Field>
-              </div>
+              <Field label="Période concernée" error={submitTried ? errors.periode : undefined}>
+                <input
+                  type="month"
+                  value={data.locataire.date_debut_periode.slice(0, 7)}
+                  onChange={(e) => e.target.value && updatePeriode(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
+                />
+              </Field>
               <Field label="Date de paiement" error={submitTried ? errors.date_paiement : undefined}>
                 <input
                   type="date"
                   value={data.locataire.date_paiement}
                   onChange={(e) => updateLocataire('date_paiement', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
-                />
-              </Field>
-              <Field label="Fait à (ville)" error={submitTried ? errors.ville_emission : undefined}>
-                <input
-                  type="text"
-                  value={data.locataire.ville_emission}
-                  onChange={(e) => updateLocataire('ville_emission', e.target.value)}
-                  placeholder="Paris"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
                 />
               </Field>
@@ -509,6 +474,14 @@ export default function TrialForm() {
                 Votre email sert uniquement à recevoir le lien d'accès à votre quittance.
               </p>
 
+              {/* Signature (obligatoire pour une quittance conforme) */}
+              <Field label="Votre signature" error={submitTried ? errors.signature : undefined}>
+                <SignaturePad
+                  value={data.signature}
+                  onChange={(sig) => setData((d) => ({ ...d, signature: sig }))}
+                />
+              </Field>
+
               <label className={`flex items-start gap-3 cursor-pointer mt-2 rounded-lg px-3 py-2.5 -mx-3 transition-colors ${
                 (submitTried && errors.consent) ? 'bg-red-50 border border-red-300' : 'border border-transparent'
               }`}>
@@ -531,21 +504,6 @@ export default function TrialForm() {
                   {' '}et la création de mon compte La Bonne Quittance.
                 </span>
               </label>
-
-              {/* Signature optionnelle */}
-              <div className="pt-2">
-                <div className="flex items-baseline justify-between mb-1">
-                  <label className="block text-xs font-medium text-gray-700">Votre signature</label>
-                  <span className="text-[11px] text-gray-400">Optionnel</span>
-                </div>
-                <SignaturePad
-                  value={data.signature}
-                  onChange={(sig) => setData((d) => ({ ...d, signature: sig }))}
-                />
-                <p className="text-[11px] text-gray-500 mt-1.5">
-                  Vous pourrez l&apos;ajouter ou la modifier plus tard depuis votre profil.
-                </p>
-              </div>
 
               {serverError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-start gap-2">
@@ -570,6 +528,7 @@ export default function TrialForm() {
             )}
             {step < 3 ? (
               <button
+                key="continue"
                 type="button"
                 onClick={goNext}
                 className="flex-1 flex items-center justify-center gap-2 bg-[#008020] hover:bg-green-800 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-colors"
@@ -578,6 +537,7 @@ export default function TrialForm() {
               </button>
             ) : (
               <button
+                key="submit"
                 type="submit"
                 disabled={isPending}
                 className="flex-1 flex items-center justify-center gap-2 bg-[#008020] hover:bg-green-800 disabled:opacity-75 text-white font-semibold px-4 py-3 rounded-xl text-sm transition-colors"
@@ -604,9 +564,6 @@ export default function TrialForm() {
 
       {/* PREVIEW (droite) */}
       <div className="order-2 lg:sticky lg:top-24">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#008020] mb-3 text-center lg:text-left">
-          Votre quittance en temps réel
-        </p>
         <QuittancePreview data={data} />
       </div>
     </div>

@@ -40,7 +40,7 @@ export default function QuittancePreview({ data }: { data: TrialFormData }) {
   const locRue = data.bien.adresse || '— Adresse du bien —'
   const locCpVille = [data.bien.code_postal, data.bien.ville].filter(Boolean).join(' ') || '—'
   const typeBail = data.bien.type_location === 'meuble' ? 'Meublé' : 'Non meublé'
-  const villeEmission = data.locataire.ville_emission || '—'
+  const villeEmission = data.bailleur.ville || '—'
   const datePaiement = fmtDate(data.locataire.date_paiement)
   const dateDebut = fmtDate(data.locataire.date_debut_periode)
   const dateFin = fmtDate(data.locataire.date_fin_periode)
