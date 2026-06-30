@@ -4,9 +4,8 @@ import { useState, useTransition, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, Mail, Lock, MailCheck, Send } from 'lucide-react'
-import { login } from './actions'
-import { resendConfirmation } from '@/app/signup/actions'
+import { Loader2, Mail, MailCheck, RotateCcw } from 'lucide-react'
+import { sendLoginOtp, verifyLoginOtp } from './actions'
 import { createClient } from '@/lib/supabase/client'
 
 function GoogleIcon() {
@@ -21,47 +20,44 @@ function GoogleIcon() {
 }
 
 function LoginForm() {
-  const [error, setError] = useState<string | null>(null)
-  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null)
-  const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>('idle')
-  const [resendError, setResendError] = useState<string | null>(null)
-  const [isResending, startResend] = useTransition()
-  const [isPending, startTransition] = useTransition()
+  const [step, setStep]       = useState<'email' | 'code'>('email')
+  const [email, setEmail]     = useState('')
+  const [error, setError]     = useState<string | null>(null)
+  const [resent, setResent]   = useState(false)
+  const [isPending, start]    = useTransition()
   const [googlePending, setGooglePending] = useState(false)
-  const searchParams = useSearchParams()
-  const message = searchParams.get('message')
-  const prefillEmail = searchParams.get('prefill') ?? ''
+  const searchParams  = useSearchParams()
+  const prefillEmail  = searchParams.get('prefill') ?? ''
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSendOtp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const submittedEmail = formData.get('email') as string
+    const addr = (new FormData(e.currentTarget).get('email') as string).trim()
     setError(null)
-    setUnconfirmedEmail(null)
-    setResendStatus('idle')
-    setResendError(null)
-    startTransition(async () => {
-      const result = await login(formData)
-      if (result?.kind === 'unconfirmed') {
-        setError(result.error)
-        setUnconfirmedEmail(submittedEmail)
-      } else if (result?.error) {
-        setError(result.error)
-      }
+    start(async () => {
+      const res = await sendLoginOtp(addr)
+      if (res?.error) return setError(res.error)
+      setEmail(addr)
+      setStep('code')
+    })
+  }
+
+  function handleVerify(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const token = (new FormData(e.currentTarget).get('token') as string).trim()
+    setError(null)
+    start(async () => {
+      const res = await verifyLoginOtp(email, token)
+      if (res?.error) setError(res.error)
     })
   }
 
   function handleResend() {
-    if (!unconfirmedEmail) return
-    setResendError(null)
-    startResend(async () => {
-      const result = await resendConfirmation(unconfirmedEmail)
-      if (result?.error) {
-        setResendStatus('error')
-        setResendError(result.error)
-      } else {
-        setResendStatus('sent')
-      }
+    setError(null)
+    setResent(false)
+    start(async () => {
+      const res = await sendLoginOtp(email)
+      if (res?.error) setError(res.error)
+      else setResent(true)
     })
   }
 
@@ -74,45 +70,99 @@ function LoginForm() {
     })
   }
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-      {message ? (
-        <div className="flex flex-col items-center text-center">
+  /* ── Étape 2 : saisie du code ── */
+  if (step === 'code') {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="flex flex-col items-center text-center mb-6">
           <div className="bg-green-50 rounded-full w-14 h-14 flex items-center justify-center mb-4">
             <MailCheck size={26} className="text-[#008020]" />
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Vérifiez vos emails</h1>
-          <p className="text-sm text-gray-500">{message}</p>
-          <p className="text-xs text-gray-400 mt-2 mb-6">Pensez à vérifier vos spams.</p>
-          <Link
-            href="/login"
-            className="text-sm text-[#008020] font-medium hover:underline"
-          >
-            Déjà confirmé ? Se connecter
-          </Link>
+          <h1 className="text-xl font-bold text-gray-900 mb-1">Vérifiez vos emails</h1>
+          <p className="text-sm text-gray-500">
+            Un code à 6 chiffres a été envoyé à
+          </p>
+          <p className="text-sm font-semibold text-gray-800 mt-0.5">{email}</p>
         </div>
-      ) : (
-        <>
-          <h1 className="text-xl font-bold text-gray-900 mb-1">Bon retour !</h1>
-          <p className="text-sm text-gray-500 mb-6">Connectez-vous à votre espace bailleur.</p>
 
-          {/* Bouton Google */}
+        <form onSubmit={handleVerify} className="space-y-4">
+          <input
+            name="token"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            autoComplete="one-time-code"
+            autoFocus
+            placeholder="000000"
+            className="w-full text-center text-3xl font-mono tracking-[0.4em] border-2 border-gray-200 rounded-xl py-4 focus:outline-none focus:border-[#008020] focus:ring-2 focus:ring-[#008020]/20 transition-colors"
+          />
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">
+              {error}
+            </p>
+          )}
+
+          {resent && (
+            <p className="text-sm text-[#008020] text-center">
+              Nouveau code envoyé. Vérifiez vos spams.
+            </p>
+          )}
+
           <button
-            onClick={handleGoogle}
-            disabled={googlePending || isPending}
-            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
           >
-            {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
-            Continuer avec Google
+            {isPending ? <Loader2 size={16} className="animate-spin" /> : 'Valider le code'}
           </button>
+        </form>
 
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 border-t border-gray-200" />
-            <span className="text-xs text-gray-400">ou</span>
-            <div className="flex-1 border-t border-gray-200" />
-          </div>
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={isPending}
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#008020] transition-colors disabled:opacity-50"
+          >
+            <RotateCcw size={12} />
+            Renvoyer un code
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStep('email'); setError(null) }}
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            Changer d'adresse email
+          </button>
+        </div>
+      </div>
+    )
+  }
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+  /* ── Étape 1 : saisie de l'email ── */
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <h1 className="text-xl font-bold text-gray-900 mb-1">Bon retour !</h1>
+      <p className="text-sm text-gray-500 mb-6">Connectez-vous à votre espace bailleur.</p>
+
+      <button
+        onClick={handleGoogle}
+        disabled={googlePending || isPending}
+        className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
+      >
+        {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
+        Continuer avec Google
+      </button>
+
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex-1 border-t border-gray-200" />
+        <span className="text-xs text-gray-400">ou</span>
+        <div className="flex-1 border-t border-gray-200" />
+      </div>
+
+      <form onSubmit={handleSendOtp} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Adresse email
@@ -131,69 +181,20 @@ function LoginForm() {
           </div>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">Mot de passe</label>
-            <Link href="/auth/reset-password" className="text-xs text-[#008020] hover:underline">
-              Mot de passe oublié ?
-            </Link>
-          </div>
-          <div className="relative">
-            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              placeholder="••••••••"
-              className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {error && !unconfirmedEmail && (
+        {error && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
 
-        {unconfirmedEmail && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-3 space-y-2">
-            <p className="text-sm text-orange-800">{error}</p>
-
-            {resendStatus === 'sent' ? (
-              <p className="text-sm text-[#008020] font-medium">
-                ✓ Email de confirmation renvoyé à <span className="font-semibold">{unconfirmedEmail}</span>. Vérifiez votre boîte (et vos spams).
-              </p>
-            ) : (
-              <>
-                {resendStatus === 'error' && resendError && (
-                  <p className="text-xs text-red-600">{resendError}</p>
-                )}
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isResending}
-                  className="flex items-center justify-center gap-2 w-full bg-white border border-orange-300 hover:bg-orange-50 disabled:opacity-50 text-orange-800 font-medium py-2 rounded-lg text-sm transition-colors"
-                >
-                  {isResending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
-                  Renvoyer le lien de confirmation
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-            <button
-              type="submit"
-              disabled={isPending || googlePending}
-              className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-            >
-              {isPending ? <><Loader2 size={16} className="animate-spin" /> Connexion...</> : 'Se connecter'}
-            </button>
-          </form>
-        </>
-      )}
+        <button
+          type="submit"
+          disabled={isPending || googlePending}
+          className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+        >
+          {isPending ? <><Loader2 size={16} className="animate-spin" /> Envoi...</> : 'Recevoir mon code'}
+        </button>
+      </form>
     </div>
   )
 }

@@ -3,24 +3,22 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
-export async function login(formData: FormData) {
+export async function sendLoginOtp(email: string) {
   const supabase = await createClient()
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
   })
+  if (error) return { error: error.message }
+  return { ok: true }
+}
 
+export async function verifyLoginOtp(email: string, token: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
   if (error) {
-    const msg = error.message
-    if (msg === 'Invalid login credentials') return { error: 'Email ou mot de passe incorrect.' }
-    if (msg === 'Email not confirmed') return {
-      error: 'Cet email n\'est pas encore confirmé.',
-      kind: 'unconfirmed' as const,
-    }
-    return { error: msg }
+    return { error: 'Code incorrect ou expiré. Vérifiez le code ou demandez-en un nouveau.' }
   }
-
   redirect('/dashboard')
 }
 

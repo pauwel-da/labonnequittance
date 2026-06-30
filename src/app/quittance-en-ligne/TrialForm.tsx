@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, Loader2, MailCheck, Shield, Lock, MapPin, AlertC
 import SignaturePad from '@/components/SignaturePad'
 import QuittancePreview from './QuittancePreview'
 import { submitTrialQuittance } from './actions'
+import { verifySignupOtp } from '@/app/signup/actions'
 
 export type TrialFormData = {
   bien: {
@@ -68,11 +69,11 @@ function isValidEmail(v: string) {
 export default function TrialForm() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [data, setData] = useState<TrialFormData>(defaultData)
-  const [consent, setConsent] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitTried, setSubmitTried] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState<{ email: string } | null>(null)
+  const [codeError, setCodeError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   // localStorage hydration
@@ -136,7 +137,6 @@ export default function TrialForm() {
     if (!data.bailleur.ville.trim()) e.b_ville = 'Ville requise'
     if (!isValidEmail(data.bailleur.email)) e.email = 'Email invalide'
     if (!data.signature?.startsWith('data:image')) e.signature = 'Signature requise pour une quittance conforme'
-    if (!consent) e.consent = 'Vous devez accepter pour continuer'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -169,8 +169,6 @@ export default function TrialForm() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    // Sécurité : Enter dans un input des étapes 1/2 déclenche aussi onSubmit du form
-    // → on ignore tant qu'on n'est pas vraiment à l'étape finale
     if (step !== 3) return
     setSubmitTried(true)
     if (!validateStep3()) return
@@ -202,9 +200,19 @@ export default function TrialForm() {
         return
       }
       if (!('ok' in res)) return
-      // Clear localStorage on success
       try { localStorage.removeItem(STORAGE_KEY) } catch {}
       setSubmitted({ email: data.bailleur.email.trim() })
+    })
+  }
+
+  function handleVerifyCode(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const token = (new FormData(e.currentTarget).get('token') as string).trim()
+    setCodeError(null)
+    startTransition(async () => {
+      const res = await verifySignupOtp(submitted!.email, token)
+      if (res?.error) setCodeError(res.error)
+      // succès : verifySignupOtp redirige vers /dashboard
     })
   }
 
@@ -216,24 +224,39 @@ export default function TrialForm() {
           <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-5">
             <MailCheck size={28} className="text-[#008020]" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Email envoyé !</h2>
-          <p className="text-sm text-gray-500 mb-1">Un lien d&apos;accès a été envoyé à</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Vérifiez vos emails</h2>
+          <p className="text-sm text-gray-500 mb-1">Un code à 6 chiffres a été envoyé à</p>
           <p className="text-sm font-semibold text-gray-800 mb-6">{submitted.email}</p>
-          <div className="text-left space-y-3 mb-6">
-            {[
-              'Ouvrez votre boîte mail',
-              'Cliquez sur le lien d\'accès',
-              'Accédez à votre quittance',
-            ].map((s, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#008020] text-white text-xs font-bold flex items-center justify-center shrink-0">
-                  {i + 1}
-                </div>
-                <span className="text-sm text-gray-600">{s}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-400">Pensez à vérifier vos spams si vous ne le trouvez pas.</p>
+
+          <form onSubmit={handleVerifyCode} className="space-y-4">
+            <input
+              name="token"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              autoComplete="one-time-code"
+              autoFocus
+              placeholder="000000"
+              className="w-full text-center text-3xl font-mono tracking-[0.4em] border-2 border-gray-200 rounded-xl py-4 focus:outline-none focus:border-[#008020] focus:ring-2 focus:ring-[#008020]/20 transition-colors"
+            />
+
+            {codeError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {codeError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+            >
+              {isPending ? <Loader2 size={16} className="animate-spin" /> : 'Accéder à ma quittance'}
+            </button>
+          </form>
+
+          <p className="text-xs text-gray-400 mt-4">Pensez à vérifier vos spams si vous ne le recevez pas.</p>
         </div>
 
         {/* Preview en parallèle (rappel visuel de ce qu'il aura) */}
@@ -471,39 +494,15 @@ export default function TrialForm() {
               </Field>
               <p className="text-[11px] text-gray-500 -mt-1 flex items-start gap-1.5">
                 <Lock size={11} className="text-gray-400 shrink-0 mt-0.5" />
-                Votre email sert uniquement à recevoir le lien d'accès à votre quittance.
+                Votre email sert uniquement à recevoir le code d&apos;accès à votre quittance.
               </p>
 
-              {/* Signature (obligatoire pour une quittance conforme) */}
               <Field label="Votre signature" error={submitTried ? errors.signature : undefined}>
                 <SignaturePad
                   value={data.signature}
                   onChange={(sig) => setData((d) => ({ ...d, signature: sig }))}
                 />
               </Field>
-
-              <label className={`flex items-start gap-3 cursor-pointer mt-2 rounded-lg px-3 py-2.5 -mx-3 transition-colors ${
-                (submitTried && errors.consent) ? 'bg-red-50 border border-red-300' : 'border border-transparent'
-              }`}>
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => {
-                    setConsent(e.target.checked)
-                    if (e.target.checked) setErrors((er) => ({ ...er, consent: '' }))
-                  }}
-                  className={`mt-0.5 w-4 h-4 shrink-0 cursor-pointer ${
-                    (submitTried && errors.consent) ? 'accent-red-500' : 'accent-[#008020]'
-                  }`}
-                />
-                <span className={`text-xs leading-relaxed ${(submitTried && errors.consent) ? 'text-red-700' : 'text-gray-500'}`}>
-                  En continuant, j&apos;accepte les{' '}
-                  <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
-                  , la{' '}
-                  <Link href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</Link>
-                  {' '}et la création de mon compte La Bonne Quittance.
-                </span>
-              </label>
 
               {serverError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-start gap-2">
@@ -551,13 +550,21 @@ export default function TrialForm() {
             )}
           </div>
 
-          {/* Trust badges */}
+          {/* CGU + trust badges */}
           {step === 3 && (
-            <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-3 text-[11px] text-gray-500">
-              <span className="flex items-center gap-1"><Lock size={11} /> Aucun cookie de tracking</span>
-              <span className="flex items-center gap-1"><MapPin size={11} /> Hébergé en Europe</span>
-              <span className="flex items-center gap-1"><Shield size={11} /> Conforme RGPD</span>
-            </div>
+            <>
+              <p className="text-[11px] text-gray-400 text-center">
+                En poursuivant, vous acceptez les{' '}
+                <Link href="/cgu" target="_blank" className="underline hover:text-[#008020]">CGU</Link>
+                {' '}et la{' '}
+                <Link href="/confidentialite" target="_blank" className="underline hover:text-[#008020]">Politique de confidentialité</Link>.
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center pt-1 text-[11px] text-gray-500">
+                <span className="flex items-center gap-1"><Lock size={11} /> Aucun cookie de tracking</span>
+                <span className="flex items-center gap-1"><MapPin size={11} /> Hébergé en Europe</span>
+                <span className="flex items-center gap-1"><Shield size={11} /> Conforme RGPD</span>
+              </div>
+            </>
           )}
         </form>
       </div>

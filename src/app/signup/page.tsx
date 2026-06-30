@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Loader2, Mail, Lock, ArrowRight, UserCheck } from 'lucide-react'
-import { signup } from './actions'
+import { Loader2, Mail, MailCheck, RotateCcw } from 'lucide-react'
+import { sendSignupOtp, verifySignupOtp } from './actions'
 import { createClient } from '@/lib/supabase/client'
 
 function GoogleIcon() {
@@ -19,18 +19,52 @@ function GoogleIcon() {
 }
 
 export default function SignupPage() {
-  const [error, setError] = useState<string | null>(null)
-  const [email, setEmail] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [existing, setExisting] = useState(false)
-  const [isPending, startTransition] = useTransition()
+  const [step, setStep]     = useState<'email' | 'code'>('email')
+  const [email, setEmail]   = useState('')
+  const [consent, setConsent] = useState(false)
+  const [consentError, setConsentError] = useState(false)
+  const [error, setError]   = useState<string | null>(null)
+  const [resent, setResent] = useState(false)
+  const [isPending, start]  = useTransition()
   const [googlePending, setGooglePending] = useState(false)
-  const [googleConsent, setGoogleConsent] = useState(false)
-  const [consentErrorSource, setConsentErrorSource] = useState<'google' | 'email' | null>(null)
+
+  function handleSendOtp(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!consent) { setConsentError(true); return }
+    setConsentError(false)
+    const addr = (new FormData(e.currentTarget).get('email') as string).trim()
+    setError(null)
+    start(async () => {
+      const res = await sendSignupOtp(addr)
+      if (res?.error) return setError(res.error)
+      setEmail(addr)
+      setStep('code')
+    })
+  }
+
+  function handleVerify(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const token = (new FormData(e.currentTarget).get('token') as string).trim()
+    setError(null)
+    start(async () => {
+      const res = await verifySignupOtp(email, token)
+      if (res?.error) setError(res.error)
+    })
+  }
+
+  function handleResend() {
+    setError(null)
+    setResent(false)
+    start(async () => {
+      const res = await sendSignupOtp(email)
+      if (res?.error) setError(res.error)
+      else setResent(true)
+    })
+  }
 
   async function handleGoogle() {
-    if (!googleConsent) { setConsentErrorSource('google'); return }
-    setConsentErrorSource(null)
+    if (!consent) { setConsentError(true); return }
+    setConsentError(false)
     setGooglePending(true)
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
@@ -39,211 +73,170 @@ export default function SignupPage() {
     })
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!googleConsent) { setConsentErrorSource('email'); return }
-    setConsentErrorSource(null)
-    const formData = new FormData(e.currentTarget)
-    setEmail(formData.get('email') as string)
-    setError(null)
-    startTransition(async () => {
-      const result = await signup(formData)
-      if (result?.kind === 'existing') {
-        setExisting(true)
-      } else if (result?.error) {
-        setError(result.error)
-      } else {
-        setSuccess(true)
-      }
-    })
+  /* ── Étape 2 : code ── */
+  if (step === 'code') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="flex justify-center mb-8">
+            <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="bg-green-50 rounded-full w-14 h-14 flex items-center justify-center mb-4">
+                <MailCheck size={26} className="text-[#008020]" />
+              </div>
+              <h1 className="text-xl font-bold text-gray-900 mb-1">Vérifiez vos emails</h1>
+              <p className="text-sm text-gray-500">Un code à 6 chiffres a été envoyé à</p>
+              <p className="text-sm font-semibold text-gray-800 mt-0.5">{email}</p>
+            </div>
+
+            <form onSubmit={handleVerify} className="space-y-4">
+              <input
+                name="token"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                autoComplete="one-time-code"
+                autoFocus
+                placeholder="000000"
+                className="w-full text-center text-3xl font-mono tracking-[0.4em] border-2 border-gray-200 rounded-xl py-4 focus:outline-none focus:border-[#008020] focus:ring-2 focus:ring-[#008020]/20 transition-colors"
+              />
+
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">
+                  {error}
+                </p>
+              )}
+
+              {resent && (
+                <p className="text-sm text-[#008020] text-center">
+                  Nouveau code envoyé. Vérifiez vos spams.
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+              >
+                {isPending ? <Loader2 size={16} className="animate-spin" /> : 'Créer mon compte'}
+              </button>
+            </form>
+
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <button
+                onClick={handleResend}
+                disabled={isPending}
+                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#008020] transition-colors disabled:opacity-50"
+              >
+                <RotateCcw size={12} />
+                Renvoyer un code
+              </button>
+              <button
+                onClick={() => { setStep('email'); setError(null) }}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Changer d'adresse email
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-
+  /* ── Étape 1 : email + consent ── */
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
-
         <div className="flex justify-center mb-8">
           <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {success ? (
-            <div className="text-center">
-              {/* Icône */}
-              <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-5">
-                <Mail size={28} className="text-[#008020]" />
-              </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h1>
+          <p className="text-sm text-gray-500 mb-6">Gérez vos quittances en toute simplicité.</p>
 
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Confirmez votre email</h2>
-              <p className="text-sm text-gray-500 mb-1">Un lien de confirmation a été envoyé à</p>
-              <p className="text-sm font-semibold text-gray-800 mb-6">{email}</p>
+          <label className={`flex items-start gap-3 cursor-pointer mb-4 rounded-lg px-3 py-2.5 -mx-3 transition-colors ${
+            consentError ? 'bg-red-50 border border-red-300' : 'border border-transparent'
+          }`}>
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={e => { setConsent(e.target.checked); if (e.target.checked) setConsentError(false) }}
+              className={`mt-0.5 w-4 h-4 shrink-0 cursor-pointer ${consentError ? 'accent-red-500' : 'accent-[#008020]'}`}
+            />
+            <span className={`text-xs leading-relaxed ${consentError ? 'text-red-700' : 'text-gray-500'}`}>
+              En continuant, j&apos;accepte les{' '}
+              <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
+              , la{' '}
+              <Link href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</Link>
+              {' '}et d&apos;être inscrit à la newsletter.
+            </span>
+          </label>
 
-              {/* Étapes */}
-              <div className="text-left space-y-3 mb-6">
-                {[
-                  'Ouvrez votre boîte mail',
-                  'Cliquez sur le lien de confirmation',
-                  'Connectez-vous à votre compte',
-                ].map((step, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-[#008020] text-white text-xs font-bold flex items-center justify-center shrink-0">
-                      {i + 1}
-                    </div>
-                    <span className="text-sm text-gray-600">{step}</span>
-                  </div>
-                ))}
-              </div>
-
-              <p className="text-xs text-gray-400 mb-6">
-                Pensez à vérifier vos spams si vous ne trouvez pas l'email.
-              </p>
-
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-2 w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
-              >
-                Aller à la connexion <ArrowRight size={16} />
-              </Link>
-            </div>
-          ) : existing ? (
-            <div className="text-center">
-              <div className="bg-orange-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-5">
-                <UserCheck size={28} className="text-orange-600" />
-              </div>
-
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Ce compte existe déjà</h2>
-              <p className="text-sm text-gray-500 mb-1">Un compte est déjà inscrit avec</p>
-              <p className="text-sm font-semibold text-gray-800 mb-6">{email}</p>
-
-              <Link
-                href={`/login?prefill=${encodeURIComponent(email)}`}
-                className="flex items-center justify-center gap-2 w-full bg-[#008020] hover:bg-green-800 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors mb-4"
-              >
-                Se connecter <ArrowRight size={16} />
-              </Link>
-
-              <Link
-                href={`/auth/reset-password?prefill=${encodeURIComponent(email)}`}
-                className="text-xs text-gray-500 hover:text-[#008020] hover:underline"
-              >
-                Mot de passe oublié ?
-              </Link>
-            </div>
-          ) : (
-            <>
-              <h1 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h1>
-              <p className="text-sm text-gray-500 mb-6">Gérez vos quittances en toute simplicité.</p>
-
-              <label className={`flex items-start gap-3 cursor-pointer mb-4 rounded-lg px-3 py-2.5 -mx-3 transition-colors ${
-                consentErrorSource ? 'bg-red-50 border border-red-300' : 'border border-transparent'
-              }`}>
-                <input
-                  type="checkbox"
-                  checked={googleConsent}
-                  onChange={e => {
-                    setGoogleConsent(e.target.checked)
-                    if (e.target.checked) setConsentErrorSource(null)
-                  }}
-                  className={`mt-0.5 w-4 h-4 shrink-0 cursor-pointer ${
-                    consentErrorSource ? 'accent-red-500' : 'accent-[#008020]'
-                  }`}
-                />
-                <span className={`text-xs leading-relaxed ${consentErrorSource ? 'text-red-700' : 'text-gray-500'}`}>
-                  En continuant, j&apos;accepte les{' '}
-                  <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
-                  , la{' '}
-                  <Link href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</Link>
-                  {' '}et d&apos;être inscrit à la newsletter.
-                </span>
-              </label>
-
-              {consentErrorSource === 'google' && (
-                <p className="text-xs text-red-500 -mt-2 mb-3">Veuillez accepter les conditions pour continuer.</p>
-              )}
-
-              <button
-                type="button"
-                onClick={handleGoogle}
-                disabled={googlePending || isPending}
-                className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
-              >
-                {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
-                Continuer avec Google
-              </button>
-
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1 border-t border-gray-200" />
-                <span className="text-xs text-gray-400">ou</span>
-                <div className="flex-1 border-t border-gray-200" />
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Adresse email
-                  </label>
-                  <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      placeholder="vous@exemple.fr"
-                      className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Mot de passe
-                  </label>
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      minLength={6}
-                      placeholder="6 caractères minimum"
-                      className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                {error && (
-                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                    {error}
-                  </p>
-                )}
-
-                {consentErrorSource === 'email' && (
-                  <p className="text-xs text-red-500">Veuillez accepter les conditions pour continuer.</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-                >
-                  {isPending ? <><Loader2 size={16} className="animate-spin" /> Création...</> : 'Créer mon compte'}
-                </button>
-              </form>
-            </>
+          {consentError && (
+            <p className="text-xs text-red-500 -mt-2 mb-3">Veuillez accepter les conditions pour continuer.</p>
           )}
+
+          <button
+            onClick={handleGoogle}
+            disabled={googlePending || isPending}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-75 transition-colors mb-4"
+          >
+            {googlePending ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
+            Continuer avec Google
+          </button>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 border-t border-gray-200" />
+            <span className="text-xs text-gray-400">ou</span>
+            <div className="flex-1 border-t border-gray-200" />
+          </div>
+
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Adresse email
+              </label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="vous@exemple.fr"
+                  className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+            >
+              {isPending ? <><Loader2 size={16} className="animate-spin" /> Envoi...</> : 'Recevoir mon code'}
+            </button>
+          </form>
         </div>
 
-        {!success && (
-          <p className="mt-5 text-sm text-gray-500 text-center">
-            Déjà un compte ?{' '}
-            <Link href="/login" className="text-[#008020] font-medium hover:underline">
-              Se connecter
-            </Link>
-          </p>
-        )}
+        <p className="mt-5 text-sm text-gray-500 text-center">
+          Déjà un compte ?{' '}
+          <Link href="/login" className="text-[#008020] font-medium hover:underline">
+            Se connecter
+          </Link>
+        </p>
       </div>
     </div>
   )
