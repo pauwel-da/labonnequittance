@@ -198,7 +198,7 @@ export default function SignupPage() {
               disabled={isPending}
               className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-75 active:scale-95 text-white font-semibold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
             >
-              {isPending ? <><Loader2 size={16} className="animate-spin" /> Envoi...</> : 'Recevoir mon code'}
+              {isPending ? <><Loader2 size={16} className="animate-spin" /> Envoi...</> : 'Continuer'}
             </button>
           </form>
 
