@@ -21,8 +21,6 @@ function GoogleIcon() {
 export default function SignupPage() {
   const [step, setStep]     = useState<'email' | 'code'>('email')
   const [email, setEmail]   = useState('')
-  const [consent, setConsent] = useState(false)
-  const [consentError, setConsentError] = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [resent, setResent] = useState(false)
   const [isPending, start]  = useTransition()
@@ -30,8 +28,6 @@ export default function SignupPage() {
 
   function handleSendOtp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!consent) { setConsentError(true); return }
-    setConsentError(false)
     const addr = (new FormData(e.currentTarget).get('email') as string).trim()
     setError(null)
     start(async () => {
@@ -63,8 +59,6 @@ export default function SignupPage() {
   }
 
   async function handleGoogle() {
-    if (!consent) { setConsentError(true); return }
-    setConsentError(false)
     setGooglePending(true)
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
@@ -160,28 +154,6 @@ export default function SignupPage() {
           <h1 className="text-xl font-bold text-gray-900 mb-1">Créer un compte</h1>
           <p className="text-sm text-gray-500 mb-6">Gérez vos quittances en toute simplicité.</p>
 
-          <label className={`flex items-start gap-3 cursor-pointer mb-4 rounded-lg px-3 py-2.5 -mx-3 transition-colors ${
-            consentError ? 'bg-red-50 border border-red-300' : 'border border-transparent'
-          }`}>
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={e => { setConsent(e.target.checked); if (e.target.checked) setConsentError(false) }}
-              className={`mt-0.5 w-4 h-4 shrink-0 cursor-pointer ${consentError ? 'accent-red-500' : 'accent-[#008020]'}`}
-            />
-            <span className={`text-xs leading-relaxed ${consentError ? 'text-red-700' : 'text-gray-500'}`}>
-              En continuant, j&apos;accepte les{' '}
-              <Link href="/cgu" target="_blank" className="text-[#008020] hover:underline">CGU</Link>
-              , la{' '}
-              <Link href="/confidentialite" target="_blank" className="text-[#008020] hover:underline">Politique de confidentialité</Link>
-              {' '}et d&apos;être inscrit à la newsletter.
-            </span>
-          </label>
-
-          {consentError && (
-            <p className="text-xs text-red-500 -mt-2 mb-3">Veuillez accepter les conditions pour continuer.</p>
-          )}
-
           <button
             onClick={handleGoogle}
             disabled={googlePending || isPending}
@@ -229,6 +201,13 @@ export default function SignupPage() {
               {isPending ? <><Loader2 size={16} className="animate-spin" /> Envoi...</> : 'Recevoir mon code'}
             </button>
           </form>
+
+          <p className="mt-4 text-[11px] text-gray-400 text-center">
+            En poursuivant, vous acceptez les{' '}
+            <Link href="/cgu" target="_blank" className="underline hover:text-[#008020]">CGU</Link>
+            {' '}et la{' '}
+            <Link href="/confidentialite" target="_blank" className="underline hover:text-[#008020]">Politique de confidentialité</Link>.
+          </p>
         </div>
 
         <p className="mt-5 text-sm text-gray-500 text-center">

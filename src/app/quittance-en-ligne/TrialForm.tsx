@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ArrowLeft, Loader2, MailCheck, Shield, Lock, MapPin, AlertCircle } from 'lucide-react'
 import SignaturePad from '@/components/SignaturePad'
+import AddressAutocomplete from '@/components/AddressAutocomplete'
 import QuittancePreview from './QuittancePreview'
 import { submitTrialQuittance } from './actions'
 import { verifySignupOtp } from '@/app/signup/actions'
@@ -318,13 +319,16 @@ export default function TrialForm() {
           {step === 1 && (
             <>
               <Field label="Adresse du bien" error={submitTried ? errors.adresse : undefined}>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   value={data.bien.adresse}
-                  onChange={(e) => updateBien('adresse', e.target.value)}
+                  onChange={(adresse, cp, ville) => {
+                    updateBien('adresse', adresse)
+                    if (cp) updateBien('code_postal', cp)
+                    if (ville) updateBien('ville', ville)
+                  }}
                   placeholder="12 rue de la Paix"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
                   autoFocus
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
                 />
               </Field>
               <div className="grid grid-cols-3 gap-3">
@@ -453,10 +457,13 @@ export default function TrialForm() {
                 </Field>
               </div>
               <Field label="Votre adresse personnelle" error={submitTried ? errors.b_adresse : undefined}>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   value={data.bailleur.adresse}
-                  onChange={(e) => updateBailleur('adresse', e.target.value)}
+                  onChange={(adresse, cp, ville) => {
+                    updateBailleur('adresse', adresse)
+                    if (cp) updateBailleur('code_postal', cp)
+                    if (ville) updateBailleur('ville', ville)
+                  }}
                   placeholder="5 rue de Rivoli"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020] focus:border-transparent"
                 />
