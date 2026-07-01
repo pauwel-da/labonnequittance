@@ -203,6 +203,7 @@ export default function TrialForm() {
       if (!('ok' in res)) return
       try { localStorage.removeItem(STORAGE_KEY) } catch {}
       setSubmitted({ email: data.bailleur.email.trim() })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     })
   }
 
