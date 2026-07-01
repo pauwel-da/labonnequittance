@@ -552,7 +552,7 @@ export default function TrialForm() {
                 {isPending ? (
                   <><Loader2 size={16} className="animate-spin" /> Envoi…</>
                 ) : (
-                  <>📩 Recevoir ma quittance par email</>
+                  <>📄 Voir ma quittance</>
                 )}
               </button>
             )}
