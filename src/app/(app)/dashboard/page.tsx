@@ -90,6 +90,11 @@ export default function DashboardPage() {
     if (yearParam || monthParam || fresh) {
       window.history.replaceState({}, '', '/dashboard')
     }
+
+    // Vider la prévisualisation au montage : évite que le router cache Next.js
+    // la restaure à l'état "ouvert" quand l'utilisateur revient sur le dashboard
+    setPreviewUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null })
+    setPreviewImage(null)
   }, [])
 
   useEffect(() => {
@@ -301,6 +306,7 @@ export default function DashboardPage() {
       return
     }
     hasAutoOpened.current = true
+    shouldAutoOpen.current = false
     handlePreview(locataires[0])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, locataires.length, proprietaire])
