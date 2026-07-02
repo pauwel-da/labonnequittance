@@ -29,7 +29,7 @@ export type TrialPayload = {
   signature: string // dataUrl PNG ou ""
 }
 
-// Rate limit en mémoire : 1 email par IP / 10 min
+// Rate limit en mémoire : 1 soumission par IP / 10 min
 const ATTEMPTS = new Map<string, number>()
 const WINDOW_MS = 10 * 60 * 1000
 
@@ -41,29 +41,34 @@ function anon() {
   )
 }
 
-export async function submitTrialQuittance(payload: TrialPayload) {
+function computeNext(dateDebut: string): string {
+  const [year, month] = dateDebut.split('-')
+  const monthNum = parseInt(month, 10)
+  return `/dashboard?fresh=1&year=${year}&month=${monthNum - 1}`
+}
+
+// Sauvegarde le brouillon d'essai. Retourne next= pour la redirection post-auth.
+export async function saveTrialDraft(
+  payload: TrialPayload
+): Promise<{ ok: true; next: string } | { error: string }> {
   // 1. Rate limit par IP
   const hdrs = await headers()
-  const ip = (hdrs.get('x-forwarded-for')?.split(',')[0].trim()) || hdrs.get('x-real-ip') || 'unknown'
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() || hdrs.get('x-real-ip') || 'unknown'
   const now = Date.now()
   const lastAttempt = ATTEMPTS.get(ip)
   if (lastAttempt && now - lastAttempt < WINDOW_MS) {
-    return { error: 'Trop de tentatives, réessayez dans quelques minutes.' as const }
+    return { error: 'Trop de tentatives, réessayez dans quelques minutes.' }
   }
 
   // 2. Validation basique
   const email = payload.bailleur.email.trim().toLowerCase()
-  if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-    return { error: 'Email invalide.' as const }
-  }
+  if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) return { error: 'Email invalide.' }
   if (!payload.bien.adresse || !payload.locataire.nom_prenom || !payload.bailleur.nom) {
-    return { error: 'Champs manquants.' as const }
+    return { error: 'Champs manquants.' }
   }
 
+  // 3. Enregistrer le brouillon
   const client = anon()
-
-  // 3. Enregistrer le brouillon (un visiteur anonyme peut INSERT, RLS l'empêche de lire/modifier).
-  // Il sera "réclamé" par /auth/callback une fois l'utilisateur authentifié via le lien magique.
   const { error: draftErr } = await client.from('trial_drafts').insert({
     email,
     payload: {
@@ -73,28 +78,19 @@ export async function submitTrialQuittance(payload: TrialPayload) {
       signature: payload.signature,
     },
   })
-  if (draftErr) return { error: 'Erreur enregistrement.' as const }
+  if (draftErr) return { error: 'Erreur enregistrement.' }
 
-  // 4. Envoi du lien magique avec ?next=/dashboard pour atterrir direct sur la quittance
-  const periode = payload.locataire.date_debut_periode // YYYY-MM-DD
-  const [year, month] = periode.split('-')
-  const monthNum = parseInt(month, 10) // 1-12
-  const next = `/dashboard?fresh=1&year=${year}&month=${monthNum - 1}` // dashboard utilise month 0-11
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-
-  const { error: otpErr } = await client.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-      emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
-    },
-  })
-  if (otpErr) {
-    return { error: 'Erreur envoi email.' as const }
-  }
-
-  // 5. Marquer le rate limit (only after successful send)
   ATTEMPTS.set(ip, now)
+  return { ok: true, next: computeNext(payload.locataire.date_debut_periode) }
+}
 
-  return { ok: true as const }
+// Envoie le code OTP par email (flux non-Gmail).
+export async function sendTrialOtp(email: string): Promise<{ ok: true } | { error: string }> {
+  const client = anon()
+  const { error } = await client.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true },
+  })
+  if (error) return { error: 'Erreur envoi email.' }
+  return { ok: true }
 }
