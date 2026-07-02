@@ -54,6 +54,8 @@ export default function DashboardPage() {
   const [proRata, setProRata] = useState<Record<string, { jourDebut: number | null; jourFin: number | null } | null>>({})
   const pickerRef = useRef<HTMLDivElement>(null)
   const blobCache = useRef<Record<string, { blob: Blob; filename: string; key: string; imageDataUrl?: string }>>({})
+  const shouldAutoOpen = useRef(false)
+  const hasAutoOpened = useRef(false)
 
   function getBlob(l: Locataire, bien: Bien, datePeriode: string, dateReglement: string, pr?: { jourDebut: number; jourFin: number } | null) {
     const key = `${l.id}-${datePeriode}-${dateReglement}-${pr ? `${pr.jourDebut}-${pr.jourFin}` : 'full'}`
@@ -83,8 +85,7 @@ export default function DashboardPage() {
       if (Number.isFinite(m) && m >= 0 && m <= 11) setMonth(m)
     }
     if (fresh) {
-      setFreshNotice(true)
-      setTimeout(() => setFreshNotice(false), 8000)
+      shouldAutoOpen.current = true
     }
     if (yearParam || monthParam || fresh) {
       window.history.replaceState({}, '', '/dashboard')
@@ -287,6 +288,22 @@ export default function DashboardPage() {
       setSending(null)
     }
   }
+
+  // Auto-open la quittance du premier locataire quand on arrive via ?fresh=1
+  useEffect(() => {
+    if (!shouldAutoOpen.current || hasAutoOpened.current || loading) return
+    const incomplete = !proprietaire?.adresse || !proprietaire?.codePostal || !proprietaire?.ville
+    if (locataires.length === 0 || incomplete) {
+      // Fallback : bandeau si pas encore de données complètes
+      setFreshNotice(true)
+      setTimeout(() => setFreshNotice(false), 8000)
+      hasAutoOpened.current = true
+      return
+    }
+    hasAutoOpened.current = true
+    handlePreview(locataires[0])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, locataires.length, proprietaire])
 
   useEffect(() => {
     if (!showPicker) return
