@@ -7,6 +7,9 @@ const isCI = !!(process.env.VERCEL || process.env.CI);
 
 const nextConfig: NextConfig = {
   distDir: isCI ? ".next" : ".next.nosync",
+  images: {
+    qualities: [75, 85],
+  },
 };
 
 export default nextConfig;

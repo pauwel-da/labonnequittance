@@ -79,28 +79,26 @@ export default function LandingHero({ userCount }: { userCount: number | null })
         <div className="relative anim-fade-mockup" style={{ animationDelay: '0.15s' }}>
           {/* MacBook mockup — transparent bg, drop-shadow follows device contour */}
           <Image
-            src="/modern-desktop.png"
+            src="/modern-desktop.webp"
             alt="Dashboard La Bonne Quittance"
             width={1447}
             height={1087}
             sizes="(min-width: 1024px) 600px, 100vw"
             priority
-            quality={85}
             className="w-full drop-shadow-[0_20px_50px_rgba(0,128,32,0.22)]"
           />
 
           {/* Floating iPhone mockup */}
           <div
-            className="absolute -bottom-6 -left-4 sm:-left-10 w-20 sm:w-28 anim-fade-mobile"
+            className="absolute -bottom-6 -left-4 sm:-left-12 w-40 sm:w-56 anim-fade-mobile"
             style={{ animationDelay: '0.5s' }}
           >
             <Image
-              src="/modern-mobile.png"
+              src="/modern-mobile.webp"
               alt="Mobile La Bonne Quittance"
               width={1122}
               height={1402}
-              sizes="140px"
-              quality={85}
+              sizes="220px"
               className="w-full drop-shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
             />
           </div>
