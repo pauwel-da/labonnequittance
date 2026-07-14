@@ -77,30 +77,51 @@ export default function LandingHero({ userCount }: { userCount: number | null })
 
         {/* ── RIGHT : Product mockup ── */}
         <div className="relative anim-fade-mockup" style={{ animationDelay: '0.15s' }}>
-          {/* MacBook mockup — transparent bg, drop-shadow follows device contour */}
-          <Image
-            src="/modern-desktop.webp"
-            alt="Dashboard La Bonne Quittance"
-            width={1447}
-            height={1087}
-            sizes="(min-width: 1024px) 600px, 100vw"
-            priority
-            className="w-full drop-shadow-[0_20px_50px_rgba(0,128,32,0.22)]"
-          />
+          {/* Browser frame */}
+          <div className="rounded-2xl overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,128,32,0.25)] border border-gray-200 bg-white">
+            <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-white rounded-md px-3 py-0.5 text-[10px] text-gray-400 border border-gray-200 max-w-[200px] truncate">
+                  labonnequittance.fr/dashboard
+                </div>
+              </div>
+            </div>
+            <Image
+              src="/capture_ordinateur.png"
+              alt="Dashboard La Bonne Quittance"
+              width={1200}
+              height={750}
+              sizes="(min-width: 1024px) 600px, 100vw"
+              priority
+              className="w-full"
+            />
+          </div>
 
-          {/* Floating iPhone mockup */}
+          {/* Floating mobile mockup */}
           <div
-            className="absolute -bottom-6 -left-4 sm:-left-12 w-40 sm:w-56 anim-fade-mobile"
+            className="absolute -bottom-6 -left-4 sm:-left-12 w-24 sm:w-36 anim-fade-mobile"
             style={{ animationDelay: '0.5s' }}
           >
-            <Image
-              src="/modern-mobile.webp"
-              alt="Mobile La Bonne Quittance"
-              width={1122}
-              height={1402}
-              sizes="220px"
-              className="w-full drop-shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
-            />
+            <div className="bg-gray-900 rounded-2xl p-1 shadow-2xl">
+              <div className="bg-black rounded-xl overflow-hidden">
+                <div className="flex justify-center pt-2 pb-1">
+                  <div className="w-14 h-3.5 bg-black rounded-full border border-gray-800" />
+                </div>
+                <Image
+                  src="/capture_mobile.png"
+                  alt="Mobile"
+                  width={390}
+                  height={844}
+                  sizes="160px"
+                  className="w-full"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
