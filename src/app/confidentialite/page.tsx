@@ -20,8 +20,9 @@ export default function ConfidentialitePage() {
           <h2 className="text-lg font-semibold text-gray-900">1. Responsable du traitement</h2>
           <ul className="list-none space-y-0.5 text-sm">
             <li><strong>Raison sociale :</strong> D ALMEIDA AYIVI PAUWEL</li>
-            <li><strong>SIREN :</strong> 881 458 475</li>
-            <li><strong>Adresse :</strong> 64 rue Waldeck Rousseau, 69006 Lyon, France</li>
+            <li><strong>Forme juridique :</strong> Société par actions simplifiée (SAS)</li>
+            <li><strong>SIREN :</strong> 108 084 625</li>
+            <li><strong>Adresse :</strong> 138 Avenue Victor Hugo, 75116 Paris, France</li>
             <li><strong>Email :</strong> <a href="mailto:contact@labonnequittance.fr" className="text-[#008020] hover:underline">contact@labonnequittance.fr</a></li>
           </ul>
         </section>

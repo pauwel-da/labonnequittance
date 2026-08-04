@@ -21,8 +21,9 @@ export default function CguPage() {
           <p>Le site <strong>labonnequittance.fr</strong> est édité par :</p>
           <ul className="list-none space-y-0.5 text-sm">
             <li><strong>Raison sociale :</strong> D ALMEIDA AYIVI PAUWEL</li>
-            <li><strong>SIREN :</strong> 881 458 475</li>
-            <li><strong>Adresse :</strong> 64 rue Waldeck Rousseau, 69006 Lyon, France</li>
+            <li><strong>Forme juridique :</strong> Société par actions simplifiée (SAS)</li>
+            <li><strong>SIREN :</strong> 108 084 625</li>
+            <li><strong>Adresse :</strong> 138 Avenue Victor Hugo, 75116 Paris, France</li>
             <li><strong>Email :</strong> <a href="mailto:contact@labonnequittance.fr" className="text-[#008020] hover:underline">contact@labonnequittance.fr</a></li>
           </ul>
         </section>
@@ -88,7 +89,7 @@ export default function CguPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">9. Droit applicable</h2>
           <p className="text-sm leading-relaxed">
-            Les présentes CGU sont soumises au droit français. En cas de litige, les tribunaux compétents sont ceux du ressort de Lyon.
+            Les présentes CGU sont soumises au droit français. En cas de litige, les tribunaux compétents sont ceux du ressort de Paris.
           </p>
         </section>
 
