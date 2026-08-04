@@ -19,7 +19,7 @@ export default function ConfidentialitePage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">1. Responsable du traitement</h2>
           <ul className="list-none space-y-0.5 text-sm">
-            <li><strong>Raison sociale :</strong> D ALMEIDA AYIVI PAUWEL</li>
+            <li><strong>Raison sociale :</strong> AYIVI</li>
             <li><strong>Forme juridique :</strong> Société par actions simplifiée (SAS)</li>
             <li><strong>SIREN :</strong> 108 084 625</li>
             <li><strong>Adresse :</strong> 138 Avenue Victor Hugo, 75116 Paris, France</li>

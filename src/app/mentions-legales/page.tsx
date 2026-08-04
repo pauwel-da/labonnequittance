@@ -19,7 +19,7 @@ export default function MentionsLegalesPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">Éditeur du site</h2>
           <ul className="list-none space-y-0.5 text-sm">
-            <li><strong>Raison sociale :</strong> D ALMEIDA AYIVI PAUWEL</li>
+            <li><strong>Raison sociale :</strong> AYIVI</li>
             <li><strong>Forme juridique :</strong> Société par actions simplifiée (SAS)</li>
             <li><strong>SIREN :</strong> 108 084 625</li>
             <li><strong>Adresse :</strong> 138 Avenue Victor Hugo, 75116 Paris, France</li>
@@ -29,7 +29,7 @@ export default function MentionsLegalesPage() {
 
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">Directeur de la publication</h2>
-          <p className="text-sm">D ALMEIDA AYIVI PAUWEL</p>
+          <p className="text-sm">AYIVI</p>
         </section>
 
         <section className="space-y-2">
@@ -53,7 +53,7 @@ export default function MentionsLegalesPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">Propriété intellectuelle</h2>
           <p className="text-sm leading-relaxed">
-            L'ensemble des contenus présents sur le site labonnequittance.fr (textes, images, logo, code source) est la propriété exclusive de D ALMEIDA AYIVI PAUWEL et est protégé par les lois françaises et internationales relatives à la propriété intellectuelle. Toute reproduction, même partielle, est interdite sans autorisation préalable écrite.
+            L'ensemble des contenus présents sur le site labonnequittance.fr (textes, images, logo, code source) est la propriété exclusive de AYIVI et est protégé par les lois françaises et internationales relatives à la propriété intellectuelle. Toute reproduction, même partielle, est interdite sans autorisation préalable écrite.
           </p>
         </section>
 

@@ -20,7 +20,7 @@ export default function CguPage() {
           <h2 className="text-lg font-semibold text-gray-900">1. Mentions légales</h2>
           <p>Le site <strong>labonnequittance.fr</strong> est édité par :</p>
           <ul className="list-none space-y-0.5 text-sm">
-            <li><strong>Raison sociale :</strong> D ALMEIDA AYIVI PAUWEL</li>
+            <li><strong>Raison sociale :</strong> AYIVI</li>
             <li><strong>Forme juridique :</strong> Société par actions simplifiée (SAS)</li>
             <li><strong>SIREN :</strong> 108 084 625</li>
             <li><strong>Adresse :</strong> 138 Avenue Victor Hugo, 75116 Paris, France</li>
@@ -68,7 +68,7 @@ export default function CguPage() {
         <section className="space-y-2">
           <h2 className="text-lg font-semibold text-gray-900">6. Propriété intellectuelle</h2>
           <p className="text-sm leading-relaxed">
-            L'ensemble des éléments constituant le site (design, code, logo, textes) est la propriété exclusive de D ALMEIDA AYIVI PAUWEL. Toute reproduction, même partielle, est interdite sans autorisation préalable.
+            L'ensemble des éléments constituant le site (design, code, logo, textes) est la propriété exclusive de AYIVI. Toute reproduction, même partielle, est interdite sans autorisation préalable.
           </p>
         </section>
 
