@@ -9,6 +9,14 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: 'revision-loyer-irl-2026',
+    titre: 'IRL 2026 : comment calculer la révision de son loyer ?',
+    description: "L'Indice de Référence des Loyers encadre la hausse annuelle des loyers. Formule, tableau des valeurs depuis 2022 et calculateur interactif gratuit.",
+    date: '4 août 2026',
+    tempsLecture: '6 min',
+    tag: 'Gestion locative',
+  },
+  {
     slug: 'creer-sa-quittance-de-loyer-pdf-gratuitement-en-2026',
     titre: 'Créer sa quittance de loyer PDF gratuitement en 2026',
     description: 'Fini le modèle Word à ressaisir chaque mois. Créez gratuitement une quittance PDF conforme, avec signature numérique, en 30 secondes.',
