@@ -47,6 +47,7 @@ export default function DashboardPage() {
   } | null>(null)
   const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [historiqueOpen, setHistoriqueOpen] = useState(false)
+  const [reviewAsked, setReviewAsked] = useState(false)
   const [regenerating, setRegenerating] = useState<string | null>(null)
   const [regenError, setRegenError] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState(false)
@@ -90,6 +91,8 @@ export default function DashboardPage() {
     if (yearParam || monthParam || fresh) {
       window.history.replaceState({}, '', '/dashboard')
     }
+
+    setReviewAsked(localStorage.getItem('review_asked') === '1')
 
     // Vider la prévisualisation au montage : évite que le router cache Next.js
     // la restaure à l'état "ouvert" quand l'utilisateur revient sur le dashboard
@@ -611,8 +614,21 @@ export default function DashboardPage() {
                       )}
 
                       {didSend && (
-                        <div className="flex items-center gap-2 text-green-700 text-sm mb-3 bg-green-50 rounded-lg px-3 py-2">
-                          <CheckCircle size={14} /> Quittance envoyée à {l.email}
+                        <div className="flex flex-col gap-2 mb-3 bg-green-50 rounded-lg px-3 py-2">
+                          <div className="flex items-center gap-2 text-green-700 text-sm">
+                            <CheckCircle size={14} /> Quittance envoyée à {l.email}
+                          </div>
+                          {!reviewAsked && (
+                            <a
+                              href="https://g.page/r/Cd5ZPM426YEYEBM/review"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => { localStorage.setItem('review_asked', '1'); setReviewAsked(true) }}
+                              className="text-xs text-[#008020] font-semibold hover:underline"
+                            >
+                              Ça vous plaît ? Laissez-nous un avis Google →
+                            </a>
+                          )}
                         </div>
                       )}
 
