@@ -377,7 +377,7 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
-        <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Période</p>
+        <p className="text-green-100 text-xs mb-1.5 uppercase tracking-wide font-medium">Mois à quittancer</p>
         <div className="relative" ref={pickerRef}>
           <div className="flex items-center justify-between bg-white/20 rounded-xl px-4 py-3">
             <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-white/20 transition-colors">
