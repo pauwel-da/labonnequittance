@@ -291,7 +291,7 @@ export default function DashboardPage() {
       setQuittances(qs => [...qs.filter(q => !(q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)), sentRecord])
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
-      if (!localStorage.getItem('review_asked')) setShowReview(true)
+      setTimeout(() => { if (!localStorage.getItem('review_asked')) setShowReview(true) }, 3200)
     } catch (err: unknown) {
       setErrors(e => ({ ...e, [l.id]: err instanceof Error ? err.message : 'Erreur envoi.' }))
     } finally {
