@@ -104,7 +104,8 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false))
 
-    getQuittances().then(setQuittances)  }, [])
+    getQuittances().then(setQuittances)
+  }, [])
 
   function shiftDates(newYear: number, newMonth: number) {
     setDatesReglement(prev => {
