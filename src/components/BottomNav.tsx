@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { FileText, Home, Users, User, LogOut, Loader2 } from 'lucide-react'
+import { FileText, Home, Users, User, LogOut, Loader2, ShieldCheck } from 'lucide-react'
 import { useTransition } from 'react'
 import { signOut } from '@/app/(app)/actions'
 
@@ -14,8 +14,9 @@ const links = [
   { href: '/profil', label: 'Profil', icon: User },
 ]
 
-export default function BottomNav() {
+export default function BottomNav({ showAdmin = false }: { showAdmin?: boolean }) {
   const pathname = usePathname()
+  const navLinks = showAdmin ? [...links, { href: '/admin', label: 'Admin', icon: ShieldCheck }] : links
   const [isPending, startTransition] = useTransition()
 
   function handleSignOut() {
@@ -30,7 +31,7 @@ export default function BottomNav() {
           <Image src="/logo.png" alt="La Bonne Quittance" width={150} height={64} priority />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {links.map(({ href, label, icon: Icon }) => {
+          {navLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname === href
             return (
               <Link
@@ -62,7 +63,7 @@ export default function BottomNav() {
 
       {/* Barre de navigation mobile */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-50">
-        {links.map(({ href, label, icon: Icon }) => {
+        {navLinks.map(({ href, label, icon: Icon }) => {
           const active = pathname === href
           return (
             <Link

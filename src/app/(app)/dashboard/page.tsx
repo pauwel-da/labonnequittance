@@ -36,15 +36,6 @@ export default function DashboardPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [previewName, setPreviewName] = useState('')
-  const [adminStats, setAdminStats] = useState<{
-    count: number
-    countToday: number
-    telecharge: number
-    envoye: number
-    visionne: number
-    caf: number
-    today: { telecharge: number; envoye: number; visionne: number; caf: number }
-  } | null>(null)
   const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [historiqueOpen, setHistoriqueOpen] = useState(false)
   const [reviewAsked, setReviewAsked] = useState(false)
@@ -113,14 +104,7 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false))
 
-    getQuittances().then(setQuittances)
-
-    // Stats admin
-    fetch('/api/admin/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => d?.count != null && setAdminStats(d))
-      .catch(() => {})
-  }, [])
+    getQuittances().then(setQuittances)  }, [])
 
   function shiftDates(newYear: number, newMonth: number) {
     setDatesReglement(prev => {
@@ -459,33 +443,6 @@ export default function DashboardPage() {
           locataires={locataires}
           quittances={quittances}
         />
-      )}
-
-      {adminStats !== null && (
-        <div className="px-4 lg:px-8 pt-4 max-w-4xl mx-auto">
-          <div className="bg-gray-900 text-white rounded-xl px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-3">Admin</p>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {[
-                { label: 'Inscrits', value: adminStats.count, today: adminStats.countToday, color: 'text-[#008020]' },
-                { label: 'Téléchargées', value: adminStats.telecharge, today: adminStats.today.telecharge, color: 'text-green-400' },
-                { label: 'Envoyées', value: adminStats.envoye, today: adminStats.today.envoye, color: 'text-blue-400' },
-                { label: 'Visionnées', value: adminStats.visionne, today: adminStats.today.visionne, color: 'text-purple-400' },
-                { label: 'CAF générées', value: adminStats.caf, today: adminStats.today.caf, color: 'text-amber-400' },
-              ].map(s => (
-                <div key={s.label} className="bg-white/5 rounded-lg px-3 py-2 text-center">
-                  <p className={`text-xl font-bold ${s.color}`}>
-                    {s.value}
-                    {s.today !== null && (
-                      <span className="text-sm font-medium text-gray-400 ml-1">({s.today})</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       )}
 
       {loading ? (
