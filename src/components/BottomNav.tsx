@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { FileText, Home, Users, User, LogOut, Loader2, ShieldCheck } from 'lucide-react'
+import { FileText, Home, Users, User, LogOut, Loader2, ShieldCheck, Handshake } from 'lucide-react'
 import { useTransition } from 'react'
 import { signOut } from '@/app/(app)/actions'
 
@@ -11,6 +11,7 @@ const links = [
   { href: '/dashboard', label: 'Quittances', icon: FileText },
   { href: '/biens', label: 'Biens', icon: Home },
   { href: '/locataires', label: 'Locataires', icon: Users },
+  { href: '/services', label: 'Services', icon: Handshake },
   { href: '/profil', label: 'Profil', icon: User },
 ]
 
@@ -69,12 +70,12 @@ export default function BottomNav({ showAdmin = false }: { showAdmin?: boolean }
             <Link
               key={href}
               href={href}
-              className={`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors ${
+              className={`flex-1 min-w-0 px-0.5 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-medium transition-colors ${
                 active ? 'text-[#008020]' : 'text-gray-400 hover:text-[#008020]'
               }`}
             >
               <Icon size={20} />
-              <span>{label}</span>
+              <span className="max-w-full truncate">{label}</span>
             </Link>
           )
         })}

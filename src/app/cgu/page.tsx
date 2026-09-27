@@ -13,7 +13,7 @@ export default function CguPage() {
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-8 text-gray-700">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Conditions Générales d'Utilisation</h1>
-          <p className="text-sm text-gray-400">Dernière mise à jour : mai 2026</p>
+          <p className="text-sm text-gray-400">Dernière mise à jour : septembre 2026</p>
         </div>
 
         <section className="space-y-2">
@@ -72,29 +72,42 @@ export default function CguPage() {
           </p>
         </section>
 
+        <section id="services-partenaires" className="space-y-2">
+          <h2 className="text-lg font-semibold text-gray-900">7. Services partenaires</h2>
+          <p className="text-sm leading-relaxed">
+            La rubrique « Services » présente des services proposés par des sociétés partenaires, signalés par la mention « Partenaire », ainsi que des services édités par AYIVI, signalés par la mention « Notre service » (par exemple LMNP Simple).
+          </p>
+          <p className="text-sm leading-relaxed">
+            Les liens vers les services partenaires sont des liens d&apos;affiliation : AYIVI peut percevoir une rémunération de la part d&apos;un partenaire lorsqu&apos;un utilisateur souscrit un contrat après avoir suivi l&apos;un de ces liens.
+          </p>
+          <p className="text-sm leading-relaxed">
+            Pour les services partenaires, La Bonne Quittance se limite à une mise en relation. Elle ne fournit aucun conseil, n&apos;intervient pas dans la souscription et n&apos;agit pas en qualité d&apos;intermédiaire d&apos;assurance. Tout contrat est conclu entre l&apos;utilisateur et le partenaire ou, le cas échéant, l&apos;assureur qu&apos;il représente, selon leurs propres conditions. Aucune donnée personnelle n&apos;est transmise aux partenaires : l&apos;utilisateur est simplement redirigé vers leur site.
+          </p>
+        </section>
+
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">7. Disponibilité du service</h2>
+          <h2 className="text-lg font-semibold text-gray-900">8. Disponibilité du service</h2>
           <p className="text-sm leading-relaxed">
             L'éditeur s'efforce d'assurer la disponibilité du service mais ne garantit pas une accessibilité ininterrompue. Des interruptions peuvent survenir pour maintenance ou pour des raisons techniques indépendantes de sa volonté.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">8. Modification des CGU</h2>
+          <h2 className="text-lg font-semibold text-gray-900">9. Modification des CGU</h2>
           <p className="text-sm leading-relaxed">
             L'éditeur se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs seront informés de toute modification significative. La poursuite de l'utilisation du service vaut acceptation des nouvelles conditions.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">9. Droit applicable</h2>
+          <h2 className="text-lg font-semibold text-gray-900">10. Droit applicable</h2>
           <p className="text-sm leading-relaxed">
             Les présentes CGU sont soumises au droit français. En cas de litige, les tribunaux compétents sont ceux du ressort de Paris.
           </p>
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">10. Contact</h2>
+          <h2 className="text-lg font-semibold text-gray-900">11. Contact</h2>
           <p className="text-sm leading-relaxed">
             Pour toute question relative aux présentes CGU : <a href="mailto:contact@labonnequittance.fr" className="text-[#008020] hover:underline">contact@labonnequittance.fr</a>
           </p>
