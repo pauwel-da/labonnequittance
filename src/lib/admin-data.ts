@@ -200,6 +200,12 @@ async function fetchEvents(client: SupabaseClient, limit: number): Promise<Admin
 
 // Popup LMNP Simple du dashboard (supabase/promo.sql).
 async function fetchPromo(client: SupabaseClient): Promise<PromoStats> {
+  // Les comptages « head » ne remontent pas toujours l'absence de table :
+  // on vérifie d'abord que la campagne existe.
+  const campaign = await client.from('promo_campaigns').select('id').eq('id', PROMO_LMNP.id).maybeSingle()
+  if (campaign.error || !campaign.data) {
+    throw new Error(`promo_campaigns : ${campaign.error?.message ?? 'campagne absente'} (supabase/promo.sql exécuté ?)`)
+  }
   const count = () => client
     .from('promo_campaign_views')
     .select('user_id', { count: 'exact', head: true })

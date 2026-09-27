@@ -7,3 +7,6 @@ export const PROMO_LMNP = {
 } as const
 
 export type PromoEvent = 'shown' | 'closed' | 'discover' | 'notify'
+
+// Lien permanent sous la liste des biens (page /biens), si au moins un bien meublé.
+export const LMNP_BIENS_URL = 'https://lmnpsimple.fr/?utm_source=labonnequittance&utm_medium=biens&utm_campaign=lbq_biens'

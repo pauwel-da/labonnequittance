@@ -1,18 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { getBiens, addBien, updateBien, deleteBien, getLocataires, getProprietaire, getQuittances } from '@/lib/db'
 import type { Bien, BienType, Locataire, Proprietaire, QuittanceRecord } from '@/lib/types'
-import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle, ArrowRight, ChevronRight } from 'lucide-react'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
 import { isOnboardingComplete, isProfileComplete } from '@/lib/onboarding'
+import { LMNP_BIENS_URL } from '@/lib/promo-config'
+
+function trackEvent(name: string) {
+  if (typeof window !== 'undefined' && 'sa_event' in window) {
+    (window as Window & { sa_event: (n: string) => void }).sa_event(name)
+  }
+}
 
 const TYPES: { value: BienType; label: string }[] = [
   { value: 'meuble', label: 'Meublé' },
   { value: 'non_meuble', label: 'Non meublé' },
 ]
 
-const emptyForm = { nom: '', adresse: '', codePostal: '', ville: '', typeLocation: 'meuble' as BienType }
+// Pas de type présélectionné : le choix meublé / non meublé doit être explicite
+// (il figure sur les quittances et sert au ciblage LMNP Simple).
+const emptyForm = { nom: '', adresse: '', codePostal: '', ville: '', typeLocation: '' as BienType | '' }
 
 export default function BiensPage() {
   const [biens, setBiens] = useState<Bien[]>([])
@@ -25,6 +35,7 @@ export default function BiensPage() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Bien | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [typeMissing, setTypeMissing] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ bien: Bien; affected: Locataire[] } | null>(null)
 
   async function reload() {
@@ -42,23 +53,31 @@ export default function BiensPage() {
   function openNew() {
     setEditing(null)
     setForm(emptyForm)
+    setTypeMissing(false)
     setShowForm(true)
   }
 
   function openEdit(b: Bien) {
     setEditing(b)
     setForm({ nom: b.nom, adresse: b.adresse, codePostal: b.codePostal, ville: b.ville, typeLocation: b.typeLocation })
+    setTypeMissing(false)
     setShowForm(true)
   }
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
+    const { typeLocation } = form
+    if (!typeLocation) {
+      setTypeMissing(true)
+      return
+    }
+    const data = { ...form, typeLocation }
     setSaving(true)
     try {
       if (editing) {
-        await updateBien(editing.id, form)
+        await updateBien(editing.id, data)
       } else {
-        await addBien(form)
+        await addBien(data)
       }
       await reload()
       setShowForm(false)
@@ -152,6 +171,34 @@ export default function BiensPage() {
         )}
       </div>
 
+      {/* Lien LMNP Simple : au moins un bien meublé, hors prise en main */}
+      {!loading
+        && biens.some(b => b.typeLocation === 'meuble')
+        && isOnboardingComplete(proprietaire, biens, locataires, quittances) && (
+        <section aria-labelledby="declaration-fiscale" className="px-4 lg:px-8 mt-6 pb-6 max-w-4xl mx-auto">
+          <h2 id="declaration-fiscale" className="px-1 mb-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Déclaration fiscale
+          </h2>
+          <a
+            href={LMNP_BIENS_URL}
+            target="_blank"
+            rel="noopener"
+            onClick={() => trackEvent('lmnp_biens_clic')}
+            className="flex items-center gap-3 min-h-17 bg-white hover:bg-gray-50 rounded-xl shadow-sm pl-3.5 pr-3 py-3 transition-colors"
+          >
+            <Image src="/promo/lmnp-simple-icon.png" alt="" width={200} height={211} className="w-9 h-auto shrink-0" />
+            <span className="flex-1 min-w-0 flex flex-col gap-0.5">
+              <span className="text-[15px] leading-5 font-semibold text-gray-900">Déclarer mes revenus meublés</span>
+              <span className="text-[13px] leading-4.5 text-gray-600">
+                Avec LMNP Simple : 99 € TTC, plusieurs biens, reprise de comptabilité et télétransmission
+              </span>
+              <span className="sr-only">(s&apos;ouvre dans un nouvel onglet)</span>
+            </span>
+            <ChevronRight size={20} className="shrink-0 text-gray-500" />
+          </a>
+        </section>
+      )}
+
       {/* Modal formulaire */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -169,17 +216,23 @@ export default function BiensPage() {
                     <button
                       key={t.value}
                       type="button"
-                      onClick={() => setForm(f => ({ ...f, typeLocation: t.value }))}
+                      aria-pressed={form.typeLocation === t.value}
+                      onClick={() => { setForm(f => ({ ...f, typeLocation: t.value })); setTypeMissing(false) }}
                       className={`py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
                         form.typeLocation === t.value
                           ? 'border-[#008020] bg-green-50 text-[#008020]'
-                          : 'border-gray-200 text-gray-600'
+                          : typeMissing
+                            ? 'border-red-300 text-gray-600'
+                            : 'border-gray-200 text-gray-600'
                       }`}
                     >
                       {t.label}
                     </button>
                   ))}
                 </div>
+                {typeMissing && (
+                  <p role="alert" className="text-xs text-red-600 mt-1.5">Choisissez le type de location.</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom du bien</label>
