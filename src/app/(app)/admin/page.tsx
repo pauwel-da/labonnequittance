@@ -357,6 +357,38 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </Card>
       </div>
 
+      {/* Popup LMNP Simple */}
+      <Card title="Popup LMNP Simple" subtitle="Dashboard · affichage unique · liste « Me prévenir » : requête en bas de supabase/promo.sql">
+        {data.promo.ok ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-gray-900">{data.promo.data.shown}</p>
+              <p className="text-gray-500">Affichages</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-gray-900">
+                {data.promo.data.discover} <span className="text-xs font-medium text-gray-400">({pct(data.promo.data.discover, data.promo.data.shown)} %)</span>
+              </p>
+              <p className="text-gray-500">Clics « Découvrir »</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-[#008020]">
+                {data.promo.data.notify} <span className="text-xs font-medium text-gray-400">({pct(data.promo.data.notify, data.promo.data.shown)} %)</span>
+              </p>
+              <p className="text-gray-500">« Me prévenir en janvier »</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-gray-900">
+                {data.promo.data.closed} <span className="text-xs font-medium text-gray-400">({pct(data.promo.data.closed, data.promo.data.shown)} %)</span>
+              </p>
+              <p className="text-gray-500">Fermetures</p>
+            </div>
+          </div>
+        ) : (
+          <SectionError error={errorOf(data.promo) ?? ''} />
+        )}
+      </Card>
+
       {/* Utilisateurs */}
       <Card
         title="Utilisateurs"

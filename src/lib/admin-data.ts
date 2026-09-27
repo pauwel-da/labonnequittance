@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from './admin'
+import { PROMO_LMNP } from './promo-config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,13 @@ export interface AdminEvent {
   meta: unknown
 }
 
+export interface PromoStats {
+  shown: number
+  closed: number
+  discover: number
+  notify: number
+}
+
 export interface AdminData {
   /** ISO — instant de génération (heure serveur). */
   generatedAt: string
@@ -51,6 +59,7 @@ export interface AdminData {
   actions: Result<{ total: ActionCounts; today: ActionCounts }>
   trialDrafts: Result<TrialDrafts>
   events: Result<AdminEvent[]>
+  promo: Result<PromoStats>
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -189,6 +198,28 @@ async function fetchEvents(client: SupabaseClient, limit: number): Promise<Admin
   }))
 }
 
+// Popup LMNP Simple du dashboard (supabase/promo.sql).
+async function fetchPromo(client: SupabaseClient): Promise<PromoStats> {
+  const count = () => client
+    .from('promo_campaign_views')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('campaign_id', PROMO_LMNP.id)
+  const [shown, closed, discover, notify] = await Promise.all([
+    count(),
+    count().not('closed_at', 'is', null),
+    count().not('discover_clicked_at', 'is', null),
+    count().not('notify_optin_at', 'is', null),
+  ])
+  const error = shown.error ?? closed.error ?? discover.error ?? notify.error
+  if (error) throw new Error(`promo_campaign_views : ${error.message} (supabase/promo.sql exécuté ?)`)
+  return {
+    shown: shown.count ?? 0,
+    closed: closed.count ?? 0,
+    discover: discover.count ?? 0,
+    notify: notify.count ?? 0,
+  }
+}
+
 // ── Point d'entrée ────────────────────────────────────────────────────────────
 
 /**
@@ -197,7 +228,7 @@ async function fetchEvents(client: SupabaseClient, limit: number): Promise<Admin
  */
 export async function getAdminData(): Promise<AdminData> {
   const client = createAdminClient()
-  const [users, daily, monthly, rappels, actions, trialDrafts, events] = await Promise.all([
+  const [users, daily, monthly, rappels, actions, trialDrafts, events, promo] = await Promise.all([
     safe(() => fetchUsers(client)),
     safe(() => fetchDaily(client, 30)),
     safe(() => fetchMonthly(client, 6)),
@@ -205,6 +236,7 @@ export async function getAdminData(): Promise<AdminData> {
     safe(() => fetchActions(client)),
     safe(() => fetchTrialDrafts(client)),
     safe(() => fetchEvents(client, 50)),
+    safe(() => fetchPromo(client)),
   ])
-  return { generatedAt: new Date().toISOString(), users, daily, monthly, rappels, actions, trialDrafts, events }
+  return { generatedAt: new Date().toISOString(), users, daily, monthly, rappels, actions, trialDrafts, events, promo }
 }
