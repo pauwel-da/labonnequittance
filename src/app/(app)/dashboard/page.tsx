@@ -38,8 +38,6 @@ export default function DashboardPage() {
   const [previewName, setPreviewName] = useState('')
   const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [historiqueOpen, setHistoriqueOpen] = useState(false)
-  const [reviewAsked, setReviewAsked] = useState(false)
-  const [showReview, setShowReview] = useState(false)
   const [regenerating, setRegenerating] = useState<string | null>(null)
   const [regenError, setRegenError] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState(false)
@@ -83,8 +81,6 @@ export default function DashboardPage() {
     if (yearParam || monthParam || fresh) {
       window.history.replaceState({}, '', '/dashboard')
     }
-
-    setReviewAsked(localStorage.getItem('review_asked') === '1')
 
     // Vider la prévisualisation au montage : évite que le router cache Next.js
     // la restaure à l'état "ouvert" quand l'utilisateur revient sur le dashboard
@@ -276,7 +272,6 @@ export default function DashboardPage() {
       setQuittances(qs => [...qs.filter(q => !(q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)), sentRecord])
       setSendSuccess(l.id)
       setTimeout(() => setSendSuccess(s => s === l.id ? null : s), 3000)
-      setTimeout(() => { if (!localStorage.getItem('review_asked')) setShowReview(true) }, 3200)
     } catch (err: unknown) {
       setErrors(e => ({ ...e, [l.id]: err instanceof Error ? err.message : 'Erreur envoi.' }))
     } finally {
@@ -576,23 +571,6 @@ export default function DashboardPage() {
                       {didSend && (
                         <div className="flex items-center gap-2 text-green-700 text-sm mb-3 bg-green-50 rounded-lg px-3 py-2">
                           <CheckCircle size={14} /> Quittance envoyée à {l.email}
-                        </div>
-                      )}
-
-                      {showReview && (
-                        <div className="flex items-center justify-between mb-3 bg-green-50 rounded-lg px-3 py-2">
-                          <a
-                            href="https://g.page/r/Cd5ZPM426YEYEBM/review"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => { localStorage.setItem('review_asked', '1'); setReviewAsked(true); setShowReview(false) }}
-                            className="text-xs text-[#008020] font-semibold hover:underline"
-                          >
-                            Ça vous plaît ? Laissez-nous un avis Google →
-                          </a>
-                          <button onClick={() => { localStorage.setItem('review_asked', '1'); setReviewAsked(true); setShowReview(false) }} className="text-gray-400 hover:text-gray-600 ml-2">
-                            <X size={14} />
-                          </button>
                         </div>
                       )}
 
