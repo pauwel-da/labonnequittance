@@ -27,8 +27,9 @@ export const SERVICE_CATEGORIES: ServiceCategory[] = [
         name: 'Cautioneo',
         kind: 'partenaire',
         description: 'Sécurisez vos loyers avec une garantie loyers impayés, à un tarif parmi les plus bas du marché.',
-        // TODO : remplacer par le lien affilié fourni par Cautioneo.
-        url: 'https://www.cautioneo.com/?utm_source=labonnequittance&utm_medium=services&utm_campaign=lbq_services',
+        // Lien d'affiliation Cautioneo (referral_id = attribution des contrats, kind=lessor = bailleur).
+        // À garder tel quel : pas de paramètres UTM ajoutés, les clics sont comptés côté Simple Analytics.
+        url: 'https://www.cautioneo.com/r/?referral_id=4399d743-2b59-4e20-a7a2-6043451db27e&kind=lessor&returnUrl=https%3A%2F%2Fpro.cautioneo.com%2Fpbi%2Fstart%2F',
         logo: { src: '/partners/cautioneo-logo.svg', width: 1075, height: 201, className: 'h-[22px] w-auto' },
       },
     ],
