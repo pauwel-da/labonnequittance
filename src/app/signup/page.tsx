@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Loader2, Mail, MailCheck, RotateCcw } from 'lucide-react'
 import { sendSignupOtp, verifySignupOtp } from './actions'
 import { createClient } from '@/lib/supabase/client'
+import ConsentementMeta from '@/components/ConsentementMeta'
 
 function GoogleIcon() {
   return (
@@ -25,6 +26,7 @@ export default function SignupPage() {
   const [resent, setResent] = useState(false)
   const [isPending, start]  = useTransition()
   const [googlePending, setGooglePending] = useState(false)
+  const [metaConsent, setMetaConsent] = useState(false)
 
   function handleSendOtp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -43,7 +45,7 @@ export default function SignupPage() {
     const token = (new FormData(e.currentTarget).get('token') as string).trim()
     setError(null)
     start(async () => {
-      const res = await verifySignupOtp(email, token)
+      const res = await verifySignupOtp(email, token, metaConsent)
       if (res?.error) setError(res.error)
     })
   }
@@ -63,7 +65,7 @@ export default function SignupPage() {
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback${metaConsent ? '?meta=1' : ''}` },
     })
   }
 
@@ -133,7 +135,7 @@ export default function SignupPage() {
                 onClick={() => { setStep('email'); setError(null) }}
                 className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Changer d'adresse email
+                Changer d&apos;adresse email
               </button>
             </div>
           </div>
@@ -202,7 +204,11 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="mt-4 text-[11px] text-gray-400 text-center">
+          <div className="mt-4">
+            <ConsentementMeta checked={metaConsent} onChange={setMetaConsent} />
+          </div>
+
+          <p className="mt-3 text-[11px] text-gray-400 text-center">
             En poursuivant, vous acceptez les{' '}
             <Link href="/cgu" target="_blank" className="underline hover:text-[#008020]">CGU</Link>
             {' '}et la{' '}

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { claimTrialDrafts } from '@/lib/supabase/claim-trial-draft'
+import { contexteDepuisHeaders, signalerInscriptionMeta } from '@/lib/meta-capi'
 import { NextResponse } from 'next/server'
 
 function safeNext(raw: string | null, fallback: string): string {
@@ -58,6 +59,11 @@ export async function GET(request: Request) {
       // Réclamer un éventuel brouillon d'essai (formulaire /quittance-en-ligne)
       if (user.email) {
         await claimTrialDrafts(supabase, user.id, user.email)
+      }
+
+      // meta=1 : case « informer Meta de mon inscription » cochée avant de cliquer sur Google
+      if (searchParams.get('meta') === '1') {
+        await signalerInscriptionMeta(supabase, user, contexteDepuisHeaders(request.headers, `${origin}/auth/callback`))
       }
 
       return NextResponse.redirect(`${origin}${safeNext(nextParam, '/dashboard')}`)

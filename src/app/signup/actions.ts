@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { claimTrialDrafts } from '@/lib/supabase/claim-trial-draft'
+import { contexteDepuisHeaders, signalerInscriptionMeta } from '@/lib/meta-capi'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export async function sendSignupOtp(email: string) {
@@ -14,7 +16,8 @@ export async function sendSignupOtp(email: string) {
   return { ok: true }
 }
 
-export async function verifySignupOtp(email: string, token: string) {
+/** metaConsent : case « informer Meta de mon inscription » cochée (/signup ou /quittance-en-ligne). */
+export async function verifySignupOtp(email: string, token: string, metaConsent = false) {
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
   if (error) {
@@ -31,6 +34,12 @@ export async function verifySignupOtp(email: string, token: string) {
       await supabase
         .from('proprietaire')
         .upsert({ user_id: user.id, optin_marketing: true }, { onConflict: 'user_id' })
+    }
+
+    if (metaConsent === true) {
+      const hdrs = await headers()
+      const sourceUrl = hdrs.get('referer') || `https://${hdrs.get('host')}/signup`
+      await signalerInscriptionMeta(supabase, user, contexteDepuisHeaders(hdrs, sourceUrl))
     }
   }
 

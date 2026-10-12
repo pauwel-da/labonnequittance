@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, useMemo, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { ArrowRight, ArrowLeft, Loader2, MailCheck, Shield, Lock, MapPin, AlertCircle } from 'lucide-react'
 import SignaturePad from '@/components/SignaturePad'
 import AddressAutocomplete from '@/components/AddressAutocomplete'
+import ConsentementMeta from '@/components/ConsentementMeta'
 import QuittancePreview from './QuittancePreview'
 import { saveTrialDraft, sendTrialOtp } from './actions'
 import { verifySignupOtp } from '@/app/signup/actions'
@@ -79,37 +80,55 @@ const defaultData: TrialFormData = {
   signature: '',
 }
 
+// Le brouillon n'est lu qu'au rendu : pas besoin d'être prévenu de ses changements.
+const subscribeNothing = () => () => {}
+
+function readStoredDraft(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+function parseDraft(raw: string | null): TrialFormData {
+  if (!raw) return defaultData
+  try {
+    return { ...defaultData, ...JSON.parse(raw) }
+  } catch {
+    return defaultData
+  }
+}
+
 function isValidEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 }
 
 export default function TrialForm() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [data, setData] = useState<TrialFormData>(defaultData)
+  // Brouillon localStorage : valeurs par défaut au rendu serveur et à l'hydratation, puis le
+  // brouillon enregistré. Dès la première saisie, `edited` prend le relais.
+  const stored = useSyncExternalStore(subscribeNothing, readStoredDraft, () => null)
+  const restored = useMemo(() => parseDraft(stored), [stored])
+  const [edited, setEdited] = useState<TrialFormData | null>(null)
+  const data = edited ?? restored
+  const setData = (update: (d: TrialFormData) => TrialFormData) =>
+    setEdited((d) => update(d ?? restored))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitTried, setSubmitTried] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState<{ email: string } | null>(null)
   const [codeError, setCodeError] = useState<string | null>(null)
+  const [metaConsent, setMetaConsent] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  // localStorage hydration
+  // localStorage persist (seulement après une saisie)
   useEffect(() => {
+    if (!edited) return
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        setData((prev) => ({ ...prev, ...parsed }))
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(edited))
     } catch {}
-  }, [])
-
-  // localStorage persist
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-    } catch {}
-  }, [data])
+  }, [edited])
 
   function updateBien<K extends keyof TrialFormData['bien']>(key: K, value: TrialFormData['bien'][K]) {
     setData((d) => ({ ...d, bien: { ...d.bien, [key]: value } }))
@@ -224,7 +243,7 @@ export default function TrialForm() {
         await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(draftRes.next)}`,
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(draftRes.next)}${metaConsent ? '&meta=1' : ''}`,
             queryParams: { login_hint: email },
           },
         })
@@ -245,7 +264,7 @@ export default function TrialForm() {
     const token = (new FormData(e.currentTarget).get('token') as string).trim()
     setCodeError(null)
     startTransition(async () => {
-      const res = await verifySignupOtp(submitted!.email, token)
+      const res = await verifySignupOtp(submitted!.email, token, metaConsent)
       if (res?.error) setCodeError(res.error)
       // succès : verifySignupOtp redirige vers /dashboard
     })
@@ -596,6 +615,7 @@ export default function TrialForm() {
           {/* CGU + trust badges */}
           {step === 3 && (
             <>
+              <ConsentementMeta checked={metaConsent} onChange={setMetaConsent} />
               <p className="text-[11px] text-gray-400 text-center">
                 En poursuivant, vous acceptez les{' '}
                 <Link href="/cgu" target="_blank" className="underline hover:text-[#008020]">CGU</Link>
