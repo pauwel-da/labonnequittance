@@ -6,8 +6,20 @@ export async function claimTrialDrafts(supabase: SupabaseClient, userId: string,
     .from('trial_drafts')
     .select('id, payload')
     .eq('email', userEmail)
+    .order('created_at', { ascending: true })
 
   if (!drafts || drafts.length === 0) return false
+
+  // L'essai peut avoir été soumis plusieurs fois (code non reçu, retour sur le formulaire…) :
+  // on ne garde que la dernière version de chaque couple bien / locataire.
+  const parBienLocataire = new Map<string, (typeof drafts)[number]>()
+  for (const draft of drafts) {
+    const p = draft.payload as TrialPayload
+    const cle = [p.bien.adresse, p.bien.code_postal, p.locataire.nom_prenom]
+      .map(s => (s ?? '').trim().replace(/\s+/g, ' ').toLowerCase())
+      .join('|')
+    parBienLocataire.set(cle, draft)
+  }
 
   const { data: existing } = await supabase
     .from('proprietaire')
@@ -15,7 +27,7 @@ export async function claimTrialDrafts(supabase: SupabaseClient, userId: string,
     .eq('user_id', userId)
     .maybeSingle()
 
-  for (const draft of drafts) {
+  for (const draft of parBienLocataire.values()) {
     const payload = draft.payload as TrialPayload
     const signature = payload.signature?.startsWith('data:image')
       ? payload.signature
@@ -85,8 +97,10 @@ export async function claimTrialDrafts(supabase: SupabaseClient, userId: string,
       }
     }
 
-    await supabase.from('trial_drafts').delete().eq('id', draft.id)
   }
+
+  // Tous les brouillons de l'email, doublons compris
+  await supabase.from('trial_drafts').delete().in('id', drafts.map(d => d.id))
 
   return true
 }

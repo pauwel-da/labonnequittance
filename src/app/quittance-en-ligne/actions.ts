@@ -29,9 +29,18 @@ export type TrialPayload = {
   signature: string // dataUrl PNG ou ""
 }
 
-// Rate limit en mémoire : 1 soumission par IP / 10 min
-const ATTEMPTS = new Map<string, number>()
+// Rate limit en mémoire (par instance Vercel) : 5 soumissions par IP / 10 min.
+// Volontairement tolérant : sur mobile (trafic des pubs), une même IP est partagée par de
+// nombreux clients d'un opérateur, et un utilisateur dont le code n'arrive pas doit pouvoir
+// resoumettre. Les doublons de brouillons sont fusionnés à l'inscription (claimTrialDrafts).
+const ATTEMPTS = new Map<string, number[]>()
 const WINDOW_MS = 10 * 60 * 1000
+const MAX_PAR_FENETRE = 5
+
+// IP tronquée pour les logs (donnée personnelle) : 203.0.113.42 → 203.0.113.x
+function ipMasquee(ip: string) {
+  return ip.includes('.') ? ip.replace(/\.\d+$/, '.x') : ip.split(':').slice(0, 4).join(':') + ':…'
+}
 
 function anon() {
   return createClient(
@@ -55,8 +64,10 @@ export async function saveTrialDraft(
   const hdrs = await headers()
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() || hdrs.get('x-real-ip') || 'unknown'
   const now = Date.now()
-  const lastAttempt = ATTEMPTS.get(ip)
-  if (lastAttempt && now - lastAttempt < WINDOW_MS) {
+  const recentes = (ATTEMPTS.get(ip) ?? []).filter(t => now - t < WINDOW_MS)
+  if (recentes.length >= MAX_PAR_FENETRE) {
+    // Visible dans les logs Vercel : permet de voir combien de prospects sont bloqués.
+    console.warn(`[trial] rate limit : ${recentes.length} soumissions en 10 min depuis ${ipMasquee(ip)}`)
     return { error: 'Trop de tentatives, réessayez dans quelques minutes.' }
   }
 
@@ -80,7 +91,10 @@ export async function saveTrialDraft(
   })
   if (draftErr) return { error: 'Erreur enregistrement.' }
 
-  ATTEMPTS.set(ip, now)
+  ATTEMPTS.set(ip, [...recentes, now])
+  if (ATTEMPTS.size > 1000) {
+    for (const [k, ts] of ATTEMPTS) if (!ts.some(t => now - t < WINDOW_MS)) ATTEMPTS.delete(k)
+  }
   return { ok: true, next: computeNext(payload.locataire.date_debut_periode) }
 }
 
