@@ -8,6 +8,7 @@ import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types
 import Link from 'next/link'
 import { FileText, Download, ChevronLeft, ChevronRight, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown, Percent } from 'lucide-react'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
+import InAppBrowserNotice from '@/components/InAppBrowserNotice'
 
 function monthLabel(year: number, month: number) {
   return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -449,6 +450,7 @@ export default function DashboardPage() {
         <>
           {locataires.length > 0 && (
             <div className="px-4 lg:px-8 py-4 max-w-4xl mx-auto">
+              <InAppBrowserNotice conseil="Vous pouvez envoyer la quittance par email à votre locataire." className="mb-4" />
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white rounded-xl p-4 shadow-sm flex items-center gap-3">
                   <div className="bg-green-50 p-2 rounded-lg">

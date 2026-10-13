@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire, addQuittance } from '@/lib/db'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
 import { ArrowLeft, Check, FileCheck, Download, Loader2, PenLine, Trash2, Info, Upload } from 'lucide-react'
+import InAppBrowserNotice from '@/components/InAppBrowserNotice'
 import { createClient } from '@/lib/supabase/client'
 
 function isValidEmail(v: string) {
@@ -686,6 +687,8 @@ export default function AttestationCafPage() {
               : <><Download size={16} /> Télécharger l&apos;attestation CAF</>
           }
         </button>
+
+        <InAppBrowserNotice />
 
       </div>
     </div>
