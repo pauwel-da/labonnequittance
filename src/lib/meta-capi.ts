@@ -32,7 +32,11 @@ function sha256(value: string) {
 
 async function envoyerInscription(user: User, ctx: ContexteRequete) {
   const token = process.env.META_CAPI_TOKEN
-  if (!token || !user.email) return
+  if (!token) {
+    console.warn('[meta-capi] META_CAPI_TOKEN absent : inscription non transmise')
+    return
+  }
+  if (!user.email) return
   const event = {
     event_name: 'CompleteRegistration',
     event_time: Math.floor(Date.now() / 1000),
@@ -61,6 +65,7 @@ async function envoyerInscription(user: User, ctx: ContexteRequete) {
       signal: AbortSignal.timeout(5000),
     })
     if (!res.ok) console.error('[meta-capi] envoi refusé', res.status, await res.text())
+    else console.info('[meta-capi] inscription transmise', await res.text())
   } catch (err) {
     console.error('[meta-capi] envoi impossible', err)
   }
@@ -71,7 +76,10 @@ async function envoyerInscription(user: User, ctx: ContexteRequete) {
  * Ne fait rien pour un compte existant. N'échoue jamais : l'inscription passe avant Meta.
  */
 export async function signalerInscriptionMeta(supabase: SupabaseClient, user: User, ctx: ContexteRequete) {
-  if (Date.now() - Date.parse(user.created_at) > INSCRIPTION_RECENTE_MS) return
+  if (Date.now() - Date.parse(user.created_at) > INSCRIPTION_RECENTE_MS) {
+    console.info(`[meta-capi] compte existant (créé le ${user.created_at}) : rien à transmettre`)
+    return
+  }
   // Preuve du consentement (RGPD) : horodatage dans les métadonnées du compte. Sans preuve, pas d'envoi.
   const { error } = await supabase.auth.updateUser({ data: { consentement_meta_at: new Date().toISOString() } })
   if (error) {

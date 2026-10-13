@@ -51,16 +51,38 @@ export async function claimTrialDrafts(supabase: SupabaseClient, userId: string,
       .single()
 
     if (bienRow) {
-      await supabase.from('locataires').insert({
-        user_id: userId,
-        bien_id: bienRow.id,
-        nom_prenom: payload.locataire.nom_prenom,
-        email: '',
-        copie_email: false,
-        loyer: payload.locataire.montant_loyer,
-        charges: payload.locataire.montant_charges,
-        date_debut: payload.locataire.date_debut_periode,
-      })
+      const { data: locataireRow } = await supabase
+        .from('locataires')
+        .insert({
+          user_id: userId,
+          bien_id: bienRow.id,
+          nom_prenom: payload.locataire.nom_prenom,
+          email: '',
+          copie_email: false,
+          loyer: payload.locataire.montant_loyer,
+          charges: payload.locataire.montant_charges,
+          date_debut: payload.locataire.date_debut_periode,
+        })
+        .select('id')
+        .single()
+
+      // La quittance a été vue dans l'aperçu de l'essai : on l'enregistre comme visionnée,
+      // pour que la checklist d'onboarding ne redemande pas « Générer ma première quittance ».
+      // (Rappel mensuel et popup LMNP ne comptent que téléchargées / envoyées : inchangés.)
+      if (locataireRow) {
+        await supabase.from('quittances').insert({
+          user_id: userId,
+          locataire_id: locataireRow.id,
+          bien_id: bienRow.id,
+          locataire_nom_prenom: payload.locataire.nom_prenom,
+          bien_nom: bienNom,
+          periode: payload.locataire.date_debut_periode,
+          date_paiement: payload.locataire.date_paiement,
+          montant_loyer: payload.locataire.montant_loyer,
+          montant_charges: payload.locataire.montant_charges,
+          action: 'visionne',
+        })
+      }
     }
 
     await supabase.from('trial_drafts').delete().eq('id', draft.id)
