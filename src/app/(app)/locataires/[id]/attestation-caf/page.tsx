@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire, addQuittance } from '@/lib/db'
 import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
-import { ArrowLeft, FileCheck, Download, Loader2, PenLine, Trash2, Info, Upload } from 'lucide-react'
+import { ArrowLeft, Check, FileCheck, Download, Loader2, PenLine, Trash2, Info, Upload } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 function isValidEmail(v: string) {
@@ -21,6 +21,7 @@ export default function AttestationCafPage() {
   const [quittances, setQuittances] = useState<QuittanceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
+  const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('')
   const [savingSignature, setSavingSignature] = useState(false)
@@ -305,24 +306,34 @@ export default function AttestationCafPage() {
 
       const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
 
+      let partage = false
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && 'share' in navigator) {
         const file = new File([blob], filename, { type: 'application/pdf' })
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: 'Attestation CAF' }).catch(() => {})
-          return
+          partage = true
         }
       }
 
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      a.click()
-      URL.revokeObjectURL(url)
+      if (!partage) {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.click()
+        // Révocation différée : révoquer tout de suite peut annuler le téléchargement sur certains navigateurs
+        setTimeout(() => URL.revokeObjectURL(url), 60_000)
+      }
 
+      // Historique : une ligne par téléchargement, partage iOS compris
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
       addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
+
+      // Confirmation visible et bouton bloqué quelques secondes : sans retour, les utilisateurs
+      // recliquent en rafale (jusqu'à 5 clics/s observés), une ligne d'historique par clic.
+      setDone(true)
+      setTimeout(() => setDone(false), 4000)
     } catch {
       setError('Erreur lors de la génération. Vérifiez votre connexion et réessayez.')
     } finally {
@@ -666,11 +677,13 @@ export default function AttestationCafPage() {
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
         )}
 
-        <button type="button" onClick={handleSubmit} disabled={generating || pregenLoading}
+        <button type="button" onClick={handleSubmit} disabled={generating || pregenLoading || done}
           className="w-full bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          {generating || pregenLoading
-            ? <><Loader2 size={16} className="animate-spin" /> Génération en cours...</>
-            : <><Download size={16} /> Télécharger l&apos;attestation CAF</>
+          {done
+            ? <><Check size={16} /> Attestation téléchargée</>
+            : generating || pregenLoading
+              ? <><Loader2 size={16} className="animate-spin" /> Génération en cours...</>
+              : <><Download size={16} /> Télécharger l&apos;attestation CAF</>
           }
         </button>
 
