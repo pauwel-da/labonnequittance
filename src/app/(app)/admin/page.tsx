@@ -6,6 +6,7 @@ import { getAdminUser } from '@/lib/admin'
 import { getAdminData, type Result, type UserOverview } from '@/lib/admin-data'
 import { BarChart, Funnel } from './charts'
 import DeleteUserButton from './DeleteUserButton'
+import CopyButton from './CopyButton'
 
 export const metadata: Metadata = { title: 'Admin — La Bonne Quittance' }
 
@@ -146,6 +147,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const errors24h = events.filter(e => e.level === 'error' && now - Date.parse(e.createdAt) < 86400_000).length
 
   const emailById = new Map(users.map(u => [u.userId, u.email]))
+
+  // Emails des clics « Me prévenir en janvier » (popup LMNP), résolus via la liste des utilisateurs
+  const notifyList = data.promo.ok
+    ? data.promo.data.notifyList.map(n => ({ ...n, email: emailById.get(n.userId) ?? null }))
+    : []
+  const notifyEmails = notifyList.flatMap(n => (n.email ? [n.email] : []))
 
   const matchedUsers = q
     ? users.filter(u => u.email.toLowerCase().includes(q) || u.userId === q).slice(0, 25)
@@ -358,8 +365,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </div>
 
       {/* Popup LMNP Simple */}
-      <Card title="Popup LMNP Simple" subtitle="Dashboard · affichage unique · liste « Me prévenir » : requête en bas de supabase/promo.sql">
+      <Card title="Popup LMNP Simple" subtitle="Dashboard · affichage unique par utilisateur">
         {data.promo.ok ? (
+          <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div className="bg-gray-50 rounded-xl px-3 py-2.5">
               <p className="text-lg font-bold tabular-nums text-gray-900">{data.promo.data.shown}</p>
@@ -384,6 +392,33 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <p className="text-gray-500">Fermetures</p>
             </div>
           </div>
+
+          {/* Liste « Me prévenir en janvier » */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <p className="text-xs font-semibold text-gray-700">
+                « Me prévenir en janvier » · {notifyList.length} email{notifyList.length > 1 ? 's' : ''}
+              </p>
+              {notifyEmails.length > 0 && (
+                <CopyButton text={notifyEmails.join(', ')} label="Copier les emails" />
+              )}
+            </div>
+            {notifyList.length === 0 ? (
+              <Empty>Personne pour l&apos;instant.</Empty>
+            ) : (
+              <ul className="text-xs divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                {notifyList.map(n => (
+                  <li key={n.userId} className="py-1.5 flex items-center justify-between gap-3">
+                    <span className="text-gray-700 truncate">
+                      {n.email ?? <span className="text-gray-400">compte {n.userId.slice(0, 8)}… (email indisponible)</span>}
+                    </span>
+                    <span className="text-gray-400 whitespace-nowrap">{fmtDate(n.at)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          </>
         ) : (
           <SectionError error={errorOf(data.promo) ?? ''} />
         )}
