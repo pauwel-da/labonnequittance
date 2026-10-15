@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from './admin'
+import type { ListeEmails } from './admin-email'
 import { PROMO_LMNP } from './promo-config'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -307,4 +308,27 @@ export async function getAdminData(): Promise<AdminData> {
     safe(() => fetchServices(client)),
   ])
   return { generatedAt: new Date().toISOString(), users, daily, monthly, rappels, actions, trialDrafts, events, promo, services }
+}
+
+/**
+ * Listes d'emails du tableau de bord (clics du popup LMNP, clics Cautioneo),
+ * proposées comme destinataires dans /admin/emails. Une liste dont la table
+ * manque reste vide plutôt que de bloquer les autres.
+ */
+export async function getListesEmails(): Promise<Result<ListeEmails[]>> {
+  return safe(async () => {
+    const client = createAdminClient()
+    const [users, promo, services] = await Promise.all([
+      fetchUsers(client),
+      fetchPromo(client).catch(() => null),
+      fetchServices(client).catch(() => null),
+    ])
+    const emailById = new Map(users.map(u => [u.userId, u.email]))
+    const emails = (userIds: string[]) => [...new Set(userIds.map(id => emailById.get(id)).filter((e): e is string => !!e))]
+    return [
+      { id: 'janvier', label: '« Me prévenir en janvier »', emails: emails((promo?.notifyList ?? []).map(c => c.userId)) },
+      { id: 'decouvrir', label: 'Clics « Découvrir »', emails: emails((promo?.discoverList ?? []).map(c => c.userId)) },
+      { id: 'cautioneo', label: 'Clics Cautioneo', emails: emails((services?.byService['cautioneo']?.users ?? []).map(u => u.userId)) },
+    ]
+  })
 }

@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { AlertTriangle, RefreshCw, Search, X } from 'lucide-react'
+import { AlertTriangle, Mail, RefreshCw, Search, X } from 'lucide-react'
 import { getAdminUser } from '@/lib/admin'
 import { getAdminData, type PromoClick, type Result, type UserOverview } from '@/lib/admin-data'
 import { BarChart, Funnel } from './charts'
 import DeleteUserButton from './DeleteUserButton'
 import CopyButton from './CopyButton'
+import AdminTabs from './AdminTabs'
 
 export const metadata: Metadata = { title: 'Admin — La Bonne Quittance' }
 
@@ -69,8 +70,12 @@ function Kpi({ label, value, delta, tone = 'text-gray-900' }: { label: string; v
   )
 }
 
-/** Liste d'emails datés (clics du popup LMNP) avec bouton de copie. */
-function EmailList({ title, items }: { title: string; items: { userId: string; email: string | null; at: string; note?: string }[] }) {
+/** Liste d'emails datés (clics du popup LMNP, Cautioneo) : copie, ou écriture via /admin/emails. */
+function EmailList({ title, items, writeHref }: {
+  title: string
+  items: { userId: string; email: string | null; at: string; note?: string }[]
+  writeHref?: string
+}) {
   const emails = items.flatMap(n => (n.email ? [n.email] : []))
   return (
     <div className="min-w-0">
@@ -78,7 +83,19 @@ function EmailList({ title, items }: { title: string; items: { userId: string; e
         <p className="text-xs font-semibold text-gray-700">
           {title} · {items.length} email{items.length > 1 ? 's' : ''}
         </p>
-        {emails.length > 0 && <CopyButton text={emails.join(', ')} label="Copier" />}
+        {emails.length > 0 && (
+          <div className="flex items-center gap-1">
+            <CopyButton text={emails.join(', ')} label="Copier" />
+            {writeHref && (
+              <Link
+                href={writeHref}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00701c] bg-green-50 hover:bg-green-100 px-2 py-1 rounded-md transition-colors"
+              >
+                <Mail size={14} /> Écrire
+              </Link>
+            )}
+          </div>
+        )}
       </div>
       {items.length === 0 ? (
         <Empty>Personne pour l&apos;instant.</Empty>
@@ -212,6 +229,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <RefreshCw size={14} /> Actualiser
         </Link>
       </div>
+      <AdminTabs active="tableau" />
 
       {/* KPI */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -432,8 +450,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
           {/* Qui a cliqué */}
           <div className="mt-4 pt-4 border-t border-gray-100 grid lg:grid-cols-2 gap-x-6 gap-y-4">
-            <EmailList title="Clics « Découvrir »" items={discoverList} />
-            <EmailList title="« Me prévenir en janvier »" items={notifyList} />
+            <EmailList title="Clics « Découvrir »" items={discoverList} writeHref="/admin/emails?liste=decouvrir" />
+            <EmailList title="« Me prévenir en janvier »" items={notifyList} writeHref="/admin/emails?liste=janvier" />
           </div>
           </>
         ) : (
@@ -459,7 +477,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <p className="text-gray-500">Clics (7 jours)</p>
             </div>
           </div>
-          <EmailList title="Ont cliqué" items={cautioneoList} />
+          <EmailList title="Ont cliqué" items={cautioneoList} writeHref="/admin/emails?liste=cautioneo" />
           </>
         ) : (
           <SectionError error={errorOf(data.services) ?? ''} />
