@@ -201,6 +201,15 @@ export default function AttestationCafPage() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [attestationJson, proprietaire, surface, questionFoyer, signatureEmpty])
 
+  /** Autre colocataire : sa part repart du partage égal (une part modifiée vaut pour une seule personne). */
+  function choisirBeneficiaire(i: number) {
+    if (!locataire || i === cible) return
+    const v = valeursColocation(locataire)
+    setCible(i)
+    setPartLoyer(v.partLoyer)
+    setPartCharges(v.partCharges)
+  }
+
   /** Réponse à « couple ou colocataires ? », mémorisée sur la fiche du locataire. */
   async function choisirFoyer(f: Foyer) {
     if (!locataire) return
@@ -592,7 +601,7 @@ export default function AttestationCafPage() {
               <p className="block text-sm font-medium text-gray-700 mb-2">Attestation pour</p>
               <div role="group" aria-label="Colocataire concerné" className="flex flex-wrap gap-2">
                 {ps.map((p, i) => (
-                  <button key={i} type="button" onClick={() => setCible(i)} aria-pressed={cible === i}
+                  <button key={i} type="button" onClick={() => choisirBeneficiaire(i)} aria-pressed={cible === i}
                     className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
                       cible === i ? 'border-[#008020] bg-green-50 text-[#008020]' : 'border-gray-200 text-gray-600'
                     }`}>
