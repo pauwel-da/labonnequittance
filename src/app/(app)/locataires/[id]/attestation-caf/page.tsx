@@ -3,14 +3,28 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire, addQuittance } from '@/lib/db'
-import type { Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
+import { getLocataires, getBiens, getProprietaire, getQuittances, saveProprietaire, addQuittance, setLocataireFoyer } from '@/lib/db'
+import type { Foyer, Locataire, Bien, Proprietaire, QuittanceRecord } from '@/lib/types'
+import { foyerEffectif, joinNoms, personnes } from '@/lib/colocation'
 import { ArrowLeft, Check, FileCheck, Download, Loader2, PenLine, Trash2, Info, Upload } from 'lucide-react'
 import InAppBrowserNotice from '@/components/InAppBrowserNotice'
 import { createClient } from '@/lib/supabase/client'
 
 function isValidEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+}
+
+const arrondi = (x: number) => String(Math.round(x * 100) / 100)
+
+// Colocation (plusieurs personnes sur la fiche) : parts égales par défaut, modifiables.
+function valeursColocation(l: Locataire) {
+  const n = personnes(l).length
+  return {
+    nombre: String(n),
+    montantTotal: arrondi(l.loyer + l.charges),
+    partLoyer: arrondi(l.loyer / n),
+    partCharges: arrondi(l.charges / n),
+  }
 }
 
 export default function AttestationCafPage() {
@@ -33,6 +47,10 @@ export default function AttestationCafPage() {
   const [colocation, setColocation] = useState(false)
   const [nombreColoc, setNombreColoc] = useState('')
   const [montantColoc, setMontantColoc] = useState('')
+  // Plusieurs personnes sur la fiche, en colocation : pour qui, et quelle part du loyer
+  const [cible, setCible] = useState(0)
+  const [partLoyer, setPartLoyer] = useState('')
+  const [partCharges, setPartCharges] = useState('')
   const [pieceUnique, setPieceUnique] = useState(false)
   const [sousLocation, setSousLocation] = useState(false)
   const [hotelPension, setHotelPension] = useState(false)
@@ -70,6 +88,16 @@ export default function AttestationCafPage() {
       setProprietaire(prop)
       setQuittances(qs)
 
+      // Colocation déjà connue : champs pré-remplis (une attestation par personne)
+      if (loc && foyerEffectif(loc) === 'colocation') {
+        const v = valeursColocation(loc)
+        setColocation(true)
+        setNombreColoc(v.nombre)
+        setMontantColoc(v.montantTotal)
+        setPartLoyer(v.partLoyer)
+        setPartCharges(v.partCharges)
+      }
+
       // Vérifier si locataire à jour (quittance ce mois-ci)
       if (loc) {
         const now = new Date()
@@ -86,9 +114,63 @@ export default function AttestationCafPage() {
     load().finally(() => setLoading(false))
   }, [id])
 
+  // Personnes du bail. Couple : une attestation aux deux noms, loyer entier.
+  // Colocation : une attestation par personne, avec sa part du loyer.
+  const ps = locataire ? personnes(locataire) : []
+  const foyer = locataire ? foyerEffectif(locataire) : null
+  const enCouple = ps.length > 1 && foyer === 'couple'
+  const enColoc = ps.length > 1 && foyer === 'colocation'
+  const questionFoyer = ps.length > 1 && foyer === null
+  const beneficiaire = enColoc ? (ps[cible] ?? ps[0]) : null
+  const nomLocataire1 = beneficiaire?.nomPrenom ?? ps[0]?.nomPrenom ?? ''
+  const nomLocataire2 = enCouple ? ps[1].nomPrenom : ''
+  const nomAttestation = enCouple ? joinNoms([nomLocataire1, nomLocataire2]) : nomLocataire1
+  const loyerDeclare = enColoc ? parseFloat(partLoyer) || 0 : (locataire?.loyer ?? 0)
+  const chargesDeclarees = enColoc ? parseFloat(partCharges) || 0 : (locataire?.charges ?? 0)
+  const colocationDeclaree = enCouple ? false : enColoc ? true : colocation
+
+  // Contenu de l'attestation, hors signature (lue sur le canvas au moment de l'envoi).
+  // Sérialisé pour la pré-génération : elle ne repart que si le contenu change vraiment.
+  const attestation = locataire && bien && proprietaire ? {
+    nom_prenom_bailleur: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
+    adresse_bailleur: `${proprietaire.adresse}, ${proprietaire.codePostal} ${proprietaire.ville}`,
+    email_bailleur: userEmail,
+    telephone,
+    nom_prenom_locataire1: nomLocataire1,
+    nom_prenom_locataire2: nomLocataire2,
+    adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
+    date_debut: locataire.dateDebut,
+    localisation: proprietaire.ville,
+    loyer_hors_charges: loyerDeclare,
+    charges: chargesDeclarees,
+    type_location: bien.typeLocation,
+    surface,
+    colocation: colocationDeclaree,
+    nombre_colocataires: nombreColoc,
+    montant_total_colocation: montantColoc,
+    piece_unique: pieceUnique,
+    sous_location: sousLocation,
+    hotel_pension: hotelPension,
+    type_sous_location: typeSousLoc,
+    sous_location_precision: sousLocPrecision,
+    logement_decent: logementDecent,
+    locataire_a_jour: locataireAJour,
+    mois_dernier_loyer_impaye: dernierLoyerImpaye,
+    recevoir_aide: recevoirAide,
+    iban,
+    bic,
+    domiciliation_banque: domiciliationBanque,
+  } : null
+  const attestationJson = attestation ? JSON.stringify(attestation) : null
+
+  function signatureImage() {
+    return proprietaire?.signature ||
+      (!signatureEmpty && canvasRef.current ? canvasRef.current.toDataURL('image/png') : '')
+  }
+
   // Pré-génération debounced
   useEffect(() => {
-    if (!locataire || !bien || !proprietaire || !surface.trim()) {
+    if (!attestationJson || !surface.trim() || questionFoyer) {
       setPregenBlob(null)
       setPregenLoading(false)
       if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -100,42 +182,13 @@ export default function AttestationCafPage() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
     debounceRef.current = setTimeout(async () => {
-      const signatureImage = proprietaire.signature ||
+      const signature_image = proprietaire?.signature ||
         (!signatureEmpty && canvasRef.current ? canvasRef.current.toDataURL('image/png') : '')
       try {
         const res = await fetch('/api/generer-attestation-caf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nom_prenom_bailleur: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
-            adresse_bailleur: `${proprietaire.adresse}, ${proprietaire.codePostal} ${proprietaire.ville}`,
-            email_bailleur: userEmail,
-            signature_image: signatureImage,
-            telephone,
-            nom_prenom_locataire1: locataire.nomPrenom,
-            adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
-            date_debut: locataire.dateDebut,
-            localisation: proprietaire.ville,
-            loyer_hors_charges: locataire.loyer,
-            charges: locataire.charges,
-            type_location: bien.typeLocation,
-            surface,
-            colocation,
-            nombre_colocataires: nombreColoc,
-            montant_total_colocation: montantColoc,
-            piece_unique: pieceUnique,
-            sous_location: sousLocation,
-            hotel_pension: hotelPension,
-            type_sous_location: typeSousLoc,
-            sous_location_precision: sousLocPrecision,
-            logement_decent: logementDecent,
-            locataire_a_jour: locataireAJour,
-            mois_dernier_loyer_impaye: dernierLoyerImpaye,
-            recevoir_aide: recevoirAide,
-            iban,
-            bic,
-            domiciliation_banque: domiciliationBanque,
-          }),
+          body: JSON.stringify({ ...JSON.parse(attestationJson), signature_image }),
         })
         if (res.ok) setPregenBlob(await res.blob())
       } catch {
@@ -146,7 +199,32 @@ export default function AttestationCafPage() {
     }, 800)
 
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [locataire, bien, proprietaire, userEmail, telephone, surface, colocation, nombreColoc, montantColoc, pieceUnique, sousLocation, hotelPension, typeSousLoc, sousLocPrecision, logementDecent, locataireAJour, dernierLoyerImpaye, recevoirAide, iban, bic, domiciliationBanque, signatureEmpty])
+  }, [attestationJson, proprietaire, surface, questionFoyer, signatureEmpty])
+
+  /** Réponse à « couple ou colocataires ? », mémorisée sur la fiche du locataire. */
+  async function choisirFoyer(f: Foyer) {
+    if (!locataire) return
+    const maj = { ...locataire, foyer: f }
+    setLocataire(maj)
+    setError(null)
+    if (f === 'colocation') {
+      const v = valeursColocation(maj)
+      setColocation(true)
+      setNombreColoc(v.nombre)
+      setMontantColoc(v.montantTotal)
+      setPartLoyer(v.partLoyer)
+      setPartCharges(v.partCharges)
+      setCible(0)
+    } else {
+      setColocation(false)
+    }
+    try {
+      await setLocataireFoyer(locataire.id, f)
+    } catch (err) {
+      // L'attestation reste faisable ; la question sera simplement reposée la prochaine fois
+      console.error('[CAF] foyer non enregistré', err)
+    }
+  }
 
   // Signature pad handlers
   function getXY(e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) {
@@ -241,8 +319,12 @@ export default function AttestationCafPage() {
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
-    if (!locataire || !bien || !proprietaire) {
+    if (!locataire || !bien || !proprietaire || !attestation) {
       setError('Données manquantes. Vérifiez votre profil propriétaire.')
+      return
+    }
+    if (enColoc && !(parseFloat(partLoyer) > 0)) {
+      setError(`Indiquez la part de loyer payée par ${nomLocataire1}.`)
       return
     }
     if (!surface.trim()) {
@@ -253,7 +335,7 @@ export default function AttestationCafPage() {
       setError('Veuillez indiquer le mois et l\'année du dernier loyer payé.')
       return
     }
-    if (colocation && (!nombreColoc || !montantColoc)) {
+    if (colocationDeclaree && (!nombreColoc || !montantColoc)) {
       setError('Veuillez renseigner le nombre de colocataires et le montant total.')
       return
     }
@@ -265,47 +347,16 @@ export default function AttestationCafPage() {
       let blob = pregenBlob && !pregenLoading ? pregenBlob : null
 
       if (!blob) {
-        const signatureImage = proprietaire.signature ||
-          (!signatureEmpty && canvasRef.current ? canvasRef.current.toDataURL('image/png') : '')
         const res = await fetch('/api/generer-attestation-caf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nom_prenom_bailleur: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
-            adresse_bailleur: `${proprietaire.adresse}, ${proprietaire.codePostal} ${proprietaire.ville}`,
-            email_bailleur: userEmail,
-            signature_image: signatureImage,
-            telephone,
-            nom_prenom_locataire1: locataire.nomPrenom,
-            adresse_locataire: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
-            date_debut: locataire.dateDebut,
-            localisation: proprietaire.ville,
-            loyer_hors_charges: locataire.loyer,
-            charges: locataire.charges,
-            type_location: bien.typeLocation,
-            surface,
-            colocation,
-            nombre_colocataires: nombreColoc,
-            montant_total_colocation: montantColoc,
-            piece_unique: pieceUnique,
-            sous_location: sousLocation,
-            hotel_pension: hotelPension,
-            type_sous_location: typeSousLoc,
-            sous_location_precision: sousLocPrecision,
-            logement_decent: logementDecent,
-            locataire_a_jour: locataireAJour,
-            mois_dernier_loyer_impaye: dernierLoyerImpaye,
-            recevoir_aide: recevoirAide,
-            iban,
-            bic,
-            domiciliation_banque: domiciliationBanque,
-          }),
+          body: JSON.stringify({ ...attestation, signature_image: signatureImage() }),
         })
         if (!res.ok) throw new Error('Erreur génération')
         blob = await res.blob()
       }
 
-      const filename = `attestation-caf-${locataire.nomPrenom.replace(/\s+/g, '_')}.pdf`
+      const filename = `attestation-caf-${nomAttestation.replace(/\s+/g, '_')}.pdf`
 
       let partage = false
       if (/iPad|iPhone|iPod/.test(navigator.userAgent) && 'share' in navigator) {
@@ -329,7 +380,7 @@ export default function AttestationCafPage() {
       // Historique : une ligne par téléchargement, partage iOS compris
       const now = new Date()
       const periode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-      addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: locataire.nomPrenom, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: locataire.loyer, montantCharges: locataire.charges, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
+      addQuittance({ locataireId: locataire.id, bienId: bien!.id, locataireNomPrenom: nomAttestation, bienNom: bien!.nom, periode, datePaiement: now.toISOString().slice(0, 10), montantLoyer: loyerDeclare, montantCharges: chargesDeclarees, action: 'caf' }).catch(err => console.error('[CAF] addQuittance failed:', err))
 
       // Confirmation visible et bouton bloqué quelques secondes : sans retour, les utilisateurs
       // recliquent en rafale (jusqu'à 5 clics/s observés), une ligne d'historique par clic.
@@ -356,20 +407,55 @@ export default function AttestationCafPage() {
 
   const needsSignature = !proprietaire?.signature
 
+  const header = (
+    <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-5">
+      <Link href="/locataires" className="flex items-center gap-2 text-green-100 text-sm mb-4 hover:text-white w-fit">
+        <ArrowLeft size={16} /> Retour
+      </Link>
+      <div className="flex items-center gap-3">
+        <div className="bg-white/20 rounded-xl p-2"><FileCheck size={22} /></div>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold">Attestation de loyer CAF</h1>
+          <p className="text-green-100 text-sm">Cerfa n° 10842*07 — {questionFoyer ? joinNoms(ps.map(p => p.nomPrenom)) : nomAttestation}</p>
+        </div>
+      </div>
+    </header>
+  )
+
+  // Deux personnes sur la fiche, jamais précisé : couple (une attestation commune)
+  // ou colocataires (une par personne) ? Pas de choix par défaut : c'est une déclaration sur l'honneur.
+  if (questionFoyer) return (
+    <div className="min-h-screen bg-gray-50">
+      {header}
+      <div className="px-4 lg:px-8 mt-6 max-w-2xl mx-auto pb-10">
+        <div className="bg-white rounded-xl shadow-sm p-5 space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">{joinNoms(ps.map(p => p.nomPrenom))} sont…</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              La CAF ne les traite pas de la même façon : un couple fait une seule demande, des colocataires en font une chacun.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <button type="button" onClick={() => choisirFoyer('couple')}
+              className="text-left border-2 border-gray-200 hover:border-[#008020] hover:bg-green-50 rounded-xl p-4 transition-colors">
+              <span className="block font-semibold text-gray-900">En couple</span>
+              <span className="block text-sm text-gray-500 mt-0.5">Un seul foyer : une attestation aux deux noms</span>
+            </button>
+            <button type="button" onClick={() => choisirFoyer('colocation')}
+              className="text-left border-2 border-gray-200 hover:border-[#008020] hover:bg-green-50 rounded-xl p-4 transition-colors">
+              <span className="block font-semibold text-gray-900">Colocataires</span>
+              <span className="block text-sm text-gray-500 mt-0.5">Foyers séparés : une attestation par personne</span>
+            </button>
+          </div>
+          <p className="text-xs text-gray-400">Votre réponse est enregistrée sur la fiche du locataire. Vous pourrez la modifier.</p>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#008020] text-white px-4 lg:px-8 pt-8 pb-5">
-        <Link href="/locataires" className="flex items-center gap-2 text-green-100 text-sm mb-4 hover:text-white w-fit">
-          <ArrowLeft size={16} /> Retour
-        </Link>
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 rounded-xl p-2"><FileCheck size={22} /></div>
-          <div>
-            <h1 className="text-xl font-bold">Attestation de loyer CAF</h1>
-            <p className="text-green-100 text-sm">Cerfa n° 10842*07 — {locataire.nomPrenom}</p>
-          </div>
-        </div>
-      </header>
+      {header}
 
       <div className="px-4 lg:px-8 mt-6 max-w-2xl mx-auto space-y-5 pb-10">
 
@@ -378,10 +464,10 @@ export default function AttestationCafPage() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Données pré-remplies</p>
           {[
             { label: 'Bailleur', value: `${proprietaire?.prenom} ${proprietaire?.nom}` },
-            { label: 'Locataire', value: locataire.nomPrenom },
+            { label: enCouple ? 'Locataires' : 'Locataire', value: enColoc ? `${nomAttestation} (colocation à ${ps.length})` : nomAttestation },
             { label: 'Bien', value: `${bien.adresse}, ${bien.codePostal} ${bien.ville}` },
-            { label: 'Loyer HC', value: `${locataire.loyer} €` },
-            { label: 'Charges', value: `${locataire.charges} €` },
+            { label: ps.length > 1 ? 'Loyer HC du bail' : 'Loyer HC', value: `${locataire.loyer} €` },
+            { label: ps.length > 1 ? 'Charges du bail' : 'Charges', value: `${locataire.charges} €` },
             { label: 'Type', value: bien.typeLocation === 'meuble' ? 'Meublé' : 'Non meublé' },
           ].map(r => (
             <div key={r.label} className="flex justify-between text-sm py-1 border-b border-gray-50 last:border-0">
@@ -498,6 +584,72 @@ export default function AttestationCafPage() {
         </div>
 
         {/* Colocation */}
+        {enColoc ? (
+          // Plusieurs personnes en colocation : une attestation par personne, avec sa part
+          <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Colocation</p>
+            <div>
+              <p className="block text-sm font-medium text-gray-700 mb-2">Attestation pour</p>
+              <div role="group" aria-label="Colocataire concerné" className="flex flex-wrap gap-2">
+                {ps.map((p, i) => (
+                  <button key={i} type="button" onClick={() => setCible(i)} aria-pressed={cible === i}
+                    className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      cible === i ? 'border-[#008020] bg-green-50 text-[#008020]' : 'border-gray-200 text-gray-600'
+                    }`}>
+                    {p.nomPrenom}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-2">Chaque colocataire fait sa propre demande : générez une attestation par personne.</p>
+            </div>
+            <div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="part-loyer" className="block text-sm font-medium text-gray-700 mb-1">Part de loyer HC (€)</label>
+                  <input id="part-loyer" type="number" min="0" step="0.01" value={partLoyer} onChange={e => setPartLoyer(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+                </div>
+                <div>
+                  <label htmlFor="part-charges" className="block text-sm font-medium text-gray-700 mb-1">Part de charges (€)</label>
+                  <input id="part-charges" type="number" min="0" step="0.01" value={partCharges} onChange={e => setPartCharges(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Ce que paie {nomLocataire1} chaque mois. Réparti à parts égales par défaut : corrigez si les parts sont inégales.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="nombre-coloc" className="block text-sm font-medium text-gray-700 mb-1">Nombre de colocataires</label>
+                <input id="nombre-coloc" type="number" min="2" value={nombreColoc} onChange={e => setNombreColoc(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+                <p className="text-xs text-gray-400 mt-1">Un couple compte pour un seul colocataire.</p>
+              </div>
+              <div>
+                <label htmlFor="montant-coloc" className="block text-sm font-medium text-gray-700 mb-1">Montant total charges incluses (€)</label>
+                <input id="montant-coloc" type="number" min="0" step="0.01" value={montantColoc} onChange={e => setMontantColoc(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#008020]" />
+              </div>
+            </div>
+            {ps.length === 2 && (
+              <button type="button" onClick={() => choisirFoyer('couple')} className="text-xs font-medium text-[#008020] hover:underline">
+                En fait, ils sont en couple ? Faire une attestation commune
+              </button>
+            )}
+          </div>
+        ) : enCouple ? (
+          <div className="bg-white rounded-xl shadow-sm p-4 space-y-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Colocation</p>
+            <p className="text-sm text-gray-700">
+              Non : {nomAttestation} sont en couple. Une seule attestation à leurs deux noms, avec le loyer entier
+              (pour la CAF, un couple n&apos;est pas une colocation).
+            </p>
+            <button type="button" onClick={() => choisirFoyer('colocation')} className="text-xs font-medium text-[#008020] hover:underline">
+              Ce sont des colocataires ? Faire une attestation par personne
+            </button>
+          </div>
+        ) : (
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Colocation</p>
           <div>
@@ -528,6 +680,7 @@ export default function AttestationCafPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Sous-location */}
         <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
