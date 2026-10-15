@@ -8,6 +8,7 @@ import { Plus, Home, Pencil, Trash2, X, Loader2, AlertTriangle, ArrowRight, Chev
 import OnboardingChecklist from '@/components/OnboardingChecklist'
 import { isOnboardingComplete, isProfileComplete } from '@/lib/onboarding'
 import { LMNP_BIENS_URL } from '@/lib/promo-config'
+import { nomsLocataires } from '@/lib/colocation'
 
 function trackEvent(name: string) {
   if (typeof window !== 'undefined' && 'sa_event' in window) {
@@ -305,7 +306,7 @@ export default function BiensPage() {
                   {deleteConfirm.affected.map(l => (
                     <li key={l.id} className="flex items-center gap-2 text-sm text-gray-700 bg-red-50 rounded-lg px-3 py-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                      {l.nomPrenom}
+                      {nomsLocataires(l)}
                     </li>
                   ))}
                 </ul>

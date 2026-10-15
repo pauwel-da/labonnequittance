@@ -9,15 +9,29 @@ export interface Bien {
   typeLocation: BienType
 }
 
+/** Autre personne du même bail (colocation, couple). */
+export interface Colocataire {
+  nomPrenom: string
+  email: string
+}
+
+/** Bail à deux : un seul foyer (couple) ou foyers séparés (colocation). Voir src/lib/colocation.ts. */
+export type Foyer = 'couple' | 'colocation'
+
 export interface Locataire {
   id: string
+  /** Locataire principal */
   nomPrenom: string
   email: string
   copieEmail: boolean
   bienId: string
+  /** Loyer et charges du bail entier */
   loyer: number
   charges: number
   dateDebut: string
+  /** Autres personnes du bail (5 au plus) ; vide pour un locataire seul */
+  colocataires: Colocataire[]
+  foyer: Foyer | null
 }
 
 export interface QuittanceRecord {

@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { FileText, Download, ChevronLeft, ChevronRight, Users, AlertCircle, AlertTriangle, Loader2, CalendarDays, Eye, Send, X, CheckCircle, ArrowRight, History, ChevronDown, Percent } from 'lucide-react'
 import OnboardingChecklist from '@/components/OnboardingChecklist'
 import InAppBrowserNotice from '@/components/InAppBrowserNotice'
+import { badgeFoyer, emailsLocataires, nomsLocataires } from '@/lib/colocation'
 
 function monthLabel(year: number, month: number) {
   return new Date(year, month, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
@@ -187,7 +188,7 @@ export default function DashboardPage() {
         a.click()
         URL.revokeObjectURL(url)
       }
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' })
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: nomsLocataires(l), bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'telecharge' })
         .then(() => getQuittances().then(setQuittances))
         .catch(() => {})
     } catch (err: unknown) {
@@ -207,7 +208,7 @@ export default function DashboardPage() {
     clearError(l.id)
     trackEvent('quittance_voir')
     try {
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' })
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: nomsLocataires(l), bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: l.loyer, montantCharges: l.charges, action: 'visionne' })
         .then(() => getQuittances().then(setQuittances))
         .catch(() => {})
       const { blob, filename } = await getBlob(l, v.bien, datePeriode, v.dateReglement, pr)
@@ -238,7 +239,8 @@ export default function DashboardPage() {
   async function handleSend(l: Locataire) {
     const v = validate(l)
     if (!v) return
-    if (!l.email) {
+    const emails = emailsLocataires(l)
+    if (emails.length === 0) {
       setErrors(e => ({ ...e, [l.id]: 'Aucun email renseigné pour ce locataire.' }))
       return
     }
@@ -255,7 +257,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
-          locataire_email: l.email,
+          locataire_emails: emails,
           copie_email: l.copieEmail,
           periode_label: monthLabel(year, month),
         }),
@@ -266,8 +268,8 @@ export default function DashboardPage() {
       const ratio = pr ? (pr.jourFin! - pr.jourDebut! + 1) / daysInMonth : 1
       const loyerSave = pr ? Math.round(l.loyer * ratio * 100) / 100 : l.loyer
       const chargesSave = pr ? Math.round(l.charges * ratio * 100) / 100 : l.charges
-      const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye', createdAt: new Date().toISOString() }
-      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: l.nomPrenom, bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye' })
+      const sentRecord: QuittanceRecord = { id: crypto.randomUUID(), locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: nomsLocataires(l), bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye', createdAt: new Date().toISOString() }
+      addQuittance({ locataireId: l.id, bienId: v.bien.id, locataireNomPrenom: nomsLocataires(l), bienNom: v.bien.nom, periode: datePeriode, datePaiement: v.dateReglement, montantLoyer: loyerSave, montantCharges: chargesSave, action: 'envoye' })
         .then(() => getQuittances().then(setQuittances))
         .catch(() => {})
       setQuittances(qs => [...qs.filter(q => !(q.locataireId === l.id && q.action === 'envoye' && q.periode === datePeriode)), sentRecord])
@@ -499,8 +501,13 @@ export default function DashboardPage() {
                   <div key={l.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div className="p-4">
                       <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold text-gray-900">{l.nomPrenom}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900">
+                            {nomsLocataires(l)}
+                            {badgeFoyer(l) && (
+                              <span className="ml-2 align-middle text-[11px] font-semibold text-gray-700 bg-gray-100 rounded-full px-2 py-0.5 whitespace-nowrap">{badgeFoyer(l)}</span>
+                            )}
+                          </p>
                           {bien && <p className="text-sm text-gray-500 mt-0.5">{bien.nom} — {bien.adresse}, {bien.ville}</p>}
                         </div>
                         <div className="text-right">
@@ -572,7 +579,7 @@ export default function DashboardPage() {
 
                       {didSend && (
                         <div className="flex items-center gap-2 text-green-700 text-sm mb-3 bg-green-50 rounded-lg px-3 py-2">
-                          <CheckCircle size={14} /> Quittance envoyée à {l.email}
+                          <CheckCircle size={14} className="shrink-0" /> <span className="break-all">Quittance envoyée à {emailsLocataires(l).join(', ')}</span>
                         </div>
                       )}
 
@@ -594,8 +601,8 @@ export default function DashboardPage() {
                         </button>
                         <button
                           onClick={() => handleSend(l)}
-                          disabled={isBusy || !l.email}
-                          title={!l.email ? 'Aucun email renseigné' : undefined}
+                          disabled={isBusy || emailsLocataires(l).length === 0}
+                          title={emailsLocataires(l).length === 0 ? 'Aucun email renseigné' : undefined}
                           className="flex items-center justify-center gap-1.5 bg-[#008020] hover:bg-green-800 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
                         >
                           {isSend ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}

@@ -8,9 +8,16 @@ const SOURCE = 'api/envoyer-quittance'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { locataire_email, copie_email, periode_label, proprietaire_prenom_nom, ...pdfPayload } = body
+  const { locataire_email, locataire_emails, copie_email, periode_label, proprietaire_prenom_nom, ...pdfPayload } = body
 
-  if (!locataire_email) {
+  // Tous les locataires du bail (colocation) ; `locataire_email` seul reste accepté.
+  const destinataires = [...new Set(
+    (Array.isArray(locataire_emails) ? locataire_emails : [locataire_email])
+      .filter((e): e is string => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()))
+      .map(e => e.trim()),
+  )].slice(0, 6)
+
+  if (destinataires.length === 0) {
     return NextResponse.json({ error: 'Email locataire manquant.' }, { status: 400 })
   }
 
@@ -56,7 +63,7 @@ export async function POST(request: NextRequest) {
   const filename = body._filename || 'quittance.pdf'
   const brevoPayload: Record<string, unknown> = {
     sender: { name: 'La Bonne Quittance', email: 'noreply@notify.labonnequittance.fr' },
-    to: [{ email: locataire_email }],
+    to: destinataires.map(email => ({ email })),
     subject: `Votre quittance de loyer — ${periode_label}`,
     htmlContent: `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">

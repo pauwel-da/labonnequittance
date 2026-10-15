@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/client'
-import type { Bien, Locataire, Proprietaire, QuittanceRecord } from './types'
+import type { Bien, Foyer, Locataire, Proprietaire, QuittanceRecord } from './types'
+import { parseColocataires, parseFoyer } from './colocation'
 
 // ── Biens ─────────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,22 @@ export async function getLocataires(): Promise<Locataire[]> {
     loyer: Number(r.loyer),
     charges: Number(r.charges),
     dateDebut: r.date_debut,
+    colocataires: parseColocataires(r.colocataires),
+    foyer: parseFoyer(r.foyer),
   }))
+}
+
+/**
+ * Colonnes de colocation (supabase/colocation.sql). Envoyées seulement quand elles
+ * portent une valeur (ou en effacent une) : un locataire seul s'enregistre même si
+ * la migration n'a pas encore été exécutée.
+ */
+function colocationColumns(l: Pick<Locataire, 'colocataires' | 'foyer'>, force = false) {
+  if (!force && l.colocataires.length === 0 && !l.foyer) return {}
+  return {
+    colocataires: l.colocataires.map(c => ({ nom_prenom: c.nomPrenom.trim(), email: c.email.trim() })),
+    foyer: l.foyer,
+  }
 }
 
 export async function addLocataire(l: Omit<Locataire, 'id'>): Promise<void> {
@@ -81,12 +97,15 @@ export async function addLocataire(l: Omit<Locataire, 'id'>): Promise<void> {
     loyer: l.loyer,
     charges: l.charges,
     date_debut: l.dateDebut,
+    ...colocationColumns(l),
   })
   if (error) throw error
 }
 
-export async function updateLocataire(id: string, l: Omit<Locataire, 'id'>): Promise<void> {
+/** `previous` : le locataire avant modification, pour effacer une colocation retirée. */
+export async function updateLocataire(id: string, l: Omit<Locataire, 'id'>, previous?: Pick<Locataire, 'colocataires' | 'foyer'>): Promise<void> {
   const supabase = createClient()
+  const hadColocation = !!previous && (previous.colocataires.length > 0 || !!previous.foyer)
   const { error } = await supabase.from('locataires').update({
     nom_prenom: l.nomPrenom,
     email: l.email || null,
@@ -95,7 +114,15 @@ export async function updateLocataire(id: string, l: Omit<Locataire, 'id'>): Pro
     loyer: l.loyer,
     charges: l.charges,
     date_debut: l.dateDebut,
+    ...colocationColumns(l, hadColocation),
   }).eq('id', id)
+  if (error) throw error
+}
+
+/** Couple ou colocation, répondu au moment de l'attestation CAF. */
+export async function setLocataireFoyer(id: string, foyer: Foyer): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.from('locataires').update({ foyer }).eq('id', id)
   if (error) throw error
 }
 
