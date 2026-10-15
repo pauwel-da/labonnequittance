@@ -33,7 +33,7 @@ export default function BottomNav({ showAdmin = false }: { showAdmin?: boolean }
         </div>
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navLinks.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href
+            const active = pathname === href || pathname.startsWith(`${href}/`)
             return (
               <Link
                 key={href}
@@ -65,7 +65,7 @@ export default function BottomNav({ showAdmin = false }: { showAdmin?: boolean }
       {/* Barre de navigation mobile */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex z-50">
         {navLinks.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href
+          const active = pathname === href || pathname.startsWith(`${href}/`)
           return (
             <Link
               key={href}
