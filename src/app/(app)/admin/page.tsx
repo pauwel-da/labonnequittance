@@ -70,7 +70,7 @@ function Kpi({ label, value, delta, tone = 'text-gray-900' }: { label: string; v
 }
 
 /** Liste d'emails datés (clics du popup LMNP) avec bouton de copie. */
-function EmailList({ title, items }: { title: string; items: { userId: string; email: string | null; at: string }[] }) {
+function EmailList({ title, items }: { title: string; items: { userId: string; email: string | null; at: string; note?: string }[] }) {
   const emails = items.flatMap(n => (n.email ? [n.email] : []))
   return (
     <div className="min-w-0">
@@ -89,7 +89,7 @@ function EmailList({ title, items }: { title: string; items: { userId: string; e
               <span className="text-gray-700 truncate">
                 {n.email ?? <span className="text-gray-400">compte {n.userId.slice(0, 8)}… (email indisponible)</span>}
               </span>
-              <span className="text-gray-400 whitespace-nowrap">{fmtDate(n.at)}</span>
+              <span className="text-gray-400 whitespace-nowrap">{n.note && <>{n.note} · </>}{fmtDate(n.at)}</span>
             </li>
           ))}
         </ul>
@@ -181,6 +181,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const withEmails = (list: PromoClick[]) => list.map(n => ({ ...n, email: emailById.get(n.userId) ?? null }))
   const discoverList = data.promo.ok ? withEmails(data.promo.data.discoverList) : []
   const notifyList = data.promo.ok ? withEmails(data.promo.data.notifyList) : []
+
+  // Clics vers Cautioneo depuis /services (à rapprocher des contrats signés)
+  const cautioneo = data.services.ok ? data.services.data.byService['cautioneo'] ?? { total: 0, last7d: 0, users: [] } : null
+  const cautioneoList = (cautioneo?.users ?? []).map(u => ({
+    userId: u.userId,
+    email: emailById.get(u.userId) ?? null,
+    at: u.lastAt,
+    note: `${u.clicks} clic${u.clicks > 1 ? 's' : ''}`,
+  }))
 
   const matchedUsers = q
     ? users.filter(u => u.email.toLowerCase().includes(q) || u.userId === q).slice(0, 25)
@@ -429,6 +438,31 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </>
         ) : (
           <SectionError error={errorOf(data.promo) ?? ''} />
+        )}
+      </Card>
+
+      {/* Cautioneo */}
+      <Card title="Cautioneo" subtitle="Clics sur « Découvrir Cautioneo » depuis /services · à rapprocher des contrats signés">
+        {cautioneo ? (
+          <>
+          <div className="grid grid-cols-3 gap-3 text-xs mb-4">
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-gray-900">{cautioneo.total}</p>
+              <p className="text-gray-500">Clics</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-[#008020]">{cautioneo.users.length}</p>
+              <p className="text-gray-500">Utilisateurs</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <p className="text-lg font-bold tabular-nums text-gray-900">{cautioneo.last7d}</p>
+              <p className="text-gray-500">Clics (7 jours)</p>
+            </div>
+          </div>
+          <EmailList title="Ont cliqué" items={cautioneoList} />
+          </>
+        ) : (
+          <SectionError error={errorOf(data.services) ?? ''} />
         )}
       </Card>
 

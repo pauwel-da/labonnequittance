@@ -47,6 +47,7 @@ export default function ServicesPage() {
                   <p className="mt-3 flex-1 text-[15px] leading-5.5 text-gray-700">{offer.description}</p>
                   <ServiceLink
                     href={offer.url}
+                    serviceId={offer.id}
                     event={`service_${offer.id.replace(/-/g, '_')}_clic`}
                     className="mt-3.5 h-11 flex items-center justify-center gap-2 border border-gray-300 hover:bg-gray-50 rounded-[10px] text-sm font-semibold text-gray-900 transition-colors"
                   >

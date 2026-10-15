@@ -54,6 +54,17 @@ export interface PromoStats {
 
 export interface PromoClick { userId: string; at: string }
 
+/** Clics sur les services de /services (supabase/services.sql), par id de service. */
+export interface ServiceStats {
+  byService: Record<string, ServiceClicks>
+}
+export interface ServiceClicks {
+  total: number
+  last7d: number
+  /** Un utilisateur par ligne, dernier clic en premier. */
+  users: { userId: string; clicks: number; lastAt: string }[]
+}
+
 export interface AdminData {
   /** ISO — instant de génération (heure serveur). */
   generatedAt: string
@@ -65,6 +76,7 @@ export interface AdminData {
   trialDrafts: Result<TrialDrafts>
   events: Result<AdminEvent[]>
   promo: Result<PromoStats>
+  services: Result<ServiceStats>
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -246,6 +258,35 @@ async function fetchPromo(client: SupabaseClient): Promise<PromoStats> {
   }
 }
 
+// Clics vers les services partenaires (supabase/services.sql).
+async function fetchServices(client: SupabaseClient): Promise<ServiceStats> {
+  const { data, error } = await client
+    .from('service_clicks')
+    .select('user_id, service_id, clicked_at')
+    .order('clicked_at', { ascending: false })
+    .limit(5000)
+  if (error) throw new Error(`service_clicks : ${error.message} (supabase/services.sql exécuté ?)`)
+
+  const d7 = Date.now() - 7 * 86400_000
+  const byService: Record<string, ServiceClicks> = {}
+  const perUser: Record<string, Map<string, { clicks: number; lastAt: string }>> = {}
+  for (const r of data ?? []) {
+    const sid = String(r.service_id)
+    const stats = (byService[sid] ??= { total: 0, last7d: 0, users: [] })
+    stats.total += 1
+    if (Date.parse(r.clicked_at) >= d7) stats.last7d += 1
+    const users = (perUser[sid] ??= new Map())
+    const u = users.get(r.user_id)
+    // Lignes triées du plus récent au plus ancien : le premier vu est le dernier clic.
+    if (u) u.clicks += 1
+    else users.set(r.user_id, { clicks: 1, lastAt: r.clicked_at })
+  }
+  for (const [sid, users] of Object.entries(perUser)) {
+    byService[sid].users = [...users].map(([userId, u]) => ({ userId, ...u }))
+  }
+  return { byService }
+}
+
 // ── Point d'entrée ────────────────────────────────────────────────────────────
 
 /**
@@ -254,7 +295,7 @@ async function fetchPromo(client: SupabaseClient): Promise<PromoStats> {
  */
 export async function getAdminData(): Promise<AdminData> {
   const client = createAdminClient()
-  const [users, daily, monthly, rappels, actions, trialDrafts, events, promo] = await Promise.all([
+  const [users, daily, monthly, rappels, actions, trialDrafts, events, promo, services] = await Promise.all([
     safe(() => fetchUsers(client)),
     safe(() => fetchDaily(client, 30)),
     safe(() => fetchMonthly(client, 6)),
@@ -263,6 +304,7 @@ export async function getAdminData(): Promise<AdminData> {
     safe(() => fetchTrialDrafts(client)),
     safe(() => fetchEvents(client, 50)),
     safe(() => fetchPromo(client)),
+    safe(() => fetchServices(client)),
   ])
-  return { generatedAt: new Date().toISOString(), users, daily, monthly, rappels, actions, trialDrafts, events, promo }
+  return { generatedAt: new Date().toISOString(), users, daily, monthly, rappels, actions, trialDrafts, events, promo, services }
 }
