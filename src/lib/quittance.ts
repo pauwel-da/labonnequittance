@@ -1,5 +1,5 @@
 import type { Bien, Locataire, Proprietaire } from './types'
-import { nomsLocataires } from './colocation'
+import { nomsLocataires, personnes } from './colocation'
 
 const API_URL = '/api/generer-quittance'
 
@@ -47,8 +47,10 @@ export function buildQuittancePayload(
     proprietaire_prenom_nom: `${proprietaire.prenom} ${proprietaire.nom}`.trim(),
     proprietaire_rue: proprietaire.adresse,
     proprietaire_code_postal_ville_pays: `${proprietaire.codePostal} ${proprietaire.ville} - France`,
-    // Tous les locataires du bail : une seule quittance pour le loyer entier
+    // Tous les locataires du bail : une seule quittance pour le loyer entier.
+    // La liste sert à la Lambda pour passer à la ligne entre deux noms.
     locataire_prenom_nom: nomsLocataires(locataire),
+    locataires_noms: personnes(locataire).map(p => p.nomPrenom),
     locataire_rue: bien.adresse,
     locataire_code_postal_ville: `${bien.codePostal} ${bien.ville}`,
     locataire_rue_code_postal_ville: `${bien.adresse}, ${bien.codePostal} ${bien.ville}`,
