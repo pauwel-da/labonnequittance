@@ -47,9 +47,12 @@ export interface PromoStats {
   closed: number
   discover: number
   notify: number
-  /** Clics « Me prévenir en janvier », du plus récent au plus ancien (email résolu côté page via la liste des utilisateurs). */
-  notifyList: { userId: string; at: string }[]
+  /** Clics « Découvrir » et « Me prévenir en janvier », du plus récent au plus ancien (email résolu côté page via la liste des utilisateurs). */
+  discoverList: PromoClick[]
+  notifyList: PromoClick[]
 }
+
+export interface PromoClick { userId: string; at: string }
 
 export interface AdminData {
   /** ISO — instant de génération (heure serveur). */
@@ -212,26 +215,34 @@ async function fetchPromo(client: SupabaseClient): Promise<PromoStats> {
     .from('promo_campaign_views')
     .select('user_id', { count: 'exact', head: true })
     .eq('campaign_id', PROMO_LMNP.id)
-  const [shown, closed, discover, notify, notifyRows] = await Promise.all([
+  // Qui a cliqué, et quand (colonne d'horodatage du clic)
+  const clicks = async (column: 'discover_clicked_at' | 'notify_optin_at'): Promise<PromoClick[]> => {
+    const { data, error } = await client
+      .from('promo_campaign_views')
+      .select(`user_id, ${column}`)
+      .eq('campaign_id', PROMO_LMNP.id)
+      .not(column, 'is', null)
+      .order(column, { ascending: false })
+    if (error) throw new Error(`promo_campaign_views : ${error.message} (supabase/promo.sql exécuté ?)`)
+    return ((data ?? []) as unknown as Record<string, unknown>[]).map(r => ({ userId: String(r.user_id), at: String(r[column]) }))
+  }
+  const [shown, closed, discover, notify, discoverList, notifyList] = await Promise.all([
     count(),
     count().not('closed_at', 'is', null),
     count().not('discover_clicked_at', 'is', null),
     count().not('notify_optin_at', 'is', null),
-    client
-      .from('promo_campaign_views')
-      .select('user_id, notify_optin_at')
-      .eq('campaign_id', PROMO_LMNP.id)
-      .not('notify_optin_at', 'is', null)
-      .order('notify_optin_at', { ascending: false }),
+    clicks('discover_clicked_at'),
+    clicks('notify_optin_at'),
   ])
-  const error = shown.error ?? closed.error ?? discover.error ?? notify.error ?? notifyRows.error
+  const error = shown.error ?? closed.error ?? discover.error ?? notify.error
   if (error) throw new Error(`promo_campaign_views : ${error.message} (supabase/promo.sql exécuté ?)`)
   return {
     shown: shown.count ?? 0,
     closed: closed.count ?? 0,
     discover: discover.count ?? 0,
     notify: notify.count ?? 0,
-    notifyList: (notifyRows.data ?? []).map(r => ({ userId: String(r.user_id), at: String(r.notify_optin_at) })),
+    discoverList,
+    notifyList,
   }
 }
 

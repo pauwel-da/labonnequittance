@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { AlertTriangle, RefreshCw, Search, X } from 'lucide-react'
 import { getAdminUser } from '@/lib/admin'
-import { getAdminData, type Result, type UserOverview } from '@/lib/admin-data'
+import { getAdminData, type PromoClick, type Result, type UserOverview } from '@/lib/admin-data'
 import { BarChart, Funnel } from './charts'
 import DeleteUserButton from './DeleteUserButton'
 import CopyButton from './CopyButton'
@@ -65,6 +65,35 @@ function Kpi({ label, value, delta, tone = 'text-gray-900' }: { label: string; v
         {value}
         {delta && <span className="text-sm font-medium text-gray-400 ml-1.5">{delta}</span>}
       </p>
+    </div>
+  )
+}
+
+/** Liste d'emails datés (clics du popup LMNP) avec bouton de copie. */
+function EmailList({ title, items }: { title: string; items: { userId: string; email: string | null; at: string }[] }) {
+  const emails = items.flatMap(n => (n.email ? [n.email] : []))
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <p className="text-xs font-semibold text-gray-700">
+          {title} · {items.length} email{items.length > 1 ? 's' : ''}
+        </p>
+        {emails.length > 0 && <CopyButton text={emails.join(', ')} label="Copier" />}
+      </div>
+      {items.length === 0 ? (
+        <Empty>Personne pour l&apos;instant.</Empty>
+      ) : (
+        <ul className="text-xs divide-y divide-gray-100 max-h-64 overflow-y-auto">
+          {items.map(n => (
+            <li key={n.userId} className="py-1.5 flex items-center justify-between gap-3">
+              <span className="text-gray-700 truncate">
+                {n.email ?? <span className="text-gray-400">compte {n.userId.slice(0, 8)}… (email indisponible)</span>}
+              </span>
+              <span className="text-gray-400 whitespace-nowrap">{fmtDate(n.at)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -148,11 +177,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   const emailById = new Map(users.map(u => [u.userId, u.email]))
 
-  // Emails des clics « Me prévenir en janvier » (popup LMNP), résolus via la liste des utilisateurs
-  const notifyList = data.promo.ok
-    ? data.promo.data.notifyList.map(n => ({ ...n, email: emailById.get(n.userId) ?? null }))
-    : []
-  const notifyEmails = notifyList.flatMap(n => (n.email ? [n.email] : []))
+  // Emails des clics du popup LMNP, résolus via la liste des utilisateurs
+  const withEmails = (list: PromoClick[]) => list.map(n => ({ ...n, email: emailById.get(n.userId) ?? null }))
+  const discoverList = data.promo.ok ? withEmails(data.promo.data.discoverList) : []
+  const notifyList = data.promo.ok ? withEmails(data.promo.data.notifyList) : []
 
   const matchedUsers = q
     ? users.filter(u => u.email.toLowerCase().includes(q) || u.userId === q).slice(0, 25)
@@ -393,30 +421,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             </div>
           </div>
 
-          {/* Liste « Me prévenir en janvier » */}
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <p className="text-xs font-semibold text-gray-700">
-                « Me prévenir en janvier » · {notifyList.length} email{notifyList.length > 1 ? 's' : ''}
-              </p>
-              {notifyEmails.length > 0 && (
-                <CopyButton text={notifyEmails.join(', ')} label="Copier les emails" />
-              )}
-            </div>
-            {notifyList.length === 0 ? (
-              <Empty>Personne pour l&apos;instant.</Empty>
-            ) : (
-              <ul className="text-xs divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                {notifyList.map(n => (
-                  <li key={n.userId} className="py-1.5 flex items-center justify-between gap-3">
-                    <span className="text-gray-700 truncate">
-                      {n.email ?? <span className="text-gray-400">compte {n.userId.slice(0, 8)}… (email indisponible)</span>}
-                    </span>
-                    <span className="text-gray-400 whitespace-nowrap">{fmtDate(n.at)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* Qui a cliqué */}
+          <div className="mt-4 pt-4 border-t border-gray-100 grid lg:grid-cols-2 gap-x-6 gap-y-4">
+            <EmailList title="Clics « Découvrir »" items={discoverList} />
+            <EmailList title="« Me prévenir en janvier »" items={notifyList} />
           </div>
           </>
         ) : (
