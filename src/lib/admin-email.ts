@@ -225,6 +225,8 @@ export function contenuVide(c: Contenu): boolean {
 
 const VERT = '#008020'
 const POLICE = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+/** Logo sur fond blanc (lisible en mode sombre). Changer ?v= à chaque nouveau logo : les messageries gardent l'ancien en cache. */
+const LOGO_EMAIL = '/email-logo.png?v=2'
 
 interface Styles { p: string; ul: string; li: string; lien: string }
 
@@ -316,7 +318,7 @@ export function construireEmailHtml(e: EmailAConstruire): string {
 <!--[if mso]><table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;background:#ffffff;border-top:4px solid ${VERT};border-radius:12px;">
 <tr><td align="center" class="lbq-px" style="padding:24px 32px 16px;">
-<a href="${SITE_URL}" style="text-decoration:none;"><img src="${origine}/email-logo.png" width="168" alt="La Bonne Quittance" style="display:block;width:168px;max-width:100%;height:auto;border:0;"></a>
+<a href="${SITE_URL}" style="text-decoration:none;"><img src="${origine}${LOGO_EMAIL}" width="168" alt="La Bonne Quittance" style="display:block;width:168px;max-width:100%;height:auto;border:0;"></a>
 </td></tr>
 <tr><td class="lbq-px" style="padding:0 32px;"><div style="height:1px;line-height:1px;font-size:1px;background:#eef0ee;">&nbsp;</div></td></tr>
 <tr><td class="lbq-px" style="padding:24px 32px 10px;font-family:${POLICE};font-size:15px;line-height:1.65;color:#1f2937;">

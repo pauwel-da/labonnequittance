@@ -32,7 +32,7 @@ export default function UpdatePasswordPage() {
       <div className="w-full max-w-sm">
 
         <div className="flex justify-center mb-8">
-          <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
+          <Image src="/logo.svg" alt="La Bonne Quittance" width={200} height={72} priority />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">

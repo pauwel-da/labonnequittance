@@ -6,7 +6,7 @@ export default function CguPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
         <Link href="/">
-          <Image src="/logo.png" alt="La Bonne Quittance" width={160} height={69} priority />
+          <Image src="/logo.svg" alt="La Bonne Quittance" width={160} height={57} priority />
         </Link>
       </header>
 

@@ -12,11 +12,10 @@ export default function QuittanceEnLignePage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="La Bonne Quittance"
               width={180}
-              height={77}
-              sizes="(min-width: 640px) 180px, 140px"
+              height={64}
               className="w-35 sm:w-45 h-auto"
               priority
             />

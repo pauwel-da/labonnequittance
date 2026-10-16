@@ -18,10 +18,10 @@ export default function SimulateurPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="La Bonne Quittance"
               width={180}
-              height={77}
+              height={64}
               className="h-auto"
               style={{ width: 'clamp(140px, 20vw, 180px)' }}
               priority

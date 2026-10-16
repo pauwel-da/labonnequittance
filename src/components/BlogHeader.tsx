@@ -22,7 +22,7 @@ export default function BlogHeader() {
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-4 shadow-sm">
       <div className="flex items-center justify-between max-w-5xl mx-auto">
         <Link href="/">
-          <Image src="/logo.png" alt="La Bonne Quittance" width={140} height={60} priority />
+          <Image src="/logo.svg" alt="La Bonne Quittance" width={140} height={50} priority />
         </Link>
 
         <div className="relative" ref={ref}>

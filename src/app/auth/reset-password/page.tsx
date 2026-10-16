@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
 
         <div className="flex justify-center mb-8">
-          <Image src="/logo.png" alt="La Bonne Quittance" width={200} height={86} priority />
+          <Image src="/logo.svg" alt="La Bonne Quittance" width={200} height={72} priority />
         </div>
 
         <Suspense fallback={

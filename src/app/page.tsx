@@ -57,11 +57,10 @@ export default async function Home() {
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="La Bonne Quittance"
             width={180}
-            height={77}
-            sizes="(min-width: 640px) 180px, 140px"
+            height={64}
             className="w-35 sm:w-45 h-auto shrink-0"
             priority
           />
