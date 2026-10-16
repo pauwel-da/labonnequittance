@@ -33,7 +33,7 @@ export default function SignupPage() {
     const addr = (new FormData(e.currentTarget).get('email') as string).trim()
     setError(null)
     start(async () => {
-      const res = await sendSignupOtp(addr)
+      const res = await sendSignupOtp(addr, metaConsent)
       if (res?.error) return setError(res.error)
       setEmail(addr)
       setStep('code')
@@ -54,7 +54,7 @@ export default function SignupPage() {
     setError(null)
     setResent(false)
     start(async () => {
-      const res = await sendSignupOtp(email)
+      const res = await sendSignupOtp(email, metaConsent)
       if (res?.error) setError(res.error)
       else setResent(true)
     })

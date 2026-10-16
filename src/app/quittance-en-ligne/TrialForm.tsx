@@ -251,7 +251,7 @@ export default function TrialForm() {
       }
 
       // Flux OTP : envoi du code par email
-      const otpRes = await sendTrialOtp(email)
+      const otpRes = await sendTrialOtp(email, metaConsent)
       if ('error' in otpRes) { setServerError(otpRes.error); return }
 
       setSubmitted({ email })

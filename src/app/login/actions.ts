@@ -17,7 +17,10 @@ export async function verifyLoginOtp(email: string, token: string) {
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
   if (error) {
-    return { error: 'Code incorrect ou expiré. Vérifiez le code ou demandez-en un nouveau.' }
+    // Code déjà utilisé par le bouton de l'email, ouvert dans ce navigateur : la session existe
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.email?.toLowerCase() === email.trim().toLowerCase()) redirect('/dashboard')
+    return { error: 'Code incorrect, expiré ou déjà utilisé. Vérifiez le code ou demandez-en un nouveau.' }
   }
   redirect('/dashboard')
 }

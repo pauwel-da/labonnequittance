@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { headers } from 'next/headers'
+import { donneesConsentementMeta } from '@/lib/meta-capi'
 
 export type TrialPayload = {
   bien: {
@@ -99,11 +100,11 @@ export async function saveTrialDraft(
 }
 
 // Envoie le code OTP par email (flux non-Gmail).
-export async function sendTrialOtp(email: string): Promise<{ ok: true } | { error: string }> {
+export async function sendTrialOtp(email: string, metaConsent = false): Promise<{ ok: true } | { error: string }> {
   const client = anon()
   const { error } = await client.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, data: donneesConsentementMeta(metaConsent) },
   })
   if (error) return { error: 'Erreur envoi email.' }
   return { ok: true }

@@ -26,6 +26,15 @@ export function contexteDepuisHeaders(hdrs: Headers, sourceUrl: string): Context
   }
 }
 
+/**
+ * Option `data` de signInWithOtp : la case cochée est retenue dans le compte créé, pour une
+ * inscription par le bouton de l'email (/auth/confirm), qui peut s'ouvrir dans un autre navigateur.
+ * Supabase ne l'enregistre qu'à la création du compte.
+ */
+export function donneesConsentementMeta(metaConsent: unknown) {
+  return metaConsent === true ? { consentement_meta_at: new Date().toISOString() } : undefined
+}
+
 function sha256(value: string) {
   return createHash('sha256').update(value.trim().toLowerCase()).digest('hex')
 }

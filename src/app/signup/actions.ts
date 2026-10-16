@@ -2,15 +2,15 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { claimTrialDrafts } from '@/lib/supabase/claim-trial-draft'
-import { contexteDepuisHeaders, signalerInscriptionMeta } from '@/lib/meta-capi'
+import { contexteDepuisHeaders, donneesConsentementMeta, signalerInscriptionMeta } from '@/lib/meta-capi'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-export async function sendSignupOtp(email: string) {
+export async function sendSignupOtp(email: string, metaConsent = false) {
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, data: donneesConsentementMeta(metaConsent) },
   })
   if (error) return { error: error.message }
   return { ok: true }
@@ -21,7 +21,10 @@ export async function verifySignupOtp(email: string, token: string, metaConsent 
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
   if (error) {
-    return { error: 'Code incorrect ou expiré. Vérifiez le code ou demandez-en un nouveau.' }
+    // Code déjà utilisé par le bouton de l'email, ouvert dans ce navigateur : la session existe
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.email?.toLowerCase() === email.trim().toLowerCase()) redirect('/dashboard')
+    return { error: 'Code incorrect, expiré ou déjà utilisé. Vérifiez le code ou demandez-en un nouveau.' }
   }
 
   const { data: { user } } = await supabase.auth.getUser()
